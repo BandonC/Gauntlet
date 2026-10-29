@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Arena</title>
+<!-- Placeholder UI: one static page over the JSON API. Replace with HTMX templates or a
+     small Vite app in Phase 4 (see CLAUDE.md). Keep it thin; the backend is the point. -->
+<style>
+  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
+  .muted { color: var(--muted); }
+  table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); }
+  th { font-weight:600; font-size:13px; color:var(--muted); }
+  tr.click { cursor:pointer; } tr.click:hover td { background: color-mix(in srgb, var(--line) 50%, transparent); }
+  select, button { font:inherit; padding:4px 8px; }
+  #board { font: 20px/1.25 ui-monospace, monospace; white-space: pre; margin: 12px 0; }
+  .X { color: var(--x); } .O { color: var(--o); }
+  .wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>LLM Arena</h1>
+  <div class="muted">Tournaments between LLM players.</div>
+
+  <h2>Leaderboard <select id="game"></select></h2>
+  <div class="wrap"><table id="lb"><thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Games</th><th>Points</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Tournaments</h2>
+  <div class="wrap"><table id="tn"><thead><tr><th>ID</th><th>Game</th><th>Status</th><th>Progress</th><th>Spent</th></tr></thead><tbody></tbody></table></div>
+
+  <h2>Recent matches</h2>
+  <div class="wrap"><table id="mt"><thead><tr><th>ID</th><th>Seats</th><th>Status</th><th>Scores</th><th>Cost</th></tr></thead><tbody></tbody></table></div>
+
+  <section id="replay" hidden>
+    <h2>Replay <span id="rtitle" class="muted"></span></h2>
+    <button id="prev">&larr;</button> <span id="pos"></span> <button id="next">&rarr;</button>
+    <div id="board"></div>
+    <div id="tinfo" class="muted"></div>
+  </section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const get = (u) => fetch(u).then((r) => r.json());
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const row = (cells, attrs = "") => `<tr ${attrs}>${cells.map((c) => `<td>${c}</td>`).join("")}</tr>`;
+
+async function loadLeaderboard() {
+  const rows = await get(`/api/leaderboard/${$("#game").value}`);
+  $("#lb tbody").innerHTML = rows.map((r, i) => row([i + 1, esc(r.player_id), r.rating, r.games, r.points])).join("")
+    || row(['<span class="muted">No completed matches yet</span>', "", "", "", ""]);
+}
+
+async function loadTables() {
+  const ts = await get("/api/tournaments");
+  $("#tn tbody").innerHTML = ts.map((t) => row([t.id, esc(t.game), esc(t.status),
+    `${t.completed}/${t.total}${t.failed ? ` (${t.failed} failed)` : ""}`,
+    `$${t.spent_usd.toFixed(4)}${t.budget_usd != null ? ` / $${t.budget_usd.toFixed(2)}` : ""}`])).join("");
+  const ms = await get("/api/matches?limit=25");
+  $("#mt tbody").innerHTML = ms.map((m) => row([m.id, esc(m.seats.join(" vs ")), esc(m.status),
+    m.scores ? m.scores.join(" – ") : "", `$${m.cost_usd.toFixed(4)}`], `class="click" data-id="${m.id}"`)).join("");
+  document.querySelectorAll("#mt tr.click").forEach((tr) => tr.onclick = () => openReplay(tr.dataset.id));
+}
+
+let rep = null, idx = 0;
+async function openReplay(id) {
+  rep = await get(`/api/matches/${id}`); idx = rep.frames.length - 1;
+  $("#replay").hidden = false; $("#rtitle").textContent = `#${rep.id} · ${rep.seats.join(" vs ")}`;
+  draw(); $("#replay").scrollIntoView({ behavior: "smooth" });
+}
+function draw() {
+  const f = rep.frames[idx];
+  // Connect 4 frame. Other games will need their own renderer keyed on rep.game.
+  $("#board").innerHTML = f.board.map((r) => [...r].map((c) => c === "." ? "·" : `<span class="${c}">●</span>`).join(" ")).join("\n");
+  $("#pos").textContent = `${idx} / ${rep.frames.length - 1}`;
+  const t = rep.turns[idx - 1];
+  $("#tinfo").textContent = t
+    ? `Turn ${t.turn_no}: ${rep.seats[t.seat]} → ${t.forfeited ? "forfeit" : JSON.stringify(t.action)} · attempts ${t.attempts} · ${t.latency_ms} ms · $${t.cost_usd.toFixed(5)}${t.error ? " · last error: " + t.error : ""}`
+    : "Start";
+}
+$("#prev").onclick = () => { if (rep && idx > 0) { idx--; draw(); } };
+$("#next").onclick = () => { if (rep && idx < rep.frames.length - 1) { idx++; draw(); } };
+
+(async () => {
+  const games = await get("/api/games");
+  $("#game").innerHTML = games.map((g) => `<option>${esc(g)}</option>`).join("");
+  $("#game").onchange = loadLeaderboard;
+  await Promise.all([loadLeaderboard(), loadTables()]);
+})();
+</script>
+</body>
+</html>

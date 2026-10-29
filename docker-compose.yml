@@ -1,0 +1,31 @@
+# Local Postgres only. The app itself runs on the host (`arena ...`) during development.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: arena
+      POSTGRES_PASSWORD: arena
+      POSTGRES_DB: arena
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arena"]
+      interval: 2s
+      retries: 15
+
+  # Disposable database for `pytest -m db` (tests DROP the public schema).
+  testdb:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: arena
+      POSTGRES_PASSWORD: arena
+      POSTGRES_DB: arena_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+volumes:
+  pgdata:

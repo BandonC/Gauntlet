@@ -1,0 +1,153 @@
+"""Vendor adapters against canned HTTP responses (no network, no tokens).
+If a vendor changes its response shape, these are the tests that should break."""
+
+import json
+
+import httpx2 as httpx
+import pytest
+
+from arena.providers.anthropic_provider import AnthropicProvider
+from arena.providers.base import CompletionRequest, ProviderError
+from arena.providers.openai_provider import OpenAIProvider
+from arena.types import ActionSpec
+
+TOOL = ActionSpec("drop_piece", "Drop a piece", {"type": "object", "properties": {}})
+REQ = CompletionRequest(model="m", system="sys", user="board", tool=TOOL)
+
+
+def client(handler) -> httpx.AsyncClient:
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+async def test_anthropic_tool_use_parsed():
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen["body"] = json.loads(request.content)
+        return httpx.Response(
+            200,
+            json={
+                "id": "msg_1",
+                "type": "message",
+                "role": "assistant",
+                "model": "m",
+                "stop_reason": "tool_use",
+                "stop_sequence": None,
+                "content": [
+                    {"type": "tool_use", "id": "tu_1", "name": "drop_piece", "input": {"column": 3}}
+                ],
+                "usage": {
+                    "input_tokens": 120,
+                    "output_tokens": 15,
+                    "cache_read_input_tokens": 900,
+                    "cache_creation_input_tokens": 0,
+                },
+            },
+        )
+
+    out = await AnthropicProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert out.tool_input == {"column": 3}
+    assert (out.usage.input_tokens, out.usage.cache_read_tokens) == (120, 900)
+    assert seen["body"]["tool_choice"] == {"type": "tool", "name": "drop_piece"}
+    assert seen["body"]["system"][0]["cache_control"] == {"type": "ephemeral"}
+
+
+async def test_anthropic_429_is_retryable_with_retry_after():
+    def handler(request):
+        return httpx.Response(
+            429,
+            headers={"retry-after": "7"},
+            json={"type": "error", "error": {"type": "rate_limit_error", "message": "slow"}},
+        )
+
+    with pytest.raises(ProviderError) as ei:
+        await AnthropicProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert ei.value.retryable and ei.value.retry_after == 7.0
+
+
+async def test_anthropic_400_not_retryable():
+    def handler(request):
+        return httpx.Response(
+            400, json={"type": "error", "error": {"type": "invalid_request_error", "message": "x"}}
+        )
+
+    with pytest.raises(ProviderError) as ei:
+        await AnthropicProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert not ei.value.retryable
+
+
+async def test_openai_function_call_parsed():
+    def handler(request):
+        return httpx.Response(
+            200,
+            json={
+                "id": "c1",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "m",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "tool_calls",
+                        "message": {
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": [
+                                {
+                                    "id": "t1",
+                                    "type": "function",
+                                    "function": {
+                                        "name": "drop_piece",
+                                        "arguments": '{"column": 5}',
+                                    },
+                                }
+                            ],
+                        },
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 1000,
+                    "completion_tokens": 12,
+                    "total_tokens": 1012,
+                    "prompt_tokens_details": {"cached_tokens": 768},
+                },
+            },
+        )
+
+    out = await OpenAIProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert out.tool_input == {"column": 5}
+    assert (out.usage.input_tokens, out.usage.cache_read_tokens) == (232, 768)
+
+
+async def test_openai_garbage_arguments_become_no_action():
+    def handler(request):
+        return httpx.Response(
+            200,
+            json={
+                "id": "c1",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "m",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "tool_calls",
+                        "message": {
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": [
+                                {
+                                    "id": "t1",
+                                    "type": "function",
+                                    "function": {"name": "drop_piece", "arguments": "{col"},
+                                }
+                            ],
+                        },
+                    }
+                ],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
+            },
+        )
+
+    out = await OpenAIProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert out.tool_input is None and out.raw_text == "{col"

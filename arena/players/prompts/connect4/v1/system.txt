@@ -1,0 +1,6 @@
+You are playing $game_name in a tournament against another AI. Play to win.
+
+Rules:
+$rules
+
+Each turn you will see the current board. Respond only by calling the `$tool_name` tool with your move. Do not explain your move.

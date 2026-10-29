@@ -1,0 +1,49 @@
+# Copy to roster.toml (gitignored) and edit.
+#
+# A player = provider + model + prompt version + settings. Change any of those and
+# you have a NEW player: give it a new id, don't edit an existing entry that has
+# already played recorded matches.
+#
+# Prices are USD per million tokens. VERIFY THEM on the provider pricing pages before
+# a real tournament; cost tracking and budget caps are only as good as these numbers.
+
+[providers.anthropic]
+requests_per_minute = 50
+max_concurrency = 8
+
+[providers.openai]
+requests_per_minute = 60
+max_concurrency = 8
+
+[[players]]
+id = "random"
+provider = "random"
+seed = 1
+
+[[players]]
+id = "haiku-5.5/c4-v1"
+provider = "anthropic"
+model = "claude-haiku-5-5"
+prompt = "connect4/v1"
+temperature = "omit"            # the Anthropic adapter never sends sampling params
+max_tokens = 256
+price_input_per_mtok = 0.10     # verify
+price_output_per_mtok = 0.50    # verify
+
+[[players]]
+id = "gpt-5-mini/c4-v1"
+provider = "openai"
+model = "gpt-5-mini"
+prompt = "connect4/v1"
+temperature = "omit"            # don't send it: some OpenAI models reject non-default values
+max_tokens = 1024               # reasoning models spend output tokens before the tool call
+price_input_per_mtok = 0.25     # verify
+price_output_per_mtok = 2.00    # verify
+
+# [[players]]
+# id = "sonnet/c4-v1"
+# provider = "anthropic"
+# model = "<model id>"
+# prompt = "connect4/v1"
+# price_input_per_mtok = 0.0    # fill in
+# price_output_per_mtok = 0.0   # fill in
