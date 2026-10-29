@@ -5,6 +5,7 @@ Endpoints:
   GET /api/games
   GET /api/tournaments                 progress and spend per tournament
   GET /api/leaderboard/{game}
+  GET /api/metrics/{game}?tournament_id=   illegal-move rate, forfeits, latency, cost, cache
   GET /api/matches?tournament_id=&limit=
   GET /api/matches/{id}                seats, status, turns, and a spectator frame per turn
 """
@@ -20,6 +21,7 @@ from fastapi.responses import FileResponse
 from arena.config import settings
 from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.registry import get_game, list_games
+from arena.store import metrics as m_store
 from arena.store import tournaments as t_store
 from arena.store.db import create_pool
 from arena.store.turns import PostgresTurnStore
@@ -71,6 +73,11 @@ async def tournaments() -> list[dict]:
 @app.get("/api/leaderboard/{game}")
 async def leaderboard(game: str) -> list[dict]:
     return await t_store.leaderboard(app.state.pool, game)
+
+
+@app.get("/api/metrics/{game}")
+async def metrics(game: str, tournament_id: int | None = None) -> list[dict]:
+    return await m_store.player_metrics(app.state.pool, game, tournament_id)
 
 
 @app.get("/api/matches")

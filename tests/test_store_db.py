@@ -18,6 +18,7 @@ from arena.players.bots import RandomPlayer
 from arena.roster import PlayerConfig, PlayerFactory, Roster
 from arena.store import queue
 from arena.store.db import create_pool
+from arena.store.metrics import player_metrics
 from arena.store.migrate import migrate
 from arena.store.tournaments import create_round_robin, leaderboard
 from arena.store.turns import PostgresTurnStore
@@ -320,3 +321,58 @@ async def test_run_worker_with_stop_set_claims_nothing(pool):
     stop.set()
     await asyncio.wait_for(run_worker(pool, FACTORY, FAST, concurrency=2, stop=stop), 5)
     assert await pool.fetchval("SELECT status FROM matches") == "queued"
+
+
+def rec(n, seat, *, attempts=1, forfeited=False, latency=0, usage=None, cost=0.0):
+    action = None if forfeited else {"column": n % 7}
+    usage = usage or Usage()
+    return TurnRecord(n, seat, action, forfeited, attempts, None, None, usage, cost, latency)
+
+
+async def test_player_metrics_from_turn_log(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    p0, p1 = m.seats
+    store = PostgresTurnStore(pool, "w0")
+    # p0: second attempt legal; p1: first attempt legal; p0: three bad attempts, forfeit.
+    await store.append_turn(
+        str(m.id), rec(0, 0, attempts=2, latency=100, usage=Usage(100, 10, 300, 0), cost=0.01)
+    )
+    await store.append_turn(str(m.id), rec(1, 1, latency=200, usage=Usage(50, 5), cost=0.002))
+    await store.append_turn(
+        str(m.id),
+        rec(2, 0, attempts=3, forfeited=True, latency=300, usage=Usage(100, 10, 0, 100), cost=0.02),
+    )
+    assert await queue.complete(pool, m.id, "w0", [0.0, 1.0])
+
+    # A second tournament with a match still running: counts for turns, not cost per game.
+    tid2, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m2,) = await _claim_all(pool, 1)
+    first = m2.seats[0]
+    await PostgresTurnStore(pool, "w0").append_turn(str(m2.id), rec(0, 0, latency=1000, cost=0.5))
+
+    by_player = {r["player_id"]: r for r in await player_metrics(pool, "connect4", tid)}
+    assert by_player[p0] == {
+        "player_id": p0,
+        "turns": 2,
+        "attempts": 5,
+        "illegal_attempts": 4,
+        "illegal_move_rate": 0.8,
+        "forfeits": 1,
+        "latency_p50_ms": 200.0,
+        "latency_p95_ms": 290.0,
+        "completed_games": 1,
+        "cost_per_game_usd": 0.03,
+        "cache_hit_rate": 0.5,  # 300 read / (200 uncached + 300 read + 100 written)
+    }
+    assert by_player[p1]["illegal_move_rate"] == 0.0
+    assert by_player[p1]["latency_p95_ms"] == 200.0
+    assert by_player[p1]["cache_hit_rate"] == 0.0
+    assert by_player[p1]["cost_per_game_usd"] == 0.002
+
+    everything = {r["player_id"]: r for r in await player_metrics(pool, "connect4")}
+    assert everything[first]["turns"] == by_player[first]["turns"] + 1
+    assert everything[first]["completed_games"] == 1  # the running match isn't a game yet
+    assert everything[first]["cost_per_game_usd"] == by_player[first]["cost_per_game_usd"]
+    assert await player_metrics(pool, "connect4", tid2 + 1) == []
+    assert await player_metrics(pool, "liars_dice") == []

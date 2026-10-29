@@ -177,7 +177,7 @@ runs (loops, scheduled tasks) skip them.
       reads `ratings` instead of recomputing.
 - [x] Mark tournaments `completed` when no queued/running matches remain.
 - [x] Graceful SIGTERM: stop claiming, let the in-flight turn persist, exit.
-- [ ] Metrics endpoint: illegal-move rate per player, forfeits, latency p50/p95,
+- [x] Metrics endpoint: illegal-move rate per player, forfeits, latency p50/p95,
       cost per game, cache hit rate.
 - [ ] Cross-process rate limiting. The limiter is per process today; options: a token
       table with `SELECT ... FOR UPDATE`, or a static per-worker share of the quota.
@@ -250,3 +250,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
   only Ctrl-C there is graceful.
+- `/api/metrics/{game}` definitions live in `store/metrics.py`'s docstring. Cost per
+  game counts completed matches only; turn-level stats include running matches.
+  API endpoints have no HTTP tests: `TestClient` needs `httpx`, which isn't a dependency
+  (the SDKs use `httpx2`). Test the store function instead.
