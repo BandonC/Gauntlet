@@ -17,6 +17,8 @@ from dataclasses import dataclass
 
 import asyncpg
 
+from arena.store import ratings
+
 CLAIM_SQL = """
 UPDATE matches m
 SET status = 'running',
@@ -54,7 +56,7 @@ UPDATE matches
 SET status = 'completed', scores = $3, completed_at = now(),
     lease_owner = NULL, lease_expires_at = NULL, last_error = NULL
 WHERE id = $1 AND lease_owner = $2 AND status = 'running'
-RETURNING id
+RETURNING game
 """
 
 RELEASE_SQL = """
@@ -102,8 +104,15 @@ async def heartbeat(
 
 
 async def complete(pool: asyncpg.Pool, match_id: int, worker_id: str, scores: list[float]) -> bool:
-    # TODO(phase 3): update ratings + rating_history in the same transaction.
-    return await pool.fetchval(COMPLETE_SQL, match_id, worker_id, scores) is not None
+    """Mark the match completed and rate it, atomically. False if the lease was lost
+    (nothing is written)."""
+    async with pool.acquire() as conn, conn.transaction():
+        game = await conn.fetchval(COMPLETE_SQL, match_id, worker_id, scores)
+        if game is None:
+            return False
+        seats = [r["player_id"] for r in await conn.fetch(SEATS_SQL, match_id)]
+        await ratings.apply_match_result(conn, match_id, game, seats, scores)
+    return True
 
 
 async def release_for_retry(

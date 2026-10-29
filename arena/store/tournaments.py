@@ -6,8 +6,8 @@ import random
 
 import asyncpg
 
-from arena.ratings.elo import EloTable
 from arena.roster import PlayerConfig, config_hash
+from arena.store import ratings
 from arena.tournaments import round_robin
 
 UPSERT_PLAYER_SQL = """
@@ -73,26 +73,5 @@ async def create_round_robin(
 
 
 async def leaderboard(pool: asyncpg.Pool, game: str) -> list[dict]:
-    """v1: Elo recomputed from completed 2-player matches in completion order.
-    TODO(phase 3): materialise into ratings/rating_history on match completion."""
-    rows = await pool.fetch(
-        """
-        SELECT m.id, m.scores, array_agg(s.player_id ORDER BY s.seat) AS seats
-        FROM matches m JOIN match_seats s ON s.match_id = m.id
-        WHERE m.game = $1 AND m.status = 'completed'
-        GROUP BY m.id ORDER BY m.completed_at, m.id
-        """,
-        game,
-    )
-    table = EloTable()
-    wins: dict[str, float] = {}
-    for r in rows:
-        a, b = r["seats"]
-        score_a = r["scores"][0]
-        table.record(a, b, score_a)
-        wins[a] = wins.get(a, 0) + score_a
-        wins[b] = wins.get(b, 0) + r["scores"][1]
-    return [
-        {"player_id": p, "rating": round(rating, 1), "games": n, "points": wins.get(p, 0)}
-        for p, rating, n in table.leaderboard()
-    ]
+    """Reads the materialised ratings table (written by queue.complete)."""
+    return await ratings.leaderboard(pool, game)
