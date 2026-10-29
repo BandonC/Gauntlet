@@ -56,7 +56,7 @@ UPDATE matches
 SET status = 'completed', scores = $3, completed_at = now(),
     lease_owner = NULL, lease_expires_at = NULL, last_error = NULL
 WHERE id = $1 AND lease_owner = $2 AND status = 'running'
-RETURNING game
+RETURNING game, tournament_id
 """
 
 RELEASE_SQL = """
@@ -65,7 +65,22 @@ SET status = CASE WHEN run_attempts >= $4 THEN 'failed' ELSE 'queued' END,
     available_at = now() + make_interval(secs => $5),
     lease_owner = NULL, lease_expires_at = NULL, last_error = $3
 WHERE id = $1 AND lease_owner = $2
-RETURNING status
+RETURNING status, tournament_id
+"""
+
+# Two workers finishing a tournament's last two matches at once would each see the
+# other's match as still running and neither would close it. Locking the tournament
+# row serialises them; the check is a separate statement so it sees the other's commit.
+# Taken last in the transaction (after match and ratings rows), the same order as
+# turns.append_turn, so it can't deadlock with it.
+LOCK_TOURNAMENT_SQL = "SELECT id FROM tournaments WHERE id = $1 FOR UPDATE"
+
+FINISH_TOURNAMENT_SQL = """
+UPDATE tournaments SET status = 'completed'
+WHERE id = $1 AND status <> 'completed'
+  AND NOT EXISTS (
+      SELECT 1 FROM matches WHERE tournament_id = $1 AND status IN ('queued', 'running')
+  )
 """
 
 SEATS_SQL = "SELECT seat, player_id FROM match_seats WHERE match_id = $1 ORDER BY seat"
@@ -107,11 +122,12 @@ async def complete(pool: asyncpg.Pool, match_id: int, worker_id: str, scores: li
     """Mark the match completed and rate it, atomically. False if the lease was lost
     (nothing is written)."""
     async with pool.acquire() as conn, conn.transaction():
-        game = await conn.fetchval(COMPLETE_SQL, match_id, worker_id, scores)
-        if game is None:
+        row = await conn.fetchrow(COMPLETE_SQL, match_id, worker_id, scores)
+        if row is None:
             return False
         seats = [r["player_id"] for r in await conn.fetch(SEATS_SQL, match_id)]
-        await ratings.apply_match_result(conn, match_id, game, seats, scores)
+        await ratings.apply_match_result(conn, match_id, row["game"], seats, scores)
+        await finish_tournament_if_done(conn, row["tournament_id"])
     return True
 
 
@@ -125,6 +141,21 @@ async def release_for_retry(
     backoff_seconds: float,
 ) -> str | None:
     """Give the match back after an infrastructure failure. Returns the new status."""
-    return await pool.fetchval(
-        RELEASE_SQL, match_id, worker_id, error[:2000], max_attempts, backoff_seconds
-    )
+    async with pool.acquire() as conn, conn.transaction():
+        row = await conn.fetchrow(
+            RELEASE_SQL, match_id, worker_id, error[:2000], max_attempts, backoff_seconds
+        )
+        if row is None:
+            return None
+        if row["status"] == "failed":
+            await finish_tournament_if_done(conn, row["tournament_id"])
+    return row["status"]
+
+
+async def finish_tournament_if_done(conn: asyncpg.Connection, tournament_id: int | None) -> None:
+    """Mark the tournament completed once no match is queued or running (failed matches
+    count as done). Call inside the transaction that moved a match to a final state."""
+    if tournament_id is None:
+        return
+    await conn.execute(LOCK_TOURNAMENT_SQL, tournament_id)
+    await conn.execute(FINISH_TOURNAMENT_SQL, tournament_id)

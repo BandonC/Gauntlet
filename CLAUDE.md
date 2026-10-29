@@ -175,7 +175,7 @@ runs (loops, scheduled tasks) skip them.
 - [x] Write ratings + `rating_history` in the same transaction as `queue.complete`
       (the UNIQUE (player_id, match_id) constraint guards double-rating); leaderboard
       reads `ratings` instead of recomputing.
-- [ ] Mark tournaments `completed` when no queued/running matches remain.
+- [x] Mark tournaments `completed` when no queued/running matches remain.
 - [ ] Graceful SIGTERM: stop claiming, let the in-flight turn persist, exit.
 - [ ] Metrics endpoint: illegal-move rate per player, forfeits, latency p50/p95,
       cost per game, cache hit rate.
@@ -243,3 +243,6 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - Ratings are written only by `queue.complete` (`store/ratings.py`). Matches completed
   before that existed are unrated, and Elo skips matches without exactly 2 seats.
   Ratings rows are locked in `player_id` order; keep that order to avoid deadlocks.
+- Tournaments close in the transaction that moves their last match to `completed` or
+  `failed` (failed counts as done). A budget-capped tournament with queued matches stays
+  `running`. Lock order in a completion: match row, ratings rows, tournament row last.

@@ -45,6 +45,10 @@ async def pool():
     await p.close()
 
 
+async def tournament_status(pool, tid: int) -> str:
+    return await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tid)
+
+
 def turn(n: int, seat: int, col: int) -> TurnRecord:
     return TurnRecord(n, seat, {"column": col}, False, 1, None, None, Usage(10, 1), 0.001, 5)
 
@@ -99,6 +103,7 @@ async def test_worker_runs_tournament_and_resumes_partial_match(pool):
     board = await leaderboard(pool, "connect4")
     assert {r["player_id"] for r in board} == {"r1", "r2"}
     assert sum(r["games"] for r in board) == 2 * n
+    assert await tournament_status(pool, tid) == "completed"
 
 
 async def test_budget_cap_stops_new_claims(pool):
@@ -112,6 +117,7 @@ async def test_budget_cap_stops_new_claims(pool):
     spent = await pool.fetchval("SELECT spent_usd::float FROM tournaments WHERE id = $1", tid)
     assert spent == pytest.approx(0.002)
     assert await queue.claim(pool, "B", 30) is None
+    assert await tournament_status(pool, tid) == "running"  # capped, not finished
 
 
 async def test_unknown_player_marks_match_failed(pool):
@@ -209,3 +215,50 @@ async def test_concurrent_completions_lose_no_rating_updates(pool):
         assert chain[0]["rating_before"] == 1500.0
         assert all(x["rating_after"] == y["rating_before"] for x, y in pairwise(chain))
         assert chain[-1]["rating_after"] == r["rating"]
+
+
+async def test_tournament_completes_only_after_last_match(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
+    first, second = await _claim_all(pool, 2)
+
+    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0])
+    assert await tournament_status(pool, tid) == "running"
+    assert await queue.complete(pool, second.id, "w1", [0.5, 0.5])
+    assert await tournament_status(pool, tid) == "completed"
+
+
+async def test_failed_match_counts_as_done_but_retry_does_not(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
+    first, second = await _claim_all(pool, 2)
+    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0])
+
+    retry = dict(max_attempts=2, backoff_seconds=0)
+    assert await queue.release_for_retry(pool, second.id, "w1", "boom", **retry) == "queued"
+    assert await tournament_status(pool, tid) == "running"
+
+    again = await queue.claim(pool, "w2", 30)
+    assert again.id == second.id and again.run_attempts == 2
+    assert await queue.release_for_retry(pool, second.id, "w2", "boom", **retry) == "failed"
+    assert await tournament_status(pool, tid) == "completed"
+
+
+async def test_last_two_matches_finishing_together_close_the_tournament(pool):
+    # Two transactions each finish one of the last two matches and check the tournament
+    # before either commits. Without the tournament row lock, each sees the other's
+    # match as still running, and the tournament is never closed.
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
+    a, b = await _claim_all(pool, 2)
+    done = "UPDATE matches SET status = 'completed', scores = '[1, 0]' WHERE id = $1"
+    async with pool.acquire() as c1, pool.acquire() as c2:
+        t1, t2 = c1.transaction(), c2.transaction()
+        await t1.start()
+        await t2.start()
+        await c1.execute(done, a.id)
+        await c2.execute(done, b.id)
+        await queue.finish_tournament_if_done(c1, tid)  # sees b running: no-op
+        second = asyncio.create_task(queue.finish_tournament_if_done(c2, tid))
+        await asyncio.sleep(0.2)  # let it block on the tournament row lock
+        await t1.commit()
+        await second
+        await t2.commit()
+    assert await tournament_status(pool, tid) == "completed"
