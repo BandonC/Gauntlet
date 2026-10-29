@@ -11,7 +11,10 @@ from itertools import pairwise
 import asyncpg
 import pytest
 
+from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
+from arena.players.base import Decision, TurnContext
+from arena.players.bots import RandomPlayer
 from arena.roster import PlayerConfig, PlayerFactory, Roster
 from arena.store import queue
 from arena.store.db import create_pool
@@ -262,3 +265,58 @@ async def test_last_two_matches_finishing_together_close_the_tournament(pool):
         await second
         await t2.commit()
     assert await tournament_status(pool, tid) == "completed"
+
+
+class HeldPlayer(RandomPlayer):
+    """RandomPlayer whose first move waits until the test releases it."""
+
+    def __init__(self, player_id: str, seed: int, started: asyncio.Event, gate: asyncio.Event):
+        super().__init__(player_id, seed)
+        self.started, self.gate = started, gate
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        self.started.set()
+        await self.gate.wait()
+        return await super().act(ctx)
+
+
+class HeldFactory:
+    def __init__(self) -> None:
+        self.started, self.gate = asyncio.Event(), asyncio.Event()
+
+    def build(self, player_id: str):
+        seed = {p.id: p.seed for p in PLAYERS}[player_id]
+        return HeldPlayer(player_id, seed, self.started, self.gate), FREE
+
+
+async def test_graceful_stop_persists_in_flight_turn_and_hands_match_back(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    held, stop = HeldFactory(), asyncio.Event()
+    worker = asyncio.create_task(run_one(pool, held, "A", FAST, stop))
+
+    await held.started.wait()  # turn 0 is mid-decision (an LLM call, in real life)
+    stop.set()  # SIGTERM arrives
+    held.gate.set()  # the in-flight decision returns
+    assert await asyncio.wait_for(worker, 5)
+
+    mid = await pool.fetchval("SELECT id FROM matches")
+    assert [t.turn_no for t in await PostgresTurnStore(pool, "x").load_turns(str(mid))] == [0]
+    row = await pool.fetchrow(
+        "SELECT status, lease_owner, run_attempts, available_at <= now() AS ready "
+        "FROM matches WHERE id = $1",
+        mid,
+    )
+    assert dict(row) == {"status": "queued", "lease_owner": None, "run_attempts": 0, "ready": True}
+
+    # Another worker picks it up at once (no lease expiry wait) and finishes from the log.
+    assert await run_one(pool, FACTORY, "B", FAST)
+    assert await pool.fetchval("SELECT status FROM matches WHERE id = $1", mid) == "completed"
+    assert await tournament_status(pool, tid) == "completed"
+
+
+async def test_run_worker_with_stop_set_claims_nothing(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    stop = asyncio.Event()
+    stop.set()
+    await asyncio.wait_for(run_worker(pool, FACTORY, FAST, concurrency=2, stop=stop), 5)
+    assert await pool.fetchval("SELECT status FROM matches") == "queued"

@@ -1,7 +1,10 @@
+import asyncio
+
 import pytest
 
 from arena.costs import Budget, BudgetExceeded, Pricing
 from arena.engine import InMemoryTurnStore, LeaseLost, MatchRunner, MatchSpec, TurnRecord
+from arena.engine.match_runner import MatchInterrupted
 from arena.games.connect4 import Connect4
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer, ScriptedPlayer
@@ -129,3 +132,25 @@ def test_replay_rejects_corrupt_log():
     runner = MatchRunner(G, [RandomPlayer(), RandomPlayer()], InMemoryTurnStore())
     with pytest.raises(CorruptTurnLog):
         runner.replay(spec(), bad)
+
+
+async def test_stop_finishes_the_turn_in_flight_then_resumes_exactly():
+    stop = asyncio.Event()
+
+    class StopsMidTurn(RandomPlayer):
+        async def act(self, ctx: TurnContext) -> Decision:
+            if ctx.view["move_number"] == 3:
+                stop.set()  # arrives while turn 2 is being decided
+            return await super().act(ctx)
+
+    store = InMemoryTurnStore()
+    players = [StopsMidTurn("a", 1), StopsMidTurn("b", 2)]
+    with pytest.raises(MatchInterrupted):
+        await MatchRunner(G, players, store).run(spec(), stop)
+    assert [t.turn_no for t in store.turns["m1"]] == [0, 1, 2]  # turn 2 still persisted
+
+    resumed = await MatchRunner(G, [RandomPlayer("a", 1), RandomPlayer("b", 2)], store).run(spec())
+    straight = await MatchRunner(
+        G, [RandomPlayer("a", 1), RandomPlayer("b", 2)], InMemoryTurnStore()
+    ).run(spec())
+    assert [t.action for t in resumed.turns] == [t.action for t in straight.turns]

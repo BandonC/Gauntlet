@@ -12,6 +12,7 @@ When it refuses, it raises LeaseLost and this runner stops immediately.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import Protocol
@@ -32,6 +33,11 @@ class CorruptTurnLog(Exception):
 
 class MatchTooLong(Exception):
     pass
+
+
+class MatchInterrupted(Exception):
+    """A stop was requested between turns. Every played turn is persisted, so the
+    match resumes from its log like any other."""
 
 
 @dataclass(frozen=True)
@@ -145,12 +151,16 @@ class MatchRunner:
         *_, final = iter_states(self.game, spec, turns)
         return final
 
-    async def run(self, spec: MatchSpec) -> MatchOutcome:
+    async def run(self, spec: MatchSpec, stop: asyncio.Event | None = None) -> MatchOutcome:
+        """Play to the end. If `stop` is set, the turn in flight still finishes and is
+        persisted, then MatchInterrupted is raised before the next one starts."""
         turns = await self.store.load_turns(spec.match_id)
         state = self.replay(spec, turns)
 
         while not self.game.is_terminal(state):
             turn_no = len(turns)
+            if stop is not None and stop.is_set():
+                raise MatchInterrupted(f"{spec.match_id} stopped before turn {turn_no}")
             if turn_no >= self.max_turns:
                 raise MatchTooLong(f"{spec.match_id} exceeded {self.max_turns} turns")
             seat = self.game.current_player(state)

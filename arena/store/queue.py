@@ -68,6 +68,16 @@ WHERE id = $1 AND lease_owner = $2
 RETURNING status, tournament_id
 """
 
+# Graceful shutdown: hand the match straight back. The run attempt is refunded because
+# nothing failed, so restarts and deploys never push a match towards 'failed'.
+SHUTDOWN_RELEASE_SQL = """
+UPDATE matches
+SET status = 'queued', available_at = now(), run_attempts = GREATEST(run_attempts - 1, 0),
+    lease_owner = NULL, lease_expires_at = NULL
+WHERE id = $1 AND lease_owner = $2 AND status = 'running'
+RETURNING id
+"""
+
 # Two workers finishing a tournament's last two matches at once would each see the
 # other's match as still running and neither would close it. Locking the tournament
 # row serialises them; the check is a separate statement so it sees the other's commit.
@@ -150,6 +160,12 @@ async def release_for_retry(
         if row["status"] == "failed":
             await finish_tournament_if_done(conn, row["tournament_id"])
     return row["status"]
+
+
+async def release_on_shutdown(pool: asyncpg.Pool, match_id: int, worker_id: str) -> bool:
+    """Give back a match interrupted by shutdown, claimable immediately. False if the
+    lease was already lost."""
+    return await pool.fetchval(SHUTDOWN_RELEASE_SQL, match_id, worker_id) is not None
 
 
 async def finish_tournament_if_done(conn: asyncpg.Connection, tournament_id: int | None) -> None:

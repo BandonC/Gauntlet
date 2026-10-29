@@ -176,7 +176,7 @@ runs (loops, scheduled tasks) skip them.
       (the UNIQUE (player_id, match_id) constraint guards double-rating); leaderboard
       reads `ratings` instead of recomputing.
 - [x] Mark tournaments `completed` when no queued/running matches remain.
-- [ ] Graceful SIGTERM: stop claiming, let the in-flight turn persist, exit.
+- [x] Graceful SIGTERM: stop claiming, let the in-flight turn persist, exit.
 - [ ] Metrics endpoint: illegal-move rate per player, forfeits, latency p50/p95,
       cost per game, cache hit rate.
 - [ ] Cross-process rate limiting. The limiter is per process today; options: a token
@@ -246,3 +246,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - Tournaments close in the transaction that moves their last match to `completed` or
   `failed` (failed counts as done). A budget-capped tournament with queued matches stays
   `running`. Lock order in a completion: match row, ratings rows, tournament row last.
+- Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
+  match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
+  signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
+  only Ctrl-C there is graceful.

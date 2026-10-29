@@ -8,6 +8,9 @@ Failure handling:
   'failed' with last_error set.
 - Worker killed (SIGKILL, crash, laptop lid): nothing to do. The lease expires and
   another worker re-claims the match.
+- Graceful stop (SIGTERM / first Ctrl-C, see install_stop_signals): stop claiming, let
+  each in-flight turn finish and persist, then hand the match back (claimable at once,
+  run attempt refunded) and exit. A second signal gets the default behaviour.
 """
 
 from __future__ import annotations
@@ -16,13 +19,15 @@ import asyncio
 import contextlib
 import logging
 import os
+import signal
 import socket
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import asyncpg
 
-from arena.engine.match_runner import LeaseLost, MatchRunner, MatchSpec
+from arena.engine.match_runner import LeaseLost, MatchInterrupted, MatchRunner, MatchSpec
 from arena.games.registry import get_game
 from arena.providers.base import ProviderError
 from arena.roster import PlayerFactory
@@ -45,7 +50,11 @@ def new_worker_id() -> str:
 
 
 async def run_one(
-    pool: asyncpg.Pool, factory: PlayerFactory, worker_id: str, cfg: WorkerConfig
+    pool: asyncpg.Pool,
+    factory: PlayerFactory,
+    worker_id: str,
+    cfg: WorkerConfig,
+    stop: asyncio.Event | None = None,
 ) -> bool:
     """Claim and run one match. Returns False if there was nothing to claim."""
     claimed = await queue.claim(pool, worker_id, cfg.lease_seconds)
@@ -70,7 +79,7 @@ async def run_one(
         )
         return True
 
-    run_task = asyncio.create_task(runner.run(spec))
+    run_task = asyncio.create_task(runner.run(spec, stop))
     hb_task = asyncio.create_task(_heartbeat_until_lost(pool, claimed.id, worker_id, cfg))
     try:
         done, _ = await asyncio.wait({run_task, hb_task}, return_when=asyncio.FIRST_COMPLETED)
@@ -94,6 +103,9 @@ async def run_one(
             )
     except LeaseLost:
         log.warning("turn write fenced off for match %s; abandoning", claimed.id)
+    except MatchInterrupted:
+        if await queue.release_on_shutdown(pool, claimed.id, worker_id):
+            log.info("match %s handed back for shutdown", claimed.id)
     except ProviderError as e:
         await _release(pool, claimed, worker_id, f"provider: {e}", cfg)
     except Exception as e:
@@ -146,10 +158,39 @@ async def run_worker(
     async def loop(slot: int) -> None:
         wid = f"{worker_id}/{slot}"
         while not stop.is_set():
-            if not await run_one(pool, factory, wid, cfg):
+            if not await run_one(pool, factory, wid, cfg, stop):
                 if exit_when_idle:
                     return
                 with contextlib.suppress(TimeoutError):
                     await asyncio.wait_for(stop.wait(), cfg.idle_sleep_seconds)
 
     await asyncio.gather(*(loop(i) for i in range(concurrency)))
+
+
+def install_stop_signals(stop: asyncio.Event) -> Callable[[], None]:
+    """Set `stop` on the first SIGTERM or SIGINT, then put the previous handlers back so
+    a second signal stops the process the usual way. Returns a function that restores
+    the previous handlers. Call from the event loop thread.
+
+    Uses signal.signal rather than loop.add_signal_handler, which Windows lacks.
+    """
+    loop = asyncio.get_running_loop()
+    sigs = [signal.SIGINT, signal.SIGTERM]
+    previous = {s: signal.getsignal(s) for s in sigs}
+
+    def restore() -> None:
+        for s, handler in previous.items():
+            if handler is not None:
+                signal.signal(s, handler)
+
+    def handle(signum: int, _frame: object) -> None:
+        log.warning(
+            "%s: finishing in-flight turns, then exiting (signal again to force)",
+            signal.Signals(signum).name,
+        )
+        restore()
+        loop.call_soon_threadsafe(stop.set)
+
+    for s in sigs:
+        signal.signal(s, handle)
+    return restore
