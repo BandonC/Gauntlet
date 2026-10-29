@@ -1,0 +1,18 @@
+import asyncio
+import signal
+
+from arena.worker import install_stop_signals
+
+
+async def test_first_signal_sets_stop_and_restores_previous_handlers():
+    before = signal.getsignal(signal.SIGTERM)
+    stop = asyncio.Event()
+    restore = install_stop_signals(stop)
+    try:
+        signal.raise_signal(signal.SIGTERM)
+        await asyncio.wait_for(stop.wait(), 2)
+        # A second signal must get the previous (default) behaviour, not be swallowed.
+        assert signal.getsignal(signal.SIGTERM) == before
+    finally:
+        restore()
+    assert signal.getsignal(signal.SIGTERM) == before

@@ -106,7 +106,7 @@ async def _tournament(args: argparse.Namespace) -> None:
 
 async def _worker(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
-    from arena.worker import WorkerConfig, run_worker
+    from arena.worker import WorkerConfig, install_stop_signals, run_worker
 
     s = settings()
     factory, _ = _factory(args.roster)
@@ -116,11 +116,19 @@ async def _worker(args: argparse.Namespace) -> None:
         max_run_attempts=s.arena_max_run_attempts,
     )
     pool = await create_pool(s.database_url, max_size=args.concurrency + 2)
+    stop = asyncio.Event()
+    restore_signals = install_stop_signals(stop)
     try:
         await run_worker(
-            pool, factory, cfg, concurrency=args.concurrency, exit_when_idle=args.exit_when_idle
+            pool,
+            factory,
+            cfg,
+            concurrency=args.concurrency,
+            stop=stop,
+            exit_when_idle=args.exit_when_idle,
         )
     finally:
+        restore_signals()
         await pool.close()
 
 
