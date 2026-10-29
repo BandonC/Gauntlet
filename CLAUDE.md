@@ -179,7 +179,7 @@ runs (loops, scheduled tasks) skip them.
 - [x] Graceful SIGTERM: stop claiming, let the in-flight turn persist, exit.
 - [x] Metrics endpoint: illegal-move rate per player, forfeits, latency p50/p95,
       cost per game, cache hit rate.
-- [ ] Cross-process rate limiting. The limiter is per process today; options: a token
+- [x] Cross-process rate limiting. The limiter is per process today; options: a token
       table with `SELECT ... FOR UPDATE`, or a static per-worker share of the quota.
 - [ ] Glicko-2 (rating deviation → confidence on the leaderboard).
 - [ ] Swiss pairing.
@@ -254,3 +254,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   game counts completed matches only; turn-level stats include running matches.
   API endpoints have no HTTP tests: `TestClient` needs `httpx`, which isn't a dependency
   (the SDKs use `httpx2`). Test the store function instead.
+- Requests/minute across workers: `arena worker` seeds `rate_limits` from roster
+  `[providers]` at startup and takes tokens with one atomic UPDATE (`store/ratelimit.py`).
+  Re-seeding keeps the current fill (clamped), so restarts don't grant a fresh burst.
+  `max_concurrency` and retry-after pauses stay per process; `arena play` stays fully
+  in-process. A vendor with no row raises rather than waiting forever.

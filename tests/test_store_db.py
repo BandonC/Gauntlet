@@ -6,6 +6,7 @@ Each test drops and recreates the public schema, so never point this at real dat
 
 import asyncio
 import os
+import time
 from itertools import pairwise
 
 import asyncpg
@@ -15,11 +16,12 @@ from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer
-from arena.roster import PlayerConfig, PlayerFactory, Roster
+from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue
 from arena.store.db import create_pool
 from arena.store.metrics import player_metrics
 from arena.store.migrate import migrate
+from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import create_round_robin, leaderboard
 from arena.store.turns import PostgresTurnStore
 from arena.types import Usage
@@ -376,3 +378,52 @@ async def test_player_metrics_from_turn_log(pool):
     assert everything[first]["cost_per_game_usd"] == by_player[first]["cost_per_game_usd"]
     assert await player_metrics(pool, "connect4", tid2 + 1) == []
     assert await player_metrics(pool, "liars_dice") == []
+
+
+async def test_postgres_bucket_never_grants_more_than_capacity_plus_refill(pool):
+    capacity, rate, window = 5.0, 20.0, 1.5
+    await pool.execute(
+        "INSERT INTO rate_limits (vendor, tokens, capacity, refill_per_sec) "
+        "VALUES ('v', $1, $1, $2)",
+        capacity,
+        rate,
+    )
+    grants: list[float] = []
+    t0 = time.monotonic()
+
+    async def hammer():
+        bucket = PostgresTokenBucket(pool, "v")  # one per task, like separate workers
+        while time.monotonic() - t0 < window:
+            await bucket.take()
+            grants.append(time.monotonic())
+
+    await asyncio.gather(*(hammer() for _ in range(8)))
+
+    grants.sort()
+    for i, t in enumerate(grants, start=1):  # every prefix of the run respects the bucket
+        assert i <= capacity + rate * (t - t0), f"grant {i} at +{t - t0:.3f}s"
+    # ...and the bucket was actually used, not starved: close to the theoretical max.
+    assert len(grants) >= 0.7 * (capacity + rate * window)
+
+
+async def test_seed_rate_limits_upserts_and_keeps_fill_level(pool):
+    limits = {
+        "anthropic": ProviderLimits(requests_per_minute=600, max_concurrency=2),
+        "openai": ProviderLimits(max_concurrency=4),  # no rpm: no bucket
+    }
+    assert await seed_rate_limits(pool, limits) == ["anthropic"]
+    row = await pool.fetchrow("SELECT tokens, capacity, refill_per_sec FROM rate_limits")
+    assert tuple(row) == (60.0, 60.0, 10.0)
+
+    # A worker restart must not refill the bucket; a smaller capacity clamps it.
+    await pool.execute("UPDATE rate_limits SET tokens = 3")
+    await seed_rate_limits(pool, {"anthropic": ProviderLimits(requests_per_minute=120)})
+    row = await pool.fetchrow("SELECT tokens, capacity, refill_per_sec FROM rate_limits")
+    assert tuple(row) == (3.0, 12.0, 2.0)
+    await seed_rate_limits(pool, {"anthropic": ProviderLimits(requests_per_minute=12)})
+    assert await pool.fetchval("SELECT tokens FROM rate_limits") == 1.0
+
+
+async def test_unseeded_vendor_raises_instead_of_waiting_forever(pool):
+    with pytest.raises(RuntimeError, match="no rate_limits row"):
+        await PostgresTokenBucket(pool, "nobody").take()

@@ -95,3 +95,35 @@ async def test_rate_limiter_spaces_requests():
         async with limiter.slot():
             pass
     assert t[0] == pytest.approx(2.0)  # 1 req/s, first one free
+
+
+async def test_token_source_replaces_rpm_bucket_but_not_concurrency_or_penalty():
+    t = [0.0]
+
+    async def fake_sleep(s):
+        t[0] += s
+
+    class CountingSource:
+        takes = 0
+
+        async def take(self):
+            self.takes += 1
+
+    source = CountingSource()
+    limiter = RateLimiter(
+        requests_per_minute=60,
+        max_concurrency=1,
+        burst=1,
+        token_source=source,
+        clock=lambda: t[0],
+        sleep=fake_sleep,
+    )
+    for _ in range(3):  # the in-process 1 req/s bucket would sleep 2s here
+        async with limiter.slot():
+            pass
+    assert source.takes == 3 and t[0] == 0.0
+
+    limiter.penalize(5.0)  # retry-after still pauses callers in this process
+    async with limiter.slot():
+        assert limiter._sem.locked()  # concurrency cap still held around the call
+    assert t[0] == pytest.approx(5.0) and source.takes == 4
