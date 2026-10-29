@@ -145,10 +145,24 @@ async def _leaderboard(args: argparse.Namespace) -> None:
         rows = await leaderboard(pool, args.game)
     finally:
         await pool.close()
+    # Ranked by rating - 2*RD (Glicko-2); Elo is the v1 rating, shown alongside.
     for i, r in enumerate(rows, 1):
         print(
-            f"{i:>2}. {r['player_id']:<28} {r['rating']:>7}  games={r['games']}  pts={r['points']}"
+            f"{i:>2}. {r['player_id']:<28} {r['rating']:>7} +/- {2 * r['rd']:<6}"
+            f" elo={r['elo']:<7} games={r['games']}  pts={r['points']}"
         )
+
+
+async def _ratings(args: argparse.Namespace) -> None:
+    from arena.store.db import create_pool
+    from arena.store.ratings import rebuild
+
+    pool = await create_pool(settings().database_url)
+    try:
+        n = await rebuild(pool, args.game)
+    finally:
+        await pool.close()
+    print(f"replayed {n} completed matches into ratings")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -181,6 +195,11 @@ def main(argv: list[str] | None = None) -> None:
     lb = sub.add_parser("leaderboard")
     lb.add_argument("--game", required=True)
 
+    rt = sub.add_parser("ratings", help="maintain the ratings tables")
+    rt_sub = rt.add_subparsers(dest="ratings_cmd", required=True)
+    rb = rt_sub.add_parser("rebuild", help="replay completed matches into Elo + Glicko-2")
+    rb.add_argument("--game", help="only this game (default: all)")
+
     s = sub.add_parser("serve", help="API + UI")
     s.add_argument("--port", type=int, default=8000)
 
@@ -196,6 +215,7 @@ def main(argv: list[str] | None = None) -> None:
         "tournament": _tournament,
         "worker": _worker,
         "leaderboard": _leaderboard,
+        "ratings": _ratings,
     }[args.cmd]
     asyncio.run(handler(args))
 
