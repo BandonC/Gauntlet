@@ -106,6 +106,7 @@ async def _tournament(args: argparse.Namespace) -> None:
 
 async def _worker(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
+    from arena.store.ratelimit import postgres_buckets, seed_rate_limits
     from arena.worker import WorkerConfig, install_stop_signals, run_worker
 
     s = settings()
@@ -116,6 +117,9 @@ async def _worker(args: argparse.Namespace) -> None:
         max_run_attempts=s.arena_max_run_attempts,
     )
     pool = await create_pool(s.database_url, max_size=args.concurrency + 2)
+    # Requests/minute is shared with every other worker through Postgres.
+    vendors = await seed_rate_limits(pool, factory.roster.limits)
+    factory = factory.with_token_sources(postgres_buckets(pool, vendors))
     stop = asyncio.Event()
     restore_signals = install_stop_signals(stop)
     try:

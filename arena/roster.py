@@ -16,7 +16,7 @@ from arena.players.bots import RandomPlayer
 from arena.players.llm import LLMPlayer, identity_hash
 from arena.players.prompting import load_prompt
 from arena.providers.base import Provider
-from arena.providers.ratelimit import RateLimiter
+from arena.providers.ratelimit import RateLimiter, TokenSource
 from arena.providers.retry import RetryingProvider
 
 
@@ -76,15 +76,29 @@ def config_hash(cfg: PlayerConfig) -> str:
 class PlayerFactory:
     """Builds players, sharing ONE rate-limited, retrying provider per vendor."""
 
-    def __init__(self, roster: Roster, api_keys: dict[str, str | None]):
+    def __init__(
+        self,
+        roster: Roster,
+        api_keys: dict[str, str | None],
+        token_sources: dict[str, TokenSource] | None = None,
+    ):
         self.roster = roster
         self._api_keys = api_keys
+        self._token_sources = token_sources or {}
         self._providers: dict[str, Provider] = {}
+
+    def with_token_sources(self, token_sources: dict[str, TokenSource]) -> PlayerFactory:
+        """Same roster and keys, with shared (e.g. Postgres) request-rate buckets."""
+        return PlayerFactory(self.roster, self._api_keys, token_sources)
 
     def _provider(self, name: str) -> Provider:
         if name not in self._providers:
             lim = self.roster.limits.get(name, ProviderLimits())
-            limiter = RateLimiter(lim.requests_per_minute, lim.max_concurrency)
+            limiter = RateLimiter(
+                lim.requests_per_minute,
+                lim.max_concurrency,
+                token_source=self._token_sources.get(name),
+            )
             if name == "anthropic":
                 from arena.providers.anthropic_provider import AnthropicProvider
 
