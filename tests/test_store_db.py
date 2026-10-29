@@ -6,6 +6,7 @@ Each test drops and recreates the public schema, so never point this at real dat
 
 import asyncio
 import os
+from itertools import pairwise
 
 import asyncpg
 import pytest
@@ -119,3 +120,92 @@ async def test_unknown_player_marks_match_failed(pool):
     assert await run_one(pool, empty, "w", FAST)
     row = await pool.fetchrow("SELECT status, last_error FROM matches")
     assert row["status"] == "failed" and "not in roster" in row["last_error"]
+
+
+async def _claim_all(pool, n: int) -> list[queue.ClaimedMatch]:
+    claims = [await queue.claim(pool, f"w{i}", 30) for i in range(n)]
+    assert all(claims)
+    return claims
+
+
+async def test_complete_writes_ratings_and_history_in_one_step(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    winner, loser = m.seats
+
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+
+    rows = await pool.fetch("SELECT player_id, rating, games_played FROM ratings ORDER BY rating")
+    assert [(r["player_id"], r["rating"], r["games_played"]) for r in rows] == [
+        (loser, 1484.0, 1),
+        (winner, 1516.0, 1),
+    ]
+    hist = await pool.fetch(
+        "SELECT player_id, rating_before, rating_after FROM rating_history WHERE match_id = $1",
+        m.id,
+    )
+    assert {(h["player_id"], h["rating_before"], h["rating_after"]) for h in hist} == {
+        (winner, 1500.0, 1516.0),
+        (loser, 1500.0, 1484.0),
+    }
+    board = await leaderboard(pool, "connect4")
+    assert [(r["player_id"], r["rating"], r["games"], r["points"]) for r in board] == [
+        (winner, 1516.0, 1, 1.0),
+        (loser, 1484.0, 1, 0.0),
+    ]
+
+
+async def test_complete_after_lost_lease_writes_no_ratings(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    await pool.execute("UPDATE matches SET lease_expires_at = now() - interval '1 second'")
+    assert (await queue.claim(pool, "B", 30)).id == m.id
+
+    assert not await queue.complete(pool, m.id, "w0", [1.0, 0.0])  # old owner
+    assert await pool.fetchval("SELECT count(*) FROM ratings") == 0
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 0
+
+
+async def test_double_rating_rolls_back_completion(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    # A stray history row for this match (e.g. a bug elsewhere) must block re-rating.
+    await pool.execute(
+        "INSERT INTO rating_history (player_id, game, match_id, rating_before, rating_after) "
+        "VALUES ($1, 'connect4', $2, 1500, 1500)",
+        m.seats[0],
+        m.id,
+    )
+    with pytest.raises(asyncpg.UniqueViolationError):
+        await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+
+    row = await pool.fetchrow("SELECT status, lease_owner FROM matches WHERE id = $1", m.id)
+    assert row["status"] == "running" and row["lease_owner"] == "w0"
+    assert await pool.fetchval("SELECT count(*) FROM ratings WHERE games_played > 0") == 0
+
+
+async def test_concurrent_completions_lose_no_rating_updates(pool):
+    players = PLAYERS + [PlayerConfig("r3", "random", seed=3)]
+    _, n = await create_round_robin(pool, "connect4", players, games_per_pair=4, budget_usd=None)
+    claims = await _claim_all(pool, n)
+
+    # Every match shares a player with others; complete them all at once.
+    oks = await asyncio.gather(
+        *(queue.complete(pool, c.id, f"w{i}", [1.0, 0.0]) for i, c in enumerate(claims))
+    )
+    assert all(oks)
+
+    rows = await pool.fetch("SELECT player_id, rating, games_played FROM ratings")
+    assert sum(r["games_played"] for r in rows) == 2 * n  # no lost updates
+    assert sum(r["rating"] for r in rows) == pytest.approx(1500.0 * len(rows))  # zero-sum
+    # Each player's history is one unbroken chain: every update saw the previous one.
+    for r in rows:
+        chain = await pool.fetch(
+            "SELECT rating_before, rating_after FROM rating_history "
+            "WHERE player_id = $1 ORDER BY id",
+            r["player_id"],
+        )
+        assert len(chain) == r["games_played"]
+        assert chain[0]["rating_before"] == 1500.0
+        assert all(x["rating_after"] == y["rating_before"] for x, y in pairwise(chain))
+        assert chain[-1]["rating_after"] == r["rating"]

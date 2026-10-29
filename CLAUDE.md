@@ -172,7 +172,7 @@ runs (loops, scheduled tasks) skip them.
       Check illegal-move rate, latency, and whether caching kicks in.
 
 **Phase 3: correctness and ops**
-- [ ] Write ratings + `rating_history` in the same transaction as `queue.complete`
+- [x] Write ratings + `rating_history` in the same transaction as `queue.complete`
       (the UNIQUE (player_id, match_id) constraint guards double-rating); leaderboard
       reads `ratings` instead of recomputing.
 - [ ] Mark tournaments `completed` when no queued/running matches remain.
@@ -240,3 +240,6 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   running finish even if they push spend slightly over the cap.
 - `arena play` uses an in-memory store and a per-match `--budget` (default $0.50); it
   never touches Postgres.
+- Ratings are written only by `queue.complete` (`store/ratings.py`). Matches completed
+  before that existed are unrated, and Elo skips matches without exactly 2 seats.
+  Ratings rows are locked in `player_id` order; keep that order to avoid deadlocks.
