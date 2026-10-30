@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import sys
+from pathlib import Path
 
 from arena.config import settings
 
@@ -33,10 +34,13 @@ def _factory(roster_path: str | None):
 
 
 def _build_player(factory, spec: str):
-    """'random' or 'random:SEED' are built in; anything else is a roster id."""
+    """'random', 'random:SEED' and 'liars-dice-bot' are built in; anything else is a
+    roster id."""
     from arena.costs import FREE
-    from arena.players.bots import RandomPlayer
+    from arena.players.bots import LiarsDiceBot, RandomPlayer
 
+    if spec == "liars-dice-bot":
+        return LiarsDiceBot(spec), FREE
     if spec == "random" or spec.startswith("random:"):
         seed = int(spec.split(":", 1)[1]) if ":" in spec else 0
         return RandomPlayer(spec, seed), FREE
@@ -50,6 +54,8 @@ async def _play(args: argparse.Namespace) -> None:
 
     game = get_game(args.game)
     factory, _ = _factory(args.roster)
+    if args.record:
+        factory = factory.with_record_dir(Path(args.record))
     built = [_build_player(factory, s) for s in (args.p1, args.p2)]
 
     def show(record, state):
@@ -201,6 +207,9 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--budget", type=float, default=0.50, help="USD cap for this match")
     p.add_argument("--quiet", action="store_true")
+    p.add_argument(
+        "--record", metavar="DIR", help="append every model completion to DIR/<vendor>-*.jsonl"
+    )
 
     sub.add_parser("migrate", help="apply SQL migrations")
 

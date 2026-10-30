@@ -6,6 +6,7 @@ buried in code. Check them against the provider pricing pages before real runs.
 
 from __future__ import annotations
 
+import time
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,6 +17,7 @@ from arena.players.bots import RandomPlayer
 from arena.players.llm import LLMPlayer, identity_hash
 from arena.players.prompting import load_prompt
 from arena.providers.base import Provider
+from arena.providers.mock import RecordingProvider
 from arena.providers.ratelimit import RateLimiter, TokenSource
 from arena.providers.retry import RetryingProvider
 
@@ -81,15 +83,23 @@ class PlayerFactory:
         roster: Roster,
         api_keys: dict[str, str | None],
         token_sources: dict[str, TokenSource] | None = None,
+        record_dir: Path | None = None,
     ):
         self.roster = roster
         self._api_keys = api_keys
         self._token_sources = token_sources or {}
+        # When set, every completion from each vendor adapter is appended to
+        # record_dir/<vendor>-<timestamp>.jsonl (RecordingProvider), for test fixtures.
+        self._record_dir = record_dir
         self._providers: dict[str, Provider] = {}
 
     def with_token_sources(self, token_sources: dict[str, TokenSource]) -> PlayerFactory:
         """Same roster and keys, with shared (e.g. Postgres) request-rate buckets."""
-        return PlayerFactory(self.roster, self._api_keys, token_sources)
+        return PlayerFactory(self.roster, self._api_keys, token_sources, self._record_dir)
+
+    def with_record_dir(self, record_dir: Path) -> PlayerFactory:
+        """Same roster, keys and rate sources, recording every completion to record_dir."""
+        return PlayerFactory(self.roster, self._api_keys, self._token_sources, record_dir)
 
     def _provider(self, name: str) -> Provider:
         if name not in self._providers:
@@ -109,6 +119,10 @@ class PlayerFactory:
                 inner = OpenAIProvider(api_key=self._api_keys.get("openai"))
             else:
                 raise ValueError(f"unknown provider {name!r}")
+            if self._record_dir is not None:
+                self._record_dir.mkdir(parents=True, exist_ok=True)
+                stamp = time.strftime("%Y%m%d-%H%M%S")
+                inner = RecordingProvider(inner, self._record_dir / f"{name}-{stamp}.jsonl")
             self._providers[name] = RetryingProvider(inner, limiter=limiter)
         return self._providers[name]
 
