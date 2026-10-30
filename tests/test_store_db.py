@@ -14,7 +14,7 @@ from itertools import pairwise
 import asyncpg
 import pytest
 
-from arena import web
+from arena import live, web
 from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
 from arena.export import export_site
@@ -897,3 +897,83 @@ async def test_scheduled_roles_are_what_the_match_plays(pool):
     for r in await pool.fetch("SELECT id, options FROM matches"):
         detail = await read.match_detail(pool, r["id"])
         assert detail["frames"][-1]["roles"] == r["options"]["roles"]
+
+
+def sse(message: str) -> tuple[str, int, dict]:
+    id_line, event_line, data_line, *_ = message.split("\n")
+    return event_line[7:], int(id_line[4:]), json.loads(data_line[6:])
+
+
+async def _one_match(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    return await queue.claim(pool, "w0", 30)
+
+
+async def test_live_viewers_get_every_turn_once_while_it_is_being_played(pool):
+    m = await _one_match(pool)
+    store = PostgresTurnStore(pool, "w0")
+    moves = [0, 1, 0, 1, 0, 1, 0]  # seat 0 stacks four
+    await store.append_turn(str(m.id), turn(0, 0, moves[0]))
+
+    async def watch(after):
+        stream = live.match_events(pool, m.id, after, poll_seconds=0.005)
+        return [sse(msg) async for msg in stream]
+
+    # One viewer from the start, one that already has two turns, racing the writer.
+    from_start = asyncio.create_task(watch(0))
+    resumed = asyncio.create_task(watch(2))
+    for n, col in enumerate(moves[1:], 1):
+        await asyncio.sleep(0.02)
+        await store.append_turn(str(m.id), turn(n, n % 2, col))
+    await asyncio.sleep(0.02)
+    assert not from_start.done()  # all turns are in, but the match isn't complete yet
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])
+
+    events = await from_start
+    assert [e[0] for e in events] == ["turn"] * 7 + ["done"]
+    assert [e[1] for e in events] == [1, 2, 3, 4, 5, 6, 7, 7]
+    assert events[-1][2] == {"status": "completed"}
+
+    detail = await read.match_detail(pool, m.id)
+    assert [e[2]["frame"] for e in events[:-1]] == detail["frames"][1:]
+    assert [e[2]["turn"]["turn_no"] for e in events[:-1]] == list(range(7))
+    assert events[0][2]["turn"]["label"] == "column 0"
+
+    late = await resumed
+    assert [e[1] for e in late] == [3, 4, 5, 6, 7, 7]
+
+
+async def test_a_finished_match_streams_what_is_left_and_ends(pool):
+    m = await _one_match(pool)
+    await PostgresTurnStore(pool, "w0").append_turn(str(m.id), turn(0, 0, 3))
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])
+    assert [sse(e)[0] async for e in live.match_events(pool, m.id, 0)] == ["turn", "done"]
+    assert [sse(e)[0] async for e in live.match_events(pool, m.id, 1)] == ["done"]
+
+
+async def test_the_stream_ends_when_a_match_fails_for_good_but_not_on_a_retry(pool):
+    m = await _one_match(pool)
+    stream = live.match_events(pool, m.id, poll_seconds=0.005, keepalive_seconds=0.01)
+    assert await queue.release_for_retry(
+        pool, m.id, "w0", "boom", max_attempts=5, backoff_seconds=0
+    ) == "queued"  # fmt: skip
+    assert await anext(stream) == live.KEEPALIVE  # still open, waiting for the retry
+
+    again = await queue.claim(pool, "w1", 30)
+    assert await queue.release_for_retry(
+        pool, again.id, "w1", "boom", max_attempts=2, backoff_seconds=0
+    ) == "failed"  # fmt: skip
+    while (msg := await anext(stream)) == live.KEEPALIVE:
+        pass
+    assert sse(msg)[0::2] == ("done", {"status": "failed"})
+
+
+async def test_progress_of_a_missing_match_is_none_and_its_stream_is_empty(pool):
+    assert await read.match_progress(pool, 999) is None
+    assert [e async for e in live.match_events(pool, 999)] == []
+
+
+async def test_a_running_match_page_links_its_stream(pool):
+    m = await _one_match(pool)
+    html = await web.match_page(pool, web.Urls(), m.id)
+    assert f'"events": "/api/matches/{m.id}/events"' in html

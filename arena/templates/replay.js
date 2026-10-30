@@ -3,6 +3,8 @@
 // embedded #replay-data JSON: frames[i] is the spectator_view before turn i, and
 // frames[turns.length] is the final state. One small renderer per game turns a frame
 // into HTML; everything from the data is escaped. Loaded by Node in tests (module.exports).
+// A match still in progress also has data.events, an SSE URL (arena/live.py) that appends
+// turns as they're played. Static exports have none, so they never try to connect.
 
 const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -111,7 +113,7 @@ function initReplay(doc) {
   const el = doc.getElementById("replay-data");
   if (!el) return;
   const data = JSON.parse(el.textContent);
-  const last = data.frames.length - 1;
+  let last = data.frames.length - 1;
   const $ = (id) => doc.getElementById(id);
   const slider = $("replay-pos");
   slider.max = String(last);
@@ -155,6 +157,26 @@ function initReplay(doc) {
     if (e.key === "ArrowRight") { stop(); show(idx + 1); }
   });
   show(last);
+
+  function follow() {
+    const stream = new EventSource(`${data.events}?after=${data.turns.length}`);
+    $("replay-live").textContent = "● Live";
+    stream.addEventListener("turn", (e) => {
+      const { turn, frame } = JSON.parse(e.data);
+      if (turn.turn_no !== data.turns.length) return; // already have it (a reconnect overlap)
+      const atEnd = idx === last;
+      data.turns.push(turn);
+      data.frames.push(frame);
+      last += 1;
+      slider.max = String(last);
+      show(atEnd ? last : idx); // only viewers at the newest frame are moved along
+    });
+    stream.addEventListener("done", (e) => {
+      stream.close();
+      $("replay-live").textContent = `Match ${JSON.parse(e.data).status}: reload for the turn table`;
+    });
+  }
+  if (data.events && typeof EventSource !== "undefined") follow();
 }
 
 if (typeof document !== "undefined") initReplay(document);

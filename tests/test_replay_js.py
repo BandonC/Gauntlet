@@ -184,3 +184,83 @@ def test_werewolf_frames_render_roles_talk_and_the_result_escaped():
     assert "killed at night" in html
     assert " win" in out["frames"][-1]
     assert "(truncated)" in out["turns"][0]
+
+
+LIVE = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const { data, events } = JSON.parse(input);
+  const els = {};
+  const el = (id) => (els[id] ??= { innerHTML: "", textContent: "", value: "0", max: "0" });
+  const doc = {
+    getElementById: (id) => (id === "replay-data" ? { textContent: JSON.stringify(data) } : el(id)),
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+  };
+  const opened = [];
+  globalThis.EventSource = class {
+    constructor(url) { this.url = url; this.on = {}; this.closed = false; opened.push(this); }
+    addEventListener(type, handler) { this.on[type] = handler; }
+    close() { this.closed = true; }
+  };
+  R.initReplay(doc);
+  const log = [];
+  const label = () => el("replay-label").textContent;
+  const snap = (what) => log.push([what, label(), el("replay-live").textContent]);
+  snap("init");
+  const stream = opened[0];
+  for (const [type, payload] of events) {
+    if (type === "back") el("replay-first").onclick();
+    else if (stream) stream.on[type]({ data: JSON.stringify(payload) });
+    snap(type);
+  }
+  console.log(JSON.stringify({ log, urls: opened.map((s) => s.url), closed: stream?.closed,
+                               max: el("replay-pos").max, info: el("replay-info").innerHTML }));
+});
+"""
+
+
+def live_payload(events_url):
+    frames = random_game(Connect4(), 2, 1)[:5]
+    turns = [{"turn_no": i, "seat": i % 2, "action": {"column": 0}, "forfeited": False,
+              "attempts": 1, "error": None, "label": f"column {i}"} for i in range(4)]  # fmt: skip
+    data = {"game": "connect4", "seats": ["a", "b"], "frames": frames[:3], "turns": turns[:2]}
+    data["events"] = events_url
+    new = [["turn", {"turn": turns[i], "frame": frames[i + 1]}] for i in (2, 3)]
+    return data, new
+
+
+def test_live_turns_append_and_follow_the_newest_frame_then_done_closes_the_stream():
+    data, new = live_payload("/api/matches/3/events")
+    payload = {"data": data, "events": [*new, ["done", {"status": "completed"}]]}
+    out = node(LIVE, payload)
+    assert out["urls"] == ["/api/matches/3/events?after=2"]
+    assert out["log"] == [
+        ["init", "2 / 2", "● Live"],
+        ["turn", "3 / 3", "● Live"],
+        ["turn", "4 / 4", "● Live"],
+        ["done", "4 / 4", "Match completed: reload for the turn table"],
+    ]
+    assert out["closed"] is True and out["max"] == "4"
+    assert out["info"] == "Turn 3: b → column 3"
+
+
+def test_a_viewer_stepping_through_history_stays_put_as_turns_arrive():
+    data, new = live_payload("/api/matches/3/events")
+    out = node(LIVE, {"data": data, "events": [["back", None], *new]})
+    assert [row[1] for row in out["log"]] == ["2 / 2", "0 / 2", "0 / 3", "0 / 4"]
+    assert out["max"] == "4"
+
+
+def test_a_turn_seen_twice_after_a_reconnect_is_ignored():
+    data, new = live_payload("/api/matches/3/events")
+    out = node(LIVE, {"data": data, "events": [new[0], new[0], new[1]]})
+    assert [row[1] for row in out["log"]] == ["2 / 2", "3 / 3", "3 / 3", "4 / 4"]
+
+
+def test_a_page_with_no_stream_never_connects():
+    data, _ = live_payload("")
+    out = node(LIVE, {"data": data, "events": []})
+    assert out["urls"] == [] and out["log"] == [["init", "2 / 2", ""]]
