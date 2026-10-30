@@ -29,6 +29,7 @@ FILE_ROUTES = {
     "tournament": "tournament-{id}.html",
     "matches": "matches.html",
     "match": "match-{id}.html",
+    "match_events": "",  # no server to stream from: exported pages never go live
 }
 FILE_URLS = web.Urls(dict(FILE_ROUTES))
 

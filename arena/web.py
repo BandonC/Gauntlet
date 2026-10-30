@@ -25,6 +25,7 @@ SERVER_ROUTES = {
     "tournament": "/tournaments/{id}",
     "matches": "/matches",
     "match": "/matches/{id}",
+    "match_events": "/api/matches/{id}/events",
 }
 
 
@@ -80,7 +81,7 @@ def move_label(game: str, action: object, forfeited: bool = False) -> str:
     return label or json.dumps(action, sort_keys=True, separators=(", ", ": "))
 
 
-def _with_labels(turns: list[dict], game: str) -> list[dict]:
+def with_labels(turns: list[dict], game: str) -> list[dict]:
     return [t | {"label": move_label(game, t["action"], t["forfeited"])} for t in turns]
 
 
@@ -92,7 +93,7 @@ env = Environment(
     lstrip_blocks=True,
 )
 env.filters["usd"] = _usd
-env.filters["with_labels"] = _with_labels
+env.filters["with_labels"] = with_labels
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.
 REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"
