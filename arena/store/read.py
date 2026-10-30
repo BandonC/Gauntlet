@@ -63,7 +63,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
 
     # Rebuild a spectator frame for every turn by replaying the log through the engine.
     game = get_game(m["game"])
-    spec = MatchSpec(str(match_id), m["game"], m["seed"], seats)
+    spec = MatchSpec(str(match_id), m["game"], m["seed"], seats, m["options"])
     frames = [game.spectator_view(s) for s in iter_states(game, spec, turns)]
 
     return {
@@ -82,6 +82,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
                 "seat": t.seat,
                 "action": t.action,
                 "forfeited": t.forfeited,
+                "truncated": t.truncated,
                 "attempts": t.attempts,
                 "error": t.error,
                 "cost_usd": t.cost_usd,

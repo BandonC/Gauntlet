@@ -20,8 +20,10 @@ from arena.store import ratings
 from arena.tournaments import (
     BYE_POINTS,
     SwissEntrant,
+    assign_roles,
     default_swiss_rounds,
     pair_counts,
+    role_counts,
     round_robin,
     swiss_pairings,
     swiss_seatings,
@@ -38,7 +40,8 @@ RETURNING config_hash
 """
 
 INSERT_MATCH_SQL = """
-INSERT INTO matches (tournament_id, game, seed, round) VALUES ($1, $2, $3, $4) RETURNING id
+INSERT INTO matches (tournament_id, game, seed, round, options)
+VALUES ($1, $2, $3, $4, $5) RETURNING id
 """
 
 # Two workers finishing a tournament's last two matches (of a round) at once would each
@@ -146,9 +149,13 @@ async def _insert_matches(
     seatings: list[list[str]],
     rng: random.Random,
     round_no: int | None = None,
+    options: list[dict] | None = None,  # per seating
 ) -> None:
-    for seats in seatings:
-        mid = await conn.fetchval(INSERT_MATCH_SQL, tid, game, rng.randrange(2**31), round_no)
+    for i, seats in enumerate(seatings):
+        match_options = options[i] if options else None
+        mid = await conn.fetchval(
+            INSERT_MATCH_SQL, tid, game, rng.randrange(2**31), round_no, match_options
+        )
         await conn.executemany(
             "INSERT INTO match_seats (match_id, seat, player_id) VALUES ($1, $2, $3)",
             [(mid, i, pid) for i, pid in enumerate(seats)],
@@ -199,9 +206,17 @@ async def create_tables(
             min(meetings),
             max(meetings),
         )
+    options = None
+    role_pool = g.role_pool(table_size)
+    if role_pool:
+        roles = assign_roles(ids, seatings, role_pool, seed)
+        options = [{"roles": table} for table in roles]
+        for role, by_player in role_counts(ids, seatings, roles).items():
+            if max(by_player.values()) - min(by_player.values()) > 1:
+                log.warning("no even deal found for role %s: %s", role, by_player)
     async with pool.acquire() as conn, conn.transaction():
         tid = await _insert_tournament(conn, game, "tables", players, budget_usd)
-        await _insert_matches(conn, tid, game, seatings, random.Random(seed))
+        await _insert_matches(conn, tid, game, seatings, random.Random(seed), options=options)
     return tid, len(seatings)
 
 

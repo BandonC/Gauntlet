@@ -73,6 +73,7 @@ def match(**over):
                 "seat": 0,
                 "action": {"column": 3},
                 "forfeited": False,
+                "truncated": False,
                 "attempts": 2,
                 "error": "column 9 is out of range 0-6",
                 "cost_usd": 0.00011,
@@ -89,6 +90,7 @@ def match(**over):
                 "seat": 1,
                 "action": None,
                 "forfeited": True,
+                "truncated": False,
                 "attempts": 3,
                 "error": None,
                 "cost_usd": 0.0,
@@ -111,11 +113,39 @@ def test_leaderboard_escapes_player_ids_and_shows_confidence():
         "index.html",
         URLS,
         boards={"connect4": [lb_row("<script>x</script>")], "liars_dice": []},
+        role_stats=[],
     )
     assert "<script>x</script>" not in html and "&lt;script&gt;x&lt;/script&gt;" in html
     assert ">9.75<" in html and "27.75 ± 18.00" in html  # Weng-Lin ranks the board
     assert "1600.0 ± 200.0" in html and ">1516.0<" in html
     assert "No rated matches yet." in html  # liars_dice has none
+
+
+def test_werewolf_role_stats_show_win_rates_by_role_and_claims():
+    row = {
+        "player_id": "<b>x</b>",
+        "wolf_games": 4,
+        "wolf_win_rate": 0.75,
+        "seer_games": 0,
+        "seer_win_rate": None,
+        "villager_games": 8,
+        "villager_win_rate": 0.5,
+        "true_claims": 3,
+        "false_claims": 2,
+        "leaks": 1,
+        "truncated_messages": 6,
+    }
+    html = render("index.html", URLS, boards={}, role_stats=[row])
+    assert "Werewolf roles" in html and "paraphrases are missed" in html
+    assert "0.75 (4)" in html and "– (0)" in html and "0.5 (8)" in html
+    assert "<b>x</b>" not in html
+    assert "Werewolf roles" not in render("index.html", URLS, boards={}, role_stats=[])
+
+
+def test_werewolf_moves_have_readable_labels():
+    assert move_label("werewolf", {"action": "kill", "target": 3}) == "kill seat 3"
+    assert move_label("werewolf", {"action": "vote", "target": 0}) == "vote seat 0"
+    assert move_label("werewolf", {"action": "say", "message": "hi"}) == "says: hi"
 
 
 def test_tournaments_show_round_failures_pause_reason_and_budget():

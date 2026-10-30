@@ -1,6 +1,7 @@
 """Command line entry point.
 
 arena play connect4 --p1 random --p2 haiku-5.5/c4-v1     one match, in memory, printed
+arena play werewolf --players werewolf-bot:1,...,werewolf-bot:7
 arena migrate                                            apply SQL migrations
 arena tournament --game connect4 --players a,b,c --games-per-pair 10 --budget 5
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
@@ -36,13 +37,16 @@ def _factory(roster_path: str | None):
 
 
 def _build_player(factory, spec: str):
-    """'random', 'random:SEED' and 'liars-dice-bot' are built in; anything else is a
-    roster id."""
+    """'random', 'random:SEED', 'liars-dice-bot', 'werewolf-bot' and 'werewolf-bot:SEED'
+    are built in; anything else is a roster id."""
     from arena.costs import FREE
-    from arena.players.bots import LiarsDiceBot, RandomPlayer
+    from arena.players.bots import LiarsDiceBot, RandomPlayer, WerewolfBot
 
     if spec == "liars-dice-bot":
         return LiarsDiceBot(spec), FREE
+    if spec == "werewolf-bot" or spec.startswith("werewolf-bot:"):
+        seed = int(spec.split(":", 1)[1]) if ":" in spec else 0
+        return WerewolfBot(spec, seed), FREE
     if spec == "random" or spec.startswith("random:"):
         seed = int(spec.split(":", 1)[1]) if ":" in spec else 0
         return RandomPlayer(spec, seed), FREE
@@ -58,12 +62,13 @@ async def _play(args: argparse.Namespace) -> None:
     factory, _ = _factory(args.roster)
     if args.record:
         factory = factory.with_record_dir(Path(args.record))
-    built = [_build_player(factory, s) for s in (args.p1, args.p2)]
+    seats = [s.strip() for s in args.players.split(",")] if args.players else [args.p1, args.p2]
+    built = [_build_player(factory, s) for s in seats]
 
     def show(record, state):
         if args.quiet:
             return
-        who = (args.p1, args.p2)[record.seat]
+        who = seats[record.seat]
         move = "FORFEIT" if record.forfeited else record.action
         extra = f"  (attempts={record.attempts})" if record.attempts > 1 else ""
         print(f"\nturn {record.turn_no}: {who} -> {move}{extra}  ${record.cost_usd:.5f}")
@@ -80,10 +85,11 @@ async def _play(args: argparse.Namespace) -> None:
         budget=Budget(args.budget),
         on_turn=show,
     )
-    out = await runner.run(MatchSpec("cli", args.game, args.seed, [args.p1, args.p2]))
-    print(f"\nscores: {dict(zip((args.p1, args.p2), out.scores, strict=True))}")
+    out = await runner.run(MatchSpec("cli", args.game, args.seed, seats))
+    print(f"\nscores: {dict(zip(seats, out.scores, strict=True))}")
+    print(f"placements: {dict(zip(seats, out.placements, strict=True))}")
     print(f"turns: {out.num_turns}  forfeits: {out.forfeits}  cost: ${out.cost_usd:.5f}")
-    for name, u in zip((args.p1, args.p2), out.usage_by_seat, strict=True):
+    for name, u in zip(seats, out.usage_by_seat, strict=True):
         print(
             f"  {name}: in={u.input_tokens} out={u.output_tokens} cache_read={u.cache_read_tokens}"
         )
@@ -235,6 +241,7 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("game")
     p.add_argument("--p1", default="random:1")
     p.add_argument("--p2", default="random:2")
+    p.add_argument("--players", help="comma-separated seats, instead of --p1/--p2")
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--budget", type=float, default=0.50, help="USD cap for this match")
     p.add_argument("--quiet", action="store_true")

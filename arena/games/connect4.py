@@ -37,7 +37,7 @@ class Connect4(Game):
     def rules_text(self) -> str:
         return RULES
 
-    def initial_state(self, num_players: int, seed: int) -> C4State:
+    def initial_state(self, num_players: int, seed: int, options: JSON | None = None) -> C4State:
         if num_players != 2:
             raise ValueError("connect4 needs exactly 2 players")
         return C4State(columns=tuple(() for _ in range(COLS)))
