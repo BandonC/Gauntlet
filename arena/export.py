@@ -82,6 +82,7 @@ async def export_site(pool: asyncpg.Pool, out: Path) -> ExportSummary:
     for g in games:
         data(f"leaderboard/{g}.json", await leaderboard(pool, g))
         data(f"metrics/{g}.json", await metrics.player_metrics(pool, g))
+    data("werewolf/roles.json", await metrics.werewolf_metrics(pool))
     return summary
 
 

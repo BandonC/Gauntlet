@@ -42,7 +42,7 @@ WHERE m.id = (
     FOR UPDATE SKIP LOCKED
     LIMIT 1
 )
-RETURNING m.id, m.tournament_id, m.game, m.seed, m.run_attempts
+RETURNING m.id, m.tournament_id, m.game, m.seed, m.run_attempts, m.options
 """
 
 HEARTBEAT_SQL = """
@@ -92,6 +92,7 @@ class ClaimedMatch:
     seed: int
     run_attempts: int
     seats: list[str]
+    options: dict | None = None
 
 
 async def claim(pool: asyncpg.Pool, worker_id: str, lease_seconds: float) -> ClaimedMatch | None:
@@ -107,6 +108,7 @@ async def claim(pool: asyncpg.Pool, worker_id: str, lease_seconds: float) -> Cla
         seed=row["seed"],
         run_attempts=row["run_attempts"],
         seats=seats,
+        options=row["options"],
     )
 
 

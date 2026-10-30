@@ -71,7 +71,9 @@ async def run_one(
             PostgresTurnStore(pool, worker_id),
             pricing=[price for _, price in built],
         )
-        spec = MatchSpec(str(claimed.id), claimed.game, claimed.seed, claimed.seats)
+        spec = MatchSpec(
+            str(claimed.id), claimed.game, claimed.seed, claimed.seats, claimed.options
+        )
     except Exception as e:  # bad config: retrying won't help, but keep the record
         log.exception("could not set up match %s", claimed.id)
         await queue.release_for_retry(
