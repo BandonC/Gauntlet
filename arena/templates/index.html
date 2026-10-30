@@ -1,17 +1,19 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Leaderboards</h1>
-<p class="muted">Ranked by Weng-Lin ordinal μ − 3σ (a conservative estimate), updated on every match at any table size. Glicko-2 and Elo are heads-up only.</p>
+<p class="muted">Live ratings update after every match, so they depend on play order. Ranked by live Weng-Lin ordinal μ − 3σ (any table size); Glicko-2 and Elo are heads-up only. Final rating is order-independent: a Bradley-Terry fit to one finished heads-up tournament, with a 95% interval against that field.</p>
 {% for game, rows in boards.items() %}
 <h2>{{ game }}</h2>
 {% if rows %}
+{% if rows[0].final_tournament_id is not none %}<p class="muted">Final rating from tournament <a href="{{ url('tournament', id=rows[0].final_tournament_id) }}">#{{ rows[0].final_tournament_id }}</a>.</p>{% endif %}
 <div class="wrap"><table>
-  <thead><tr><th>#</th><th>Player</th><th class="num">Ordinal</th><th class="num">μ ± 3σ</th><th class="num">Glicko-2 ± 2·RD</th><th class="num">Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
   <tbody>
   {% for r in rows %}
     <tr>
       <td>{{ loop.index }}</td>
       <td>{{ r.player_id }}</td>
+      <td class="num">{% if r.final %}{{ r.final.rating }} ({{ r.final.low }} – {{ r.final.high }}){% else %}–{% endif %}</td>
       <td class="num">{{ r.ordinal }}</td>
       <td class="num">{{ r.mu }} ± {{ '%.2f' | format(3 * r.sigma) }}</td>
       <td class="num">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>

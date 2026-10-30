@@ -6,7 +6,13 @@ import pytest
 from arena.games.base import placements_from_scores, rank_forfeits_last
 from arena.games.werewolf import ROLES
 from arena.ratings.elo import EloTable, expected_score, update
-from arena.tournaments import assign_roles, role_counts, round_robin, table_schedule
+from arena.tournaments import (
+    assign_roles,
+    role_counts,
+    round_robin,
+    shuffle_matches,
+    table_schedule,
+)
 
 
 def test_elo_is_zero_sum_and_symmetric():
@@ -27,6 +33,22 @@ def test_round_robin_alternates_first_seat():
     assert len(s) == 3 * 4
     ab = [x for x in s if set(x) == {"a", "b"}]
     assert sum(x[0] == "a" for x in ab) == 2
+
+
+def test_shuffling_keeps_every_match_and_is_seeded():
+    s = round_robin(["a", "b", "c"], games_per_pair=10)
+    shuffled = shuffle_matches(s, 5)
+    assert sorted(shuffled) == sorted(s) and shuffled != s
+    assert shuffle_matches(s, 5) == shuffled and shuffle_matches(s, 6) != shuffled
+    ab = [x for x in shuffled if set(x) == {"a", "b"}]
+    assert sum(x[0] == "a" for x in ab) == 5  # seat balance survives the shuffle
+
+
+def test_shuffling_breaks_up_the_pairing_blocks():
+    s = round_robin(["a", "b", "c"], games_per_pair=10)
+    changes = lambda ms: sum(set(x) != set(y) for x, y in zip(ms, ms[1:], strict=False))  # noqa: E731
+    assert changes(s) == 2
+    assert all(changes(shuffle_matches(s, seed)) > 8 for seed in range(30))
 
 
 def test_round_robin_rejects_duplicates():
