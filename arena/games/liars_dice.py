@@ -91,7 +91,7 @@ class LiarsDice(Game):
     def rules_text(self) -> str:
         return RULES
 
-    def initial_state(self, num_players: int, seed: int) -> LDState:
+    def initial_state(self, num_players: int, seed: int, options: JSON | None = None) -> LDState:
         if not self.min_players <= num_players <= self.max_players:
             raise ValueError("liars_dice takes 2-6 players")
         counts = (DICE_PER_PLAYER,) * num_players

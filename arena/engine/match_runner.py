@@ -20,7 +20,7 @@ from typing import Protocol
 from arena.costs import FREE, Budget, Pricing
 from arena.games.base import Game, State, rank_forfeits_last
 from arena.players.base import Player, TurnContext
-from arena.types import Action, Usage
+from arena.types import JSON, Action, Usage
 
 
 class LeaseLost(Exception):
@@ -46,6 +46,7 @@ class MatchSpec:
     game: str
     seed: int
     seats: list[str]  # player ids in seat order
+    options: JSON | None = None  # matches.options, passed to Game.initial_state
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,7 @@ class TurnRecord:
     usage: Usage
     cost_usd: float
     latency_ms: int
+    truncated: bool = False  # the engine shortened this action (Game.normalize_action)
 
 
 @dataclass(frozen=True)
@@ -102,7 +104,7 @@ class InMemoryTurnStore:
 def iter_states(game: Game, spec: MatchSpec, turns: Sequence[TurnRecord]) -> Iterator[State]:
     """Yield the initial state, then the state after each logged turn, re-validating
     every action. Used for resuming matches and for building replays."""
-    state = game.initial_state(len(spec.seats), spec.seed)
+    state = game.initial_state(len(spec.seats), spec.seed, spec.options)
     yield state
     for i, t in enumerate(turns):
         if t.turn_no != i:
@@ -208,10 +210,20 @@ class MatchRunner:
                 continue
             error = self.game.validate_action(state, seat, decision.action)
             if error is None:
+                action = self.game.normalize_action(state, seat, decision.action)
                 record = self._record(
-                    turn_no, seat, decision.action, False, attempt, raw, None, usage, latency
+                    turn_no,
+                    seat,
+                    action,
+                    False,
+                    attempt,
+                    raw,
+                    None,
+                    usage,
+                    latency,
+                    truncated=action != decision.action,
                 )
-                return record, self.game.apply(state, seat, decision.action)
+                return record, self.game.apply(state, seat, action)
 
         # Every attempt was invalid: forfeit. (Infra errors never reach here; they raise.)
         record = self._record(
@@ -230,6 +242,7 @@ class MatchRunner:
         error: str | None,
         usage: Usage,
         latency_ms: int,
+        truncated: bool = False,
     ) -> TurnRecord:
         return TurnRecord(
             turn_no=turn_no,
@@ -242,6 +255,7 @@ class MatchRunner:
             usage=usage,
             cost_usd=self.pricing[seat].cost(usage),
             latency_ms=latency_ms,
+            truncated=truncated,
         )
 
     def _outcome(self, spec: MatchSpec, state: State, turns: list[TurnRecord]) -> MatchOutcome:

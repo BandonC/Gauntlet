@@ -20,6 +20,15 @@ id = "random"
 provider = "random"
 seed = 1
 
+# Scripted bots are free. `model` names the game; give each its own seed. Seven of them
+# run a free Postgres Werewolf tournament:
+# arena tournament --game werewolf --players ww1,...,ww7 --format tables --table-size 7 --tables 14
+[[players]]
+id = "ww1"
+provider = "bot"
+model = "werewolf"
+seed = 1
+
 [[players]]
 id = "haiku-5.5/c4-v1"
 provider = "anthropic"

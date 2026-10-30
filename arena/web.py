@@ -16,7 +16,7 @@ from jinja2 import Environment, PackageLoader, StrictUndefined, select_autoescap
 from markupsafe import Markup
 
 from arena.games.registry import list_games
-from arena.store import read
+from arena.store import metrics, read
 from arena.store.ratings import leaderboard
 
 SERVER_ROUTES = {
@@ -55,9 +55,21 @@ def _liars_dice_move(a: dict) -> str | None:
     return None
 
 
+def _werewolf_move(a: dict) -> str | None:
+    if a.get("action") == "say" and "message" in a:
+        return f"says: {a['message']}"
+    if a.get("action") in ("kill", "inspect", "vote") and "target" in a:
+        return f"{a['action']} seat {a['target']}"
+    return None
+
+
 # Short labels for the turn table and the replay info line. Keep in step with the
 # game's action schema; anything unexpected falls back to the raw (sorted) JSON.
-MOVE_LABELS = {"connect4": _connect4_move, "liars_dice": _liars_dice_move}
+MOVE_LABELS = {
+    "connect4": _connect4_move,
+    "liars_dice": _liars_dice_move,
+    "werewolf": _werewolf_move,
+}
 
 
 def move_label(game: str, action: object, forfeited: bool = False) -> str:
@@ -93,7 +105,8 @@ def render(template: str, urls: Urls, **context: object) -> str:
 
 async def index_page(pool: asyncpg.Pool, urls: Urls) -> str:
     boards = {g: await leaderboard(pool, g) for g in list_games()}
-    return render("index.html", urls, boards=boards)
+    role_stats = await metrics.werewolf_metrics(pool)
+    return render("index.html", urls, boards=boards, role_stats=role_stats)
 
 
 async def tournaments_page(pool: asyncpg.Pool, urls: Urls) -> str:

@@ -113,6 +113,69 @@ def pair_counts(player_ids: list[str], seatings: list[list[str]]) -> dict[frozen
     return counts
 
 
+def role_counts(
+    player_ids: list[str], seatings: list[list[str]], roles: list[list[str]]
+) -> dict[str, dict[str, int]]:
+    """role -> player -> tables played in that role, including zeros."""
+    counts = {r: dict.fromkeys(player_ids, 0) for table in roles for r in table}
+    for seats, table in zip(seatings, roles, strict=True):
+        for pid, role in zip(seats, table, strict=True):
+            counts[role][pid] += 1
+    return counts
+
+
+def assign_roles(
+    player_ids: list[str], seatings: list[list[str]], role_pool: list[str], seed: int
+) -> list[list[str]]:
+    """Deal role_pool at every table, in seat order, so that for each role players'
+    counts differ by at most 1. Pure. Like pair balance this is a search: it stops as soon
+    as that holds, otherwise returns the most even deal found. Swaps within a table keep
+    each table's roles intact, so the sum of squared counts reaches its minimum exactly
+    when the deal is as even as the tables allow."""
+    rng = random.Random(seed)
+    roles = [rng.sample(role_pool, len(role_pool)) for _ in seatings]
+    counts = {(p, r): 0 for p in player_ids for r in role_pool}
+    for seats, table in zip(seatings, roles, strict=True):
+        for pid, role in zip(seats, table, strict=True):
+            counts[pid, role] += 1
+    cost = sum(c * c for c in counts.values())
+
+    def even() -> bool:
+        return all(
+            max(by_player.values()) - min(by_player.values()) <= 1
+            for by_player in role_counts(player_ids, seatings, roles).values()
+        )
+
+    def swap(table: int, i: int, j: int) -> None:
+        nonlocal cost
+        p, q = seatings[table][i], seatings[table][j]
+        a, b = roles[table][i], roles[table][j]
+        for key, by in (((p, a), -1), ((q, b), -1), ((p, b), 1), ((q, a), 1)):
+            cost += by * (2 * counts[key] + by)
+            counts[key] += by
+        roles[table][i], roles[table][j] = b, a
+
+    best, best_cost = [list(t) for t in roles], cost
+    if len(role_pool) < 2 or even():
+        return best
+    for step in range(_SEARCH_STEPS):
+        temperature = _HOT * (_COLD / _HOT) ** ((step % _COOLING_CYCLE) / _COOLING_CYCLE)
+        t = rng.randrange(len(roles))
+        i, j = rng.sample(range(len(role_pool)), 2)
+        if roles[t][i] == roles[t][j]:
+            continue
+        before = cost
+        swap(t, i, j)
+        delta = cost - before
+        if delta > 0 and rng.random() >= math.exp(-delta / temperature):
+            swap(t, i, j)  # undo
+        elif cost < best_cost:
+            best, best_cost = [list(t) for t in roles], cost
+            if even():
+                break
+    return best
+
+
 def table_schedule(
     player_ids: list[str], table_size: int, tables: int, seed: int
 ) -> list[list[str]]:

@@ -26,7 +26,7 @@ from arena.ratings.weng_lin import WengLin, rate
 from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue, ratings, read
 from arena.store.db import create_pool
-from arena.store.metrics import player_metrics
+from arena.store.metrics import player_metrics, werewolf_metrics
 from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import (
@@ -817,7 +817,7 @@ async def test_migration_backfills_placements_and_rebuild_rates_old_matches(pool
     )
     await conn.close()
 
-    assert await migrate(DSN) == ["0005_weng_lin.sql"]
+    assert (await migrate(DSN))[0] == "0005_weng_lin.sql"
     rows = await pool.fetch("SELECT placements FROM matches ORDER BY id")
     assert [r["placements"] for r in rows] == [[2, 1], [1, 1], None]
 
@@ -826,3 +826,74 @@ async def test_migration_backfills_placements_and_rebuild_rates_old_matches(pool
     a, b = rate(win_b, [1, 1])
     board = {r["player_id"]: r for r in await leaderboard(pool, "connect4")}
     assert (board["a"]["mu"], board["b"]["mu"]) == (round(a.mu, 2), round(b.mu, 2))
+
+
+WW = [PlayerConfig(f"ww{i}", "bot", model="werewolf", seed=i) for i in range(1, 10)]
+WW_FACTORY = PlayerFactory(Roster({p.id: p for p in WW}, {}), {})
+
+
+async def test_werewolf_tournament_runs_on_bots_with_balanced_scheduled_roles(pool):
+    tid, n = await create_tables(pool, "werewolf", WW[:8], 7, 16, budget_usd=None, seed=2)
+    assert n == 16
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=4, exit_when_idle=True)
+    assert await tournament_status(pool, tid) == "completed"
+
+    rows = await pool.fetch(
+        "SELECT m.options, m.scores, m.placements, array_agg(s.player_id ORDER BY s.seat) AS seats "
+        "FROM matches m JOIN match_seats s ON s.match_id = m.id "
+        "WHERE m.tournament_id = $1 GROUP BY m.id",
+        tid,
+    )
+    counts = {}
+    for r in rows:
+        assert sum(r["scores"]) in (2.0, 5.0) and r["placements"].count(1) == sum(r["scores"])
+        for seat, role in enumerate(r["options"]["roles"]):
+            per_role = counts.setdefault(role, dict.fromkeys((p.id for p in WW[:8]), 0))
+            per_role[r["seats"][seat]] += 1
+    assert set(counts) == {"wolf", "seer", "villager"}
+    assert all(max(c.values()) - min(c.values()) <= 1 for c in counts.values())
+
+    # Weng-Lin rated all 7 seats; team ties reached it; the replay and rebuild agree.
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 16 * 7
+    assert len(await leaderboard(pool, "werewolf")) == 8
+    live = await _snapshot(pool)
+    await pool.execute("UPDATE ratings SET wl_mu = 0, wl_sigma = 1")
+    assert await ratings.rebuild(pool, "werewolf") == 16
+    assert await _snapshot(pool) == live
+
+    stats = await werewolf_metrics(pool, tid)
+    assert [s["player_id"] for s in stats] == [p.id for p in WW[:8]]
+    for role, by_player in counts.items():
+        assert {s["player_id"]: s[f"{role}_games"] for s in stats} == by_player
+    assert sum(s["true_claims"] + s["false_claims"] for s in stats) > 0
+    assert all(s["leaks"] == 0 for s in stats)  # bots never name themselves as wolves
+
+    mid = await pool.fetchval("SELECT min(id) FROM matches WHERE tournament_id = $1", tid)
+    detail = await read.match_detail(pool, mid)
+    assert detail["frames"][0]["roles"] == detail_roles(rows, detail)
+    assert "werewolf" in await web.match_page(pool, web.Urls(), mid)
+    assert "Werewolf roles" in await web.index_page(pool, web.Urls())
+
+
+def detail_roles(rows, detail):
+    return next(r["options"]["roles"] for r in rows if list(r["seats"]) == detail["seats"])
+
+
+async def test_truncated_flag_survives_the_turn_log(pool):
+    tid, _ = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=2)
+    m = await queue.claim(pool, "w0", 30)
+    assert m.options is not None and len(m.options["roles"]) == 7
+    store = PostgresTurnStore(pool, "w0")
+    t = TurnRecord(
+        0, 0, {"action": "say", "message": "x"}, False, 1, None, None, Usage(), 0, 0, True
+    )
+    await store.append_turn(str(m.id), t)
+    assert (await store.load_turns(str(m.id)))[0].truncated is True
+
+
+async def test_scheduled_roles_are_what_the_match_plays(pool):
+    await create_tables(pool, "werewolf", WW[:7], 7, 2, budget_usd=None, seed=5)
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)
+    for r in await pool.fetch("SELECT id, options FROM matches"):
+        detail = await read.match_detail(pool, r["id"])
+        assert detail["frames"][-1]["roles"] == r["options"]["roles"]

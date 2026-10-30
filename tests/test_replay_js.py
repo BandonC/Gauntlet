@@ -11,6 +11,7 @@ import pytest
 
 from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
+from arena.games.werewolf import Werewolf
 from arena.web import REPLAY_JS
 
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
@@ -89,7 +90,7 @@ def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():
         {"turn_no": 2, "seat": 0, "action": {"column": 1}, "forfeited": False,
          "attempts": 1, "error": None, "label": "column 1"},
     ]  # fmt: skip
-    out = node(RENDER, {"game": "werewolf", "seats": [EVIL, "b"], "frames": [{"x": EVIL}],
+    out = node(RENDER, {"game": "chess", "seats": [EVIL, "b"], "frames": [{"x": EVIL}],
                         "turns": turns})  # fmt: skip
     assert out["frames"][0].startswith("<pre>") and EVIL not in out["frames"][0]
     assert "Turn 0: &lt;b&gt;evil&lt;/b&gt;" in out["turns"][0]
@@ -155,3 +156,31 @@ def test_stepping_controls_move_through_frames_and_highlight_turn_rows():
         ["pause", "▶ Play"],
     ]
     assert out["info"] == "Start of the match"  # play restarted from frame 0, then paused
+
+
+def werewolf_frames(seed: int):
+    game = Werewolf()
+    rng = random.Random(seed)
+    s = game.initial_state(7, seed)
+    frames = [game.spectator_view(s)]
+    while not game.is_terminal(s):
+        seat = game.current_player(s)
+        hint = game.legal_actions_hint(s, seat)
+        action = rng.choice(hint) if hint else {"action": "say", "message": f"{EVIL} & hello"}
+        s = game.apply(s, seat, action)
+        frames.append(game.spectator_view(s))
+    return frames
+
+
+def test_werewolf_frames_render_roles_talk_and_the_result_escaped():
+    frames = werewolf_frames(4)
+    seats = [EVIL] + [f"p{i}" for i in range(1, 7)]
+    turn = {"turn_no": 3, "seat": 0, "action": {}, "label": "says: hi", "truncated": True}
+    turn |= {"forfeited": False, "attempts": 1, "error": None}
+    out = node(RENDER, {"game": "werewolf", "frames": frames, "seats": seats, "turns": [turn]})
+    html = "".join(out["frames"])
+    assert "<b>evil</b>" not in html and "&lt;b&gt;evil&lt;/b&gt;" in html
+    assert "villager" in html and "Night 1" in html and "discussion round" in html
+    assert "killed at night" in html
+    assert " win" in out["frames"][-1]
+    assert "(truncated)" in out["turns"][0]

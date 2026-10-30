@@ -20,12 +20,12 @@ INSERT_TURN_SQL = """
 INSERT INTO turns (
     match_id, turn_no, seat, action, forfeited, attempts, raw_response, error,
     input_tokens, output_tokens, cache_read_tokens, cache_write_tokens,
-    cost_usd, latency_ms, worker_id
+    cost_usd, latency_ms, worker_id, truncated
 )
 -- Explicit casts: params in an INSERT ... SELECT list don't infer the column types.
 SELECT $1::bigint, $2::int, $3::smallint, $4::jsonb, $5::boolean, $6::smallint,
        $7::text, $8::text, $9::int, $10::int, $11::int, $12::int,
-       $13::numeric, $14::int, $15::text
+       $13::numeric, $14::int, $15::text, $16::boolean
 WHERE EXISTS (
     SELECT 1 FROM matches
     WHERE id = $1 AND lease_owner = $15 AND lease_expires_at > now()
@@ -67,6 +67,7 @@ class PostgresTurnStore:
                 ),
                 cost_usd=float(r["cost_usd"]),
                 latency_ms=r["latency_ms"],
+                truncated=r["truncated"],
             )
             for r in rows
         ]
@@ -91,6 +92,7 @@ class PostgresTurnStore:
                 t.cost_usd,
                 t.latency_ms,
                 self._worker_id,
+                t.truncated,
             )
             if inserted is None:
                 raise LeaseLost(f"match {mid} turn {t.turn_no}: lease lost or turn exists")
