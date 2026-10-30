@@ -18,7 +18,8 @@ Optimise for correctness and clear failure semantics over features.
 | Area | State |
 |---|---|
 | Game contract, Connect 4, match runner, players, Elo, round-robin | Done, unit-tested |
-| Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
+| Anthropic adapter, retries, rate limiter | Done, proven by real runs (see First real run under Gotchas) |
+| OpenAI adapter | Done, tested against canned HTTP responses. **Never called for real**: no key yet, so OpenAI players are optional. |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
 | JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping, live view over SSE), static export | Done |
 | Ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
@@ -181,9 +182,9 @@ runs (loops, scheduled tasks) skip them.
 
 - [x] **Phase 1**: contracts, Connect 4, match runner, players, providers, CLI
 - [x] **Phase 2**: schema, queue/leases, fenced turn store, worker, budget cap, read API
-- [ ] `[human]` **First real run**: two cheap models, 20 games, `--budget 1`. Record
-      responses with `RecordingProvider` into `recordings/` for regression fixtures.
-      Check illegal-move rate, latency, and whether caching kicks in.
+- [x] `[human]` **First real run** (2026-10-30): `haiku-5.5/c4-v1` vs `haiku-4.5/c4-v1`
+      (Anthropic-only, no OpenAI key), 20 games, `--budget 1`, $0.2277 spent. Recorded with
+      `arena worker --record`; one game is the fixture in `tests/fixtures/`.
 
 **Phase 3: correctness and ops**
 - [x] Write ratings + `rating_history` in the same transaction as `queue.complete`
@@ -381,6 +382,16 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   apart, and files recorded before that field still load. With `--concurrency` above 1,
   lines from different matches interleave, so record fixtures at concurrency 1. Only
   successful completions are written: failed calls never reach RecordingProvider.
+- First real run (tournament 3, 20 Connect 4 games, Haiku 4.5 12-8 Haiku 5.5):
+  the first player won 16 of 20, so seat order drowns out most model differences. Connect 4
+  needs hundreds of games to separate similar models; 20 only proves the pipeline. Haiku
+  4.5 doesn't cache at this prompt length (0 cache reads or writes in 196 calls) while
+  Haiku 5.5 hit 64%, so with its 10x prices it cost 19x as much. All 56 rejected attempts
+  were "column 3 is full", though the prompt lists legal columns. `max_tokens = 256` was
+  enough: every recorded reply had a tool call.
+- `turns.rejections` holds every rejected attempt of a turn; `error` stays as the last
+  reason, including when a retry succeeds. Rows from before migration 0007 are empty,
+  except tournament 3, restored once from its recording.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);

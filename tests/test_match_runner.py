@@ -35,6 +35,34 @@ async def test_illegal_then_legal_gets_feedback():
     assert out.scores == [1.0, 0.0]
 
 
+async def test_a_retry_that_succeeds_keeps_every_rejection_in_order():
+    bad = {"column": 9}
+    p0 = ScriptedPlayer([None, bad, {"column": 0}, {"column": 0}, {"column": 0}, {"column": 0}])
+    p1 = ScriptedPlayer([{"column": 1}] * 3)
+    out = await MatchRunner(G, [p0, p1], InMemoryTurnStore(), max_attempts=3).run(spec())
+
+    first = out.turns[0]
+    assert first.attempts == 3 and not first.forfeited and first.action == {"column": 0}
+    assert first.rejections == [
+        {
+            "attempt": 1,
+            "action": None,
+            "reason": "no move was returned; call the tool with a legal move",
+        },
+        {"attempt": 2, "action": bad, "reason": "column 9 is out of range 0-6"},
+    ]
+    assert first.error == "column 9 is out of range 0-6"  # still the last one
+    assert out.turns[1].rejections == [] and out.turns[1].error is None
+
+
+async def test_a_forfeit_keeps_all_its_rejections():
+    p0 = ScriptedPlayer([{"column": 9}, None, {"bad": 1}])
+    out = await MatchRunner(G, [p0, ScriptedPlayer([])], InMemoryTurnStore()).run(spec())
+    t = out.turns[0]
+    assert [r["attempt"] for r in t.rejections] == [1, 2, 3]
+    assert t.error == t.rejections[-1]["reason"]
+
+
 async def test_forfeit_after_max_attempts():
     p0 = ScriptedPlayer([None, {"column": 99}, {"bad": 1}])
     p1 = ScriptedPlayer([])
