@@ -11,9 +11,10 @@
 requests_per_minute = 50
 max_concurrency = 8
 
-[providers.openai]
-requests_per_minute = 60
-max_concurrency = 8
+# Optional: only for OpenAI players. Needs OPENAI_API_KEY in .env.
+# [providers.openai]
+# requests_per_minute = 60
+# max_concurrency = 8
 
 [[players]]
 id = "random"
@@ -40,14 +41,25 @@ price_input_per_mtok = 0.10     # verify
 price_output_per_mtok = 0.50    # verify
 
 [[players]]
-id = "gpt-5-mini/c4-v1"
-provider = "openai"
-model = "gpt-5-mini"
+id = "haiku-4.5/c4-v1"
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
 prompt = "connect4/v1"
-temperature = "omit"            # don't send it: some OpenAI models reject non-default values
-max_tokens = 1024               # reasoning models spend output tokens before the tool call
-price_input_per_mtok = 0.25     # verify
-price_output_per_mtok = 2.00    # verify
+temperature = "omit"
+max_tokens = 256
+price_input_per_mtok = 1.00     # verify
+price_output_per_mtok = 5.00    # verify
+
+# Optional: only for OpenAI players. Needs OPENAI_API_KEY in .env and [providers.openai].
+# [[players]]
+# id = "gpt-5-mini/c4-v1"
+# provider = "openai"
+# model = "gpt-5-mini"
+# prompt = "connect4/v1"
+# temperature = "omit"          # don't send it: some OpenAI models reject non-default values
+# max_tokens = 1024             # reasoning models spend output tokens before the tool call
+# price_input_per_mtok = 0.25   # verify
+# price_output_per_mtok = 2.00  # verify
 
 # [[players]]
 # id = "sonnet/c4-v1"

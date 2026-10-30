@@ -5,7 +5,7 @@ arena play werewolf --players werewolf-bot:1,...,werewolf-bot:7
 arena migrate                                            apply SQL migrations
 arena tournament --game connect4 --players a,b,c --games-per-pair 10 --budget 5
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
-arena worker --concurrency 4                             run matches from the queue
+arena worker --concurrency 4 --record recordings         run matches from the queue
 arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
 arena export --out site                                  static HTML + JSON (GitHub Pages)
@@ -172,6 +172,8 @@ async def _worker(args: argparse.Namespace) -> None:
     # Requests/minute is shared with every other worker through Postgres.
     vendors = await seed_rate_limits(pool, factory.roster.limits)
     factory = factory.with_token_sources(postgres_buckets(pool, vendors))
+    if args.record:
+        factory = factory.with_record_dir(Path(args.record))
     stop = asyncio.Event()
     restore_signals = install_stop_signals(stop)
     try:
@@ -268,6 +270,9 @@ def main(argv: list[str] | None = None) -> None:
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)
     w.add_argument("--exit-when-idle", action="store_true")
+    w.add_argument(
+        "--record", metavar="DIR", help="append every model completion to DIR/<vendor>-*.jsonl"
+    )
 
     lb = sub.add_parser("leaderboard")
     lb.add_argument("--game", required=True)
