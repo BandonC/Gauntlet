@@ -3,9 +3,23 @@ import json
 import pytest
 from jinja2 import UndefinedError
 
-from arena.web import SERVER_ROUTES, Urls, render
+from arena.web import SERVER_ROUTES, Urls, move_label, render
 
 URLS = Urls()
+
+
+def list_row(**over):
+    row = {
+        "id": 3,
+        "game": "connect4",
+        "tournament_id": 7,
+        "round": None,
+        "seats": ["a", "b"],
+        "status": "completed",
+        "scores": None,
+        "cost_usd": 0.0,
+    }
+    return row | over  # fmt: skip
 
 
 def lb_row(pid, rating=1600.0, rd=100.0):
@@ -122,7 +136,7 @@ def test_tournaments_show_round_failures_pause_reason_and_budget():
 
 
 def test_tournament_page_lists_its_matches():
-    ms = [{"id": 3, "seats": ["a", "b"], "status": "queued", "scores": None, "cost_usd": 0.0}]
+    ms = [list_row(status="queued")]
     html = render(
         "tournament.html", URLS, t=tournament(status="paused", last_error="x"), matches=ms
     )
@@ -132,7 +146,7 @@ def test_tournament_page_lists_its_matches():
 
 def test_match_page_shows_moves_rejections_and_forfeits():
     html = render("match.html", URLS, m=match())
-    assert "<code>{&#34;column&#34;: 3}</code>" in html  # escaped JSON
+    assert "<td>column 3" in html  # a readable label, not raw JSON
     assert "last rejected: column 9 is out of range 0-6" in html
     assert ">forfeit<" in html and "300 / 40 / 1000" in html and "$0.00011" in html
     assert 'href="/tournaments/7"' in html and "seat 0: haiku (1.0)" in html
@@ -143,7 +157,7 @@ def test_links_follow_the_url_table_so_export_can_use_file_paths():
     html = render(
         "matches.html",
         files,
-        matches=[{"id": 3, "seats": ["a", "b"], "status": "x", "scores": None, "cost_usd": 0.0}],
+        matches=[list_row()],
     )
     assert 'href="matches/3.html"' in html and 'href="index.html"' in html
 
@@ -184,3 +198,32 @@ def test_inlined_replay_script_cannot_close_its_own_tag():
     from arena.web import REPLAY_JS
 
     assert "</script" not in REPLAY_JS.read_text(encoding="utf-8").lower()
+
+
+@pytest.mark.parametrize(
+    ("game", "action", "forfeited", "label"),
+    [
+        ("connect4", {"column": 3}, False, "column 3"),
+        ("liars_dice", {"face": 6, "action": "bid", "quantity": 3}, False, "bid 3 × 6"),
+        ("liars_dice", {"action": "challenge"}, False, "challenge"),
+        ("liars_dice", None, True, "forfeit"),
+        # Unknown games or unexpected shapes fall back to sorted JSON, never crash.
+        ("liars_dice", {"action": "pass"}, False, '{"action": "pass"}'),
+        ("werewolf", {"vote": 2, "a": 1}, False, '{"a": 1, "vote": 2}'),
+    ],
+)
+def test_move_labels(game, action, forfeited, label):
+    assert move_label(game, action, forfeited) == label
+
+
+def test_replay_data_carries_the_same_labels_as_the_turn_table():
+    html = render("match.html", URLS, m=match(frames=[{}, {}, {}]))
+    turns = json.loads(_embedded(html))["turns"]
+    assert [t["label"] for t in turns] == ["column 3", "forfeit"]
+
+
+def test_match_list_shows_game_and_tournament_round():
+    rows = [list_row(id=4, game="liars_dice", round=2), list_row(id=5, tournament_id=None)]
+    html = render("matches.html", URLS, matches=rows)
+    assert "<td>liars_dice</td>" in html and "<td>connect4</td>" in html
+    assert '<a href="/tournaments/7">#7</a>, round 2' in html

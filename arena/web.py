@@ -43,8 +43,33 @@ def _usd(value: float | None, digits: int = 4) -> str:
     return "" if value is None else f"${value:.{digits}f}"
 
 
-def _action(action: object) -> str:
-    return json.dumps(action, separators=(", ", ": ")) if action is not None else ""
+def _connect4_move(a: dict) -> str | None:
+    return f"column {a['column']}" if set(a) == {"column"} else None
+
+
+def _liars_dice_move(a: dict) -> str | None:
+    if a.get("action") == "challenge":
+        return "challenge"
+    if a.get("action") == "bid" and {"quantity", "face"} <= set(a):
+        return f"bid {a['quantity']} × {a['face']}"
+    return None
+
+
+# Short labels for the turn table and the replay info line. Keep in step with the
+# game's action schema; anything unexpected falls back to the raw (sorted) JSON.
+MOVE_LABELS = {"connect4": _connect4_move, "liars_dice": _liars_dice_move}
+
+
+def move_label(game: str, action: object, forfeited: bool = False) -> str:
+    if forfeited or action is None:
+        return "forfeit"
+    fmt = MOVE_LABELS.get(game)
+    label = fmt(action) if fmt and isinstance(action, dict) else None
+    return label or json.dumps(action, sort_keys=True, separators=(", ", ": "))
+
+
+def _with_labels(turns: list[dict], game: str) -> list[dict]:
+    return [t | {"label": move_label(game, t["action"], t["forfeited"])} for t in turns]
 
 
 env = Environment(
@@ -55,7 +80,7 @@ env = Environment(
     lstrip_blocks=True,
 )
 env.filters["usd"] = _usd
-env.filters["action"] = _action
+env.filters["with_labels"] = _with_labels
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.
 REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"
