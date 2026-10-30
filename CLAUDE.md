@@ -275,6 +275,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   once nothing is queued, running or failed, Swiss queues the next round or the
   tournament completes. A budget-capped tournament with queued matches stays `running`.
   Lock order in a completion: match row, ratings rows, tournament row last.
+  Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
+  re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - A match that fails for good (run attempts used up, or a setup error) pauses its
   tournament, both formats: nothing is claimed or paired until `arena tournament resume
   <id>` re-queues failed matches with fresh run attempts. Failed matches are never scored.
@@ -296,8 +298,6 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   missing field raises (tested in `tests/test_web.py`); test pages by calling the builders
   (no `TestClient`: it needs `httpx`). Read queries live in `store/read.py`, shared with
   the JSON API so both always show the same data.
-  Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
-  re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
