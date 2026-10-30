@@ -8,21 +8,27 @@ Swiss: running also queues round n+1 when round n's last match completes.
 
 from __future__ import annotations
 
+import logging
 import random
 
 import asyncpg
 
-from arena.ratings.glicko2 import DEFAULT_RATING, DEFAULT_RD
+from arena.games.registry import get_game
+from arena.ratings.weng_lin import WengLin
 from arena.roster import PlayerConfig, config_hash
 from arena.store import ratings
 from arena.tournaments import (
     BYE_POINTS,
     SwissEntrant,
     default_swiss_rounds,
+    pair_counts,
     round_robin,
     swiss_pairings,
     swiss_seatings,
+    table_schedule,
 )
+
+log = logging.getLogger(__name__)
 
 UPSERT_PLAYER_SQL = """
 INSERT INTO players (id, provider, model, prompt_key, config, config_hash)
@@ -165,6 +171,40 @@ async def create_round_robin(
     return tid, len(seatings)
 
 
+async def create_tables(
+    pool: asyncpg.Pool,
+    game: str,
+    players: list[PlayerConfig],
+    table_size: int,
+    tables: int,
+    budget_usd: float | None,
+    seed: int | None = None,
+) -> tuple[int, int]:
+    """Queue every table at once (see tournaments.table_schedule). Returns
+    (tournament_id, number_of_matches)."""
+    g = get_game(game)
+    if not g.min_players <= table_size <= g.max_players:
+        raise ValueError(f"{game} takes {g.min_players}-{g.max_players} players per table")
+    seed = random.randrange(2**31) if seed is None else seed
+    ids = [p.id for p in players]
+    seatings = table_schedule(ids, table_size, tables, seed)
+    meetings = pair_counts(ids, seatings).values()
+    if max(meetings) - min(meetings) > 1:
+        log.warning(
+            "no evenly balanced schedule found for %d players, %d tables of %d: pairs meet "
+            "%d-%d times",
+            len(ids),
+            tables,
+            table_size,
+            min(meetings),
+            max(meetings),
+        )
+    async with pool.acquire() as conn, conn.transaction():
+        tid = await _insert_tournament(conn, game, "tables", players, budget_usd)
+        await _insert_matches(conn, tid, game, seatings, random.Random(seed))
+    return tid, len(seatings)
+
+
 async def create_swiss(
     pool: asyncpg.Pool,
     game: str,
@@ -173,7 +213,7 @@ async def create_swiss(
     rounds: int | None = None,
     seed: int | None = None,
 ) -> tuple[int, int]:
-    """Queue round 1 (seeded by conservative Glicko rating); later rounds are queued as
+    """Queue round 1 (seeded by Weng-Lin ordinal); later rounds are queued as
     rounds finish. Returns (tournament_id, matches in round 1)."""
     if len(players) < 2:
         raise ValueError("a Swiss tournament needs at least 2 players")
@@ -186,8 +226,8 @@ async def create_swiss(
 
 
 async def swiss_entrants(conn: asyncpg.Connection, tid: int, game: str) -> list[SwissEntrant]:
-    """Current Swiss standings inputs: points (byes count BYE_POINTS), conservative
-    Glicko rating, and whether each player has had a bye."""
+    """Current Swiss standings inputs: points (byes count BYE_POINTS), Weng-Lin ordinal,
+    and whether each player has had a bye."""
     ids = [
         r["player_id"]
         for r in await conn.fetch(
@@ -201,21 +241,21 @@ async def swiss_entrants(conn: asyncpg.Connection, tid: int, game: str) -> list[
             "SELECT player_id FROM tournament_byes WHERE tournament_id = $1", tid
         )
     ]
-    conservative = {
-        r["player_id"]: r["c"]
+    ordinal = {
+        r["player_id"]: r["ordinal"]
         for r in await conn.fetch(
-            "SELECT player_id, glicko_rating - 2 * glicko_rd AS c FROM ratings "
+            "SELECT player_id, wl_mu - 3 * wl_sigma AS ordinal FROM ratings "
             "WHERE game = $1 AND player_id = ANY($2::text[])",
             game,
             ids,
         )
     }
-    unrated = DEFAULT_RATING - 2 * DEFAULT_RD
+    unrated = WengLin().ordinal
     return [
         SwissEntrant(
             pid,
             points.get(pid, 0.0) + BYE_POINTS * byes.count(pid),
-            conservative.get(pid, unrated),
+            ordinal.get(pid, unrated),
             pid in byes,
         )
         for pid in ids

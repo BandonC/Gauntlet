@@ -15,7 +15,7 @@ def play(cols: list[int]):
 def test_vertical_win():
     s = play([0, 1, 0, 1, 0, 1, 0])
     assert G.is_terminal(s) and s.winner == 0
-    assert G.scores(s) == [1.0, 0.0]
+    assert G.scores(s) == [1.0, 0.0] and G.placements(s) == [1, 2]
 
 
 def test_horizontal_win():
@@ -64,6 +64,7 @@ def test_draw():
     )
     s = G.apply(almost, 1, {"column": 6})
     assert s.winner is None and s.draw and G.scores(s) == [0.5, 0.5]
+    assert G.placements(s) == [1, 1]  # the default: derived from scores, ties share a rank
 
 
 def test_forfeit():

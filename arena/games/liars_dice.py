@@ -12,9 +12,8 @@ Rules (no wild ones, no spot-on):
 - On a challenge all dice are revealed. If the bid holds (count >= Q) the challenger
   loses a die, otherwise the bidder does. The loser opens the next round; if they were
   eliminated, the next player with dice in seat order opens it.
-- Last player with dice wins (score 1; everyone else 0).
-
-Tournaments and ratings stay heads-up (2 players) for now; the engine supports 2-6.
+- Last player with dice wins (score 1; everyone else 0). Placements rank the rest in
+  reverse elimination order: the first player out finishes last.
 """
 
 from __future__ import annotations
@@ -22,6 +21,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, replace
 
+from arena.games.base import Game
 from arena.types import JSON, Action, ActionSpec
 
 DICE_PER_PLAYER = 5
@@ -62,6 +62,7 @@ class LDState:
     last_reveal: JSON | None = None  # public record of the previous challenge
     winner: int | None = None
     forfeited: tuple[int, ...] = ()
+    eliminated: tuple[int, ...] = ()  # seats in the order they ran out of dice
 
 
 def roll(seed: int, round_no: int, dice_counts: tuple[int, ...]) -> tuple[tuple[int, ...], ...]:
@@ -82,7 +83,7 @@ def _bid_json(b: Bid) -> JSON:
     return {"seat": b.seat, "quantity": b.quantity, "face": b.face}
 
 
-class LiarsDice:
+class LiarsDice(Game):
     name = "liars_dice"
     min_players = 2
     max_players = 6
@@ -266,6 +267,8 @@ class LiarsDice:
         return self._new_round(state, counts, opener_hint=loser)
 
     def _new_round(self, state: LDState, counts: tuple[int, ...], opener_hint: int) -> LDState:
+        out = tuple(i for i, n in enumerate(counts) if n == 0 and state.dice_counts[i] > 0)
+        state = replace(state, eliminated=state.eliminated + out)
         alive = [i for i, n in enumerate(counts) if n > 0]
         if len(alive) == 1:
             return replace(state, dice_counts=counts, bids=(), winner=alive[0])
@@ -288,6 +291,14 @@ class LiarsDice:
         if state.winner is None:
             raise ValueError("scores() called on a non-terminal state")
         return [1.0 if s == state.winner else 0.0 for s in range(len(state.dice_counts))]
+
+    def placements(self, state: LDState) -> list[int]:
+        if state.winner is None:
+            raise ValueError("placements() called on a non-terminal state")
+        ranks = [0] * len(state.dice_counts)
+        for rank, seat in enumerate((state.winner, *reversed(state.eliminated)), 1):
+            ranks[seat] = rank
+        return ranks
 
 
 def _is_int(x: object) -> bool:

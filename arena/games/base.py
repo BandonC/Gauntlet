@@ -16,6 +16,7 @@ Design rules (see CLAUDE.md):
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any, Protocol
 
 from arena.types import JSON, Action, ActionSpec
@@ -75,3 +76,25 @@ class Game(Protocol):
     def scores(self, state: State) -> list[float]:
         """Per-seat result for a terminal state: 1 win, 0 loss, 0.5 draw (2p games)."""
         ...
+
+    def placements(self, state: State) -> list[int]:
+        """Per-seat finishing rank for a terminal state: 1 is best, ties share a rank
+        (team games give all winners rank 1). MatchRunner moves forfeited seats to the
+        bottom afterwards, so engines don't handle forfeits here. Requires an explicit
+        `class MyGame(Game)` to inherit this default."""
+        return placements_from_scores(self.scores(state))
+
+
+def placements_from_scores(scores: Sequence[float]) -> list[int]:
+    """Competition ranking: higher score is better, equal scores tie (1, 2, 2, 4)."""
+    return [1 + sum(other > score for other in scores) for score in scores]
+
+
+def rank_forfeits_last(placements: Sequence[int], forfeits: Sequence[int]) -> list[int]:
+    """Forfeited seats drop below every other seat, a later forfeit above an earlier
+    one. forfeits: seats in the order they forfeited."""
+    kept = [s for s in range(len(placements)) if s not in forfeits]
+    ranks = [1 + sum(placements[o] < placements[s] for o in kept) for s in range(len(placements))]
+    for i, seat in enumerate(reversed(forfeits)):
+        ranks[seat] = len(kept) + 1 + i
+    return ranks
