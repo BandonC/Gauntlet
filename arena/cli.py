@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
 
@@ -58,7 +59,10 @@ async def _play(args: argparse.Namespace) -> None:
         move = "FORFEIT" if record.forfeited else record.action
         extra = f"  (attempts={record.attempts})" if record.attempts > 1 else ""
         print(f"\nturn {record.turn_no}: {who} -> {move}{extra}  ${record.cost_usd:.5f}")
-        print(game.render_view(game.player_view(state, 0)).split("\n\n")[1])
+        if game.name == "connect4":  # no hidden info: show the board from the rendered view
+            print(game.render_view(game.player_view(state, 0)).split("\n\n")[1])
+        else:  # hidden-info games: the omniscient frame, compact
+            print(json.dumps(game.spectator_view(state), separators=(",", ":")))
 
     runner = MatchRunner(
         game,
