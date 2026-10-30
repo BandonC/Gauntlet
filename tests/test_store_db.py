@@ -977,3 +977,17 @@ async def test_a_running_match_page_links_its_stream(pool):
     m = await _one_match(pool)
     html = await web.match_page(pool, web.Urls(), m.id)
     assert f'"events": "/api/matches/{m.id}/events"' in html
+
+
+async def test_rejections_survive_the_turn_log_and_reach_the_api(pool):
+    m = await _one_match(pool)
+    store = PostgresTurnStore(pool, "w0")
+    rejected = [{"attempt": 1, "action": {"column": 9}, "reason": "column 9 is out of range 0-6"}]
+    t = TurnRecord(
+        0, 0, {"column": 3}, False, 2, None, rejected[0]["reason"], Usage(), 0, 0, False, rejected
+    )
+    await store.append_turn(str(m.id), t)
+    await store.append_turn(str(m.id), turn(1, 1, 3))
+    first, second = await store.load_turns(str(m.id))
+    assert first.rejections == rejected and second.rejections == []
+    assert (await read.match_detail(pool, m.id))["turns"][0]["rejections"] == rejected

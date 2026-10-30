@@ -98,6 +98,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
                 "truncated": t.truncated,
                 "attempts": t.attempts,
                 "error": t.error,
+                "rejections": t.rejections,
                 "cost_usd": t.cost_usd,
                 "latency_ms": t.latency_ms,
                 "tokens": t.usage.__dict__,
