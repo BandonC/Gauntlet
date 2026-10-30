@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 
+from arena.games.base import Game
 from arena.types import JSON, Action, ActionSpec
 
 COLS = 7
@@ -28,7 +29,7 @@ class C4State:
     forfeited_by: int | None = None
 
 
-class Connect4:
+class Connect4(Game):
     name = "connect4"
     min_players = 2
     max_players = 2

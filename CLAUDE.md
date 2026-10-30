@@ -21,10 +21,10 @@ Optimise for correctness and clear failure semantics over features.
 | Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
 | JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping), static export | Done |
-| Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
-| Swiss tournaments, pause/resume on failed matches | Done, db-tested |
-| Liar's Dice engine + bots (2-6 seats; tournaments stay heads-up) | Done, unit-tested, replay renderer |
-| Presentation, Werewolf, multiplayer ratings | See Roadmap |
+| Ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
+| Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
+| Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
+| Presentation, Werewolf | See Roadmap |
 
 ## Commands
 
@@ -41,6 +41,7 @@ ruff check arena tests && ruff format arena tests
 arena play connect4 --p1 random:1 --p2 random:2           # free, in memory
 arena migrate
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
+arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
@@ -83,7 +84,8 @@ arena/
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
-  costs.py, ratings/{elo,glicko2}.py, tournaments.py (round_robin), cli.py, config.py
+  costs.py, ratings/{elo,glicko2,weng_lin}.py, cli.py, config.py
+  tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
 migrations/             forward-only SQL, applied in filename order
 ```
 
@@ -168,8 +170,8 @@ migrations/             forward-only SQL, applied in filename order
 
 **v1 definition of done:** Connect 4 · Postgres workers with leases · round-robin ·
 Elo · cost tracking + budget cap · replay page · first real tournament with at least
-3 LLM players. v1 uses Elo; Glicko-2 runs beside it as a post-v1 addition (it ranks the
-leaderboard, but Elo stays the v1 rating and is always shown).
+3 LLM players. v1 uses Elo. Post-v1, Weng-Lin ranks the leaderboard because it rates every
+table size; Glicko-2 and Elo stay beside it as heads-up-only extras and are always shown.
 
 Items tagged `[human]` need real API calls or a decision from the user. Unattended
 runs (loops, scheduled tasks) skip them.
@@ -214,8 +216,8 @@ runs (loops, scheduled tasks) skip them.
 **Phase 5: v2 games**
 - [x] Liar's Dice engine, `LiarsDiceBot`, prompt `liars_dice/v1`: hidden dice, round r's
       dice from `Random(f"{seed}:{r}")`; first real test of `player_view` hiding.
-- [ ] Multiplayer ratings and pairing. Engines take more than 2 seats (Liar's Dice 2-6,
-      Werewolf), but round-robin, Swiss, Elo and Glicko-2 are heads-up only today.
+- [x] Multiplayer ratings and pairing: Weng-Lin Plackett-Luce on every match, placements
+      on matches, `--format tables` (round-robin, Swiss, Elo and Glicko-2 stay heads-up).
 - [ ] Werewolf engine + scripted bots (flagship): multi-phase turns (discussion → vote →
       night), per-seat views, discussion log in state with summarisation of old rounds
       to bound context (cost grows ~quadratically otherwise), "role leaked" metric.
@@ -243,7 +245,9 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Adding a game (checklist)
 
-1. `arena/games/<name>.py` implementing every method of `Game` in `games/base.py`.
+1. `arena/games/<name>.py`: `class <Name>(Game)` implementing every method of `Game` in
+   `games/base.py`. Subclass it explicitly to inherit the default `placements()`; override
+   that when finishing order says more than scores do.
 2. Register it in `games/registry.py`.
 3. Unit tests: win/loss/draw, illegal actions, `apply` doesn't mutate, `player_view`
    hides other seats' private info, and replay determinism (same seed + actions → same
@@ -266,11 +270,32 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - `arena play` uses an in-memory store and a per-match `--budget` (default $0.50); it
   never touches Postgres.
 - Ratings are written only by `queue.complete` (`store/ratings.py`). Matches completed
-  before that existed are unrated, and ratings skip matches without exactly 2 seats.
+  before that existed are unrated. Weng-Lin rates every match at any table size; Elo and
+  Glicko-2 update only with exactly 2 seats (their history rows show before == after
+  otherwise). A player seated twice in one match is never rated.
   Ratings rows are locked in `player_id` order; keep that order to avoid deadlocks.
+- Weng-Lin (`ratings/weng_lin.py`): Plackett-Luce with one seat per team, mu 25, sigma
+  25/3, beta 25/6, kappa 1e-4. No tau (openskill's additive dynamics): skill is fixed by
+  config_hash, so sigma only shrinks. The leaderboard and Swiss seeding use the ordinal
+  mu - 3*sigma. `tests/test_weng_lin.py` holds reference values from openskill 6.2.0
+  with `PlackettLuce(tau=0.0)`, which is not a dependency. After applying migration 0005
+  run `arena ratings rebuild` once: existing rows start at the Weng-Lin defaults.
+- Werewolf will bias Weng-Lin: wolves and villagers are asymmetric teams, and ties at
+  rank 1 rate each winner individually with no idea of which side they were on. Handling
+  that is part of the Werewolf design; multi-player teams aren't modelled in `rate`.
+- Placements: per-seat ranks on `matches.placements`, 1 is best, ties allowed.
+  `Game.placements()` defaults to competition ranking of `scores()` (1, 2, 2, 4); only
+  their order matters to ratings. `MatchRunner` then moves forfeits below everyone with
+  `rank_forfeits_last`, so engines ignore forfeits there. Tournament points still come
+  from `scores`, never placements. Liar's Dice records `eliminated` in state for this.
+- `--format tables`: `table_schedule` is pure. Players' game counts and each player's
+  seat counts always differ by at most 1 (seats are an edge colouring, so that's exact,
+  not searched). Pair meetings differ by at most 1 only if the annealing finds such a
+  schedule within its step budget. Some configs have none (6 players, 5 tables of 3),
+  and large ones can miss (12/6/22, 24/6/40): `create_tables` logs a warning and uses
+  the most even schedule found. The whole schedule is queued at once, in no rounds.
 - Glicko-2: every match is its own rating period, tau = 0.3, and RD never grows from
-  inactivity (skill is fixed by config_hash). The leaderboard ranks by rating - 2·RD.
-  After applying migration 0003 run `arena ratings rebuild` once: existing rows start at
+  inactivity (skill is fixed by config_hash). After applying migration 0003 run `arena ratings rebuild` once: existing rows start at
   Glicko defaults. Rebuild replays by (completed_at, id), and `queue.complete` re-stamps
   completed_at with clock_timestamp() under the rating locks so that order is exact.
 - Tournaments advance in the transaction that completes a match (`advance_tournament`):

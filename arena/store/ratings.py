@@ -1,6 +1,7 @@
-"""Materialised ratings: Elo (the v1 rating, column `rating`) and Glicko-2 beside it
-(glicko_* columns, post-v1). Written in the same transaction as queue.complete, so a
-match is rated exactly once and only if its completion commits.
+"""Materialised ratings. Weng-Lin (wl_* columns) updates on every match at any table
+size and ranks the leaderboard; Elo (column `rating`, the v1 rating) and Glicko-2
+(glicko_* columns) are heads-up-only extras beside it. Written in the same transaction
+as queue.complete, so a match is rated exactly once and only if its completion commits.
 
 Concurrent completions that share a player serialise on that player's `ratings` row
 (`FOR UPDATE`). Rows are created and locked in player_id order so two transactions
@@ -15,8 +16,9 @@ from __future__ import annotations
 
 import asyncpg
 
-from arena.ratings import elo, glicko2
+from arena.ratings import elo, glicko2, weng_lin
 from arena.ratings.glicko2 import Glicko
+from arena.ratings.weng_lin import WengLin
 
 ENSURE_RATING_SQL = """
 INSERT INTO ratings (player_id, game, rating) VALUES ($1, $2, $3::double precision)
@@ -24,7 +26,7 @@ ON CONFLICT (player_id, game) DO NOTHING
 """
 
 LOCK_RATINGS_SQL = """
-SELECT player_id, rating, glicko_rating, glicko_rd, glicko_vol FROM ratings
+SELECT player_id, rating, glicko_rating, glicko_rd, glicko_vol, wl_mu, wl_sigma FROM ratings
 WHERE game = $1 AND player_id = ANY($2::text[])
 ORDER BY player_id
 FOR UPDATE
@@ -33,7 +35,7 @@ FOR UPDATE
 UPDATE_RATING_SQL = """
 UPDATE ratings
 SET rating = $3, glicko_rating = $4, glicko_rd = $5, glicko_vol = $6,
-    games_played = games_played + 1, updated_at = now()
+    wl_mu = $7, wl_sigma = $8, games_played = games_played + 1, updated_at = now()
 WHERE player_id = $1 AND game = $2
 """
 
@@ -42,15 +44,17 @@ WHERE player_id = $1 AND game = $2
 INSERT_HISTORY_SQL = """
 INSERT INTO rating_history (
     player_id, game, match_id, rating_before, rating_after,
-    glicko_rating_before, glicko_rating_after, glicko_rd_before, glicko_rd_after
+    glicko_rating_before, glicko_rating_after, glicko_rd_before, glicko_rd_after,
+    wl_mu_before, wl_mu_after, wl_sigma_before, wl_sigma_after
 )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 """
 
-# Ranked by the conservative estimate rating - 2*RD: a player needs games, not just a
-# lucky win, to reach the top.
+# Ranked by the ordinal mu - 3*sigma, a conservative estimate: a player needs games, not
+# just a lucky win, to reach the top.
 LEADERBOARD_SQL = """
-SELECT r.player_id, r.rating AS elo, r.glicko_rating, r.glicko_rd, r.games_played,
+SELECT r.player_id, r.rating AS elo, r.glicko_rating, r.glicko_rd, r.wl_mu, r.wl_sigma,
+       r.games_played,
        COALESCE((
            SELECT sum((m.scores ->> s.seat::int)::float)
            FROM match_seats s JOIN matches m ON m.id = s.match_id
@@ -58,11 +62,12 @@ SELECT r.player_id, r.rating AS elo, r.glicko_rating, r.glicko_rd, r.games_playe
        ), 0) AS points
 FROM ratings r
 WHERE r.game = $1
-ORDER BY r.glicko_rating - 2 * r.glicko_rd DESC, r.player_id
+ORDER BY r.wl_mu - 3 * r.wl_sigma DESC, r.player_id
 """
 
 REPLAY_SQL = """
-SELECT m.id, m.game, m.scores, array_agg(s.player_id ORDER BY s.seat) AS seats
+SELECT m.id, m.game, m.scores, m.placements,
+       array_agg(s.player_id ORDER BY s.seat) AS seats
 FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE m.status = 'completed' AND ($1::text IS NULL OR m.game = $1)
 GROUP BY m.id
@@ -71,42 +76,57 @@ ORDER BY m.completed_at, m.id
 
 
 async def apply_match_result(
-    conn: asyncpg.Connection, match_id: int, game: str, seats: list[str], scores: list[float]
+    conn: asyncpg.Connection,
+    match_id: int,
+    game: str,
+    seats: list[str],
+    scores: list[float],
+    placements: list[int],
 ) -> bool:
     """Update ratings + rating_history for a completed match. Call inside a transaction.
     Returns True if the match was rated (the player rows are then locked until commit).
 
-    Both systems are two-player only: matches with any other seat count are left
-    unrated until a multi-player rating system exists.
+    Weng-Lin updates at every table size. Elo and Glicko-2 are heads-up only: at other
+    table sizes their columns stay put, so those history rows show before == after.
+    A player seated twice is never rated (rating_history allows one row per match).
     """
-    if len(seats) != 2 or seats[0] == seats[1]:
+    if len(seats) < 2 or len(set(seats)) != len(seats):
         return False
-    a, b = seats
     for pid in sorted(seats):
         await conn.execute(ENSURE_RATING_SQL, pid, game, elo.DEFAULT_RATING)
     rows = {r["player_id"]: r for r in await conn.fetch(LOCK_RATINGS_SQL, game, sorted(seats))}
-    before = {
-        pid: (r["rating"], Glicko(r["glicko_rating"], r["glicko_rd"], r["glicko_vol"]))
-        for pid, r in rows.items()
+    old_elo = {pid: r["rating"] for pid, r in rows.items()}
+    old_gl = {
+        pid: Glicko(r["glicko_rating"], r["glicko_rd"], r["glicko_vol"]) for pid, r in rows.items()
     }
-    elo_a, elo_b = elo.update(before[a][0], before[b][0], scores[0])
-    gl_a, gl_b = glicko2.update_pair(before[a][1], before[b][1], scores[0])
-    for pid, new_elo, new_gl in ((a, elo_a, gl_a), (b, elo_b, gl_b)):
-        old_elo, old_gl = before[pid]
+    old_wl = {pid: WengLin(r["wl_mu"], r["wl_sigma"]) for pid, r in rows.items()}
+    new_elo, new_gl = dict(old_elo), dict(old_gl)
+    if len(seats) == 2:
+        a, b = seats
+        new_elo[a], new_elo[b] = elo.update(old_elo[a], old_elo[b], scores[0])
+        new_gl[a], new_gl[b] = glicko2.update_pair(old_gl[a], old_gl[b], scores[0])
+    rated = weng_lin.rate([old_wl[pid] for pid in seats], placements)
+    new_wl = dict(zip(seats, rated, strict=True))
+    for pid in sorted(seats):
+        gl, wl = new_gl[pid], new_wl[pid]
         await conn.execute(
-            UPDATE_RATING_SQL, pid, game, new_elo, new_gl.rating, new_gl.rd, new_gl.vol
+            UPDATE_RATING_SQL, pid, game, new_elo[pid], gl.rating, gl.rd, gl.vol, wl.mu, wl.sigma
         )
         await conn.execute(
             INSERT_HISTORY_SQL,
             pid,
             game,
             match_id,
-            old_elo,
-            new_elo,
-            old_gl.rating,
-            new_gl.rating,
-            old_gl.rd,
-            new_gl.rd,
+            old_elo[pid],
+            new_elo[pid],
+            old_gl[pid].rating,
+            gl.rating,
+            old_gl[pid].rd,
+            gl.rd,
+            old_wl[pid].mu,
+            wl.mu,
+            old_wl[pid].sigma,
+            wl.sigma,
         )
     return True
 
@@ -121,7 +141,9 @@ async def rebuild(pool: asyncpg.Pool, game: str | None = None) -> int:
         await conn.execute("DELETE FROM ratings WHERE $1::text IS NULL OR game = $1", game)
         matches = await conn.fetch(REPLAY_SQL, game)
         for m in matches:
-            await apply_match_result(conn, m["id"], m["game"], list(m["seats"]), m["scores"])
+            await apply_match_result(
+                conn, m["id"], m["game"], list(m["seats"]), m["scores"], m["placements"]
+            )
     return len(matches)
 
 
@@ -134,6 +156,9 @@ async def leaderboard(pool: asyncpg.Pool, game: str) -> list[dict]:
             "rd": round(r["glicko_rd"], 1),
             "low": round(r["glicko_rating"] - 2 * r["glicko_rd"], 1),
             "high": round(r["glicko_rating"] + 2 * r["glicko_rd"], 1),
+            "ordinal": round(r["wl_mu"] - weng_lin.ORDINAL_Z * r["wl_sigma"], 2),
+            "mu": round(r["wl_mu"], 2),
+            "sigma": round(r["wl_sigma"], 2),
             "elo": round(r["elo"], 1),
             "games": r["games_played"],
             "points": r["points"],

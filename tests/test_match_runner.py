@@ -39,7 +39,7 @@ async def test_forfeit_after_max_attempts():
     p0 = ScriptedPlayer([None, {"column": 99}, {"bad": 1}])
     p1 = ScriptedPlayer([])
     out = await MatchRunner(G, [p0, p1], InMemoryTurnStore(), max_attempts=3).run(spec())
-    assert out.forfeits == [0] and out.scores == [0.0, 1.0]
+    assert out.forfeits == [0] and out.scores == [0.0, 1.0] and out.placements == [2, 1]
     assert out.turns[0].attempts == 3 and out.turns[0].action is None
 
 
