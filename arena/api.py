@@ -13,16 +13,17 @@ JSON endpoints:
   GET /api/metrics/{game}?tournament_id=   illegal-move rate, forfeits, latency, cost, cache
   GET /api/matches?tournament_id=&limit=
   GET /api/matches/{id}                seats, status, turns, and a spectator frame per turn
+  GET /api/matches/{id}/events?after=  Server-Sent Events: each new turn, then done (live.py)
 """
 
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
 
-from arena import web
+from arena import live, web
 from arena.config import settings
 from arena.games.registry import list_games
 from arena.store import metrics as m_store
@@ -116,3 +117,15 @@ async def match_detail(match_id: int) -> dict:
     if m is None:
         raise HTTPException(404, "match not found")
     return m
+
+
+@app.get("/api/matches/{match_id}/events")
+async def match_events(match_id: int, request: Request, after: int = 0) -> StreamingResponse:
+    if await read.match_progress(app.state.pool, match_id) is None:
+        raise HTTPException(404, "match not found")
+    start = live.resume_point(after, request.headers.get("last-event-id"))
+    return StreamingResponse(
+        live.match_events(app.state.pool, match_id, start),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

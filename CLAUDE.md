@@ -20,12 +20,11 @@ Optimise for correctness and clear failure semantics over features.
 | Game contract, Connect 4, match runner, players, Elo, round-robin | Done, unit-tested |
 | Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
-| JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping), static export | Done |
+| JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping, live view over SSE), static export | Done |
 | Ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer. **No real model has played it.** |
-| Presentation | See Roadmap |
 
 ## Commands
 
@@ -83,6 +82,7 @@ arena/
   worker.py             claim → run with heartbeat → complete / release for retry
   api.py                FastAPI: JSON API + HTML routes
   web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export
+  live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
@@ -213,7 +213,8 @@ runs (loops, scheduled tasks) skip them.
       Liar's Dice (all dice, bids, reveals).
 - [x] `arena export`: render the same templates to static HTML + JSON files for GitHub
       Pages ($0 hosting). No server needed to browse the result.
-- [ ] Live match view via Server-Sent Events. Optional; do it last.
+- [x] Live match view via Server-Sent Events: `/api/matches/{id}/events`, followed by the
+      replay page while a match is queued or running.
 
 **Phase 5: v2 games**
 - [x] Liar's Dice engine, `LiarsDiceBot`, prompt `liars_dice/v1`: hidden dice, round r's
@@ -365,6 +366,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   latest 50, like the server. Export writes over files of the same name and deletes
   nothing. asyncpg returns `sum()` over bigint as Decimal; `_json_default` turns it into
   a number.
+- Live view: `live.match_events` polls `read.match_progress` once a second per viewer and
+  replays the log only when the turn count moves, so the turn log stays the only source
+  of truth (no LISTEN/NOTIFY). An event's id is the turn count, so EventSource resumes from
+  Last-Event-ID. A retry keeps the stream open; only `completed` and `failed` end it, and
+  resuming a failed match needs a page reload to watch it. Like replays, the stream shows
+  spectator frames: every role and die, live. Keep that in mind if the server is ever
+  public while models play. New turns reach the replay controls, not the server-rendered
+  turn table: the page says to reload once the match ends. Exports set the route to ""
+  (`FILE_ROUTES`), and the page only sends a URL while a match is queued or running.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
