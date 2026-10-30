@@ -32,6 +32,12 @@ GROUP BY m.id, m.round ORDER BY m.id DESC LIMIT $2
 """
 
 
+MATCH_PROGRESS_SQL = """
+SELECT status, (SELECT count(*) FROM turns WHERE match_id = m.id) AS turns
+FROM matches m WHERE id = $1
+"""
+
+
 async def list_tournaments(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
     """Progress and spend per tournament, newest first (or just one)."""
     return [dict(r) for r in await pool.fetch(TOURNAMENTS_SQL, tournament_id)]
@@ -46,6 +52,13 @@ async def list_matches(
 async def match_ids(pool: asyncpg.Pool) -> list[int]:
     """Every match id, oldest first (the static export writes a page for each)."""
     return [r["id"] for r in await pool.fetch("SELECT id FROM matches ORDER BY id")]
+
+
+async def match_progress(pool: asyncpg.Pool, match_id: int) -> tuple[str, int] | None:
+    """(status, turns logged) from one statement, or None if no such match. Cheap enough
+    to poll: the live view only replays the log when the count moves."""
+    row = await pool.fetchrow(MATCH_PROGRESS_SQL, match_id)
+    return None if row is None else (row["status"], row["turns"])
 
 
 async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:

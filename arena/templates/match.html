@@ -38,11 +38,12 @@
   <button id="replay-last" title="End">⏭</button>
   <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
   <span id="replay-label" class="muted"></span>
+  <span id="replay-live" class="muted"></span>
 </div>
 <div id="replay-frame"><noscript><p class="muted">The replay needs JavaScript; the turn list below works without it.</p></noscript></div>
 <p id="replay-info" class="muted"></p>
 {% set turns = m.turns | with_labels(m.game) %}
-<script id="replay-data" type="application/json">{{ {"game": m.game, "seats": m.seats, "frames": m.frames, "turns": turns} | tojson }}</script>
+<script id="replay-data" type="application/json">{{ {"game": m.game, "seats": m.seats, "frames": m.frames, "turns": turns, "events": url('match_events', id=m.id) if m.status in ('queued', 'running') else ''} | tojson }}</script>
 <script>
 {{ replay_js }}
 </script>

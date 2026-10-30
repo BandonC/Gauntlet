@@ -3,6 +3,7 @@ import json
 import pytest
 from jinja2 import UndefinedError
 
+from arena.live import format_event, resume_point
 from arena.web import SERVER_ROUTES, Urls, move_label, render
 
 URLS = Urls()
@@ -146,6 +147,46 @@ def test_werewolf_moves_have_readable_labels():
     assert move_label("werewolf", {"action": "kill", "target": 3}) == "kill seat 3"
     assert move_label("werewolf", {"action": "vote", "target": 0}) == "vote seat 0"
     assert move_label("werewolf", {"action": "say", "message": "hi"}) == "says: hi"
+
+
+def replay_data(html):
+    return json.loads(
+        html.split('id="replay-data" type="application/json">')[1].split("</script>")[0]
+    )
+
+
+@pytest.mark.parametrize(
+    ("status", "events"),
+    [
+        ("queued", "/api/matches/3/events"),
+        ("running", "/api/matches/3/events"),
+        ("completed", ""),
+        ("failed", ""),
+    ],
+)
+def test_only_a_match_in_progress_gets_a_live_stream(status, events):
+    html = render("match.html", URLS, m=match(status=status))
+    assert replay_data(html)["events"] == events
+
+
+def test_exported_pages_never_go_live():
+    from arena.export import FILE_URLS
+
+    html = render("match.html", FILE_URLS, m=match(status="running"))
+    assert replay_data(html)["events"] == ""
+
+
+def test_event_format_is_one_valid_sse_message():
+    msg = format_event("turn", 3, {"text": "line one\nline two"})
+    assert msg == 'id: 3\nevent: turn\ndata: {"text":"line one\\nline two"}\n\n'
+
+
+@pytest.mark.parametrize(
+    ("after", "header", "expected"),
+    [(0, None, 0), (4, None, 4), (4, "9", 9), (9, "4", 9), (2, "junk", 2), (-5, None, 0)],
+)
+def test_resume_point_takes_the_furthest_the_client_has_seen(after, header, expected):
+    assert resume_point(after, header) == expected
 
 
 def test_tournaments_show_round_failures_pause_reason_and_budget():
