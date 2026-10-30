@@ -40,6 +40,22 @@ async def test_recorded_lines_say_which_model_produced_them(tmp_path):
     assert [line["model"] for line in lines] == ["claude-a", "claude-b"]
 
 
+def test_load_recording_can_take_one_models_lines(tmp_path):
+    path = tmp_path / "rec.jsonl"
+    usage = Usage(1, 2).__dict__
+    rows = [("a", 1), ("b", 2), ("a", 3)]
+    path.write_text(
+        "".join(
+            json.dumps({"model": m, "tool_input": {"column": c}, "raw_text": "", "usage": usage})
+            + "\n"
+            for m, c in rows
+        )
+    )
+    script = load_recording(path, model="a")._script
+    assert [c.tool_input["column"] for c in script] == [1, 3]
+    assert len(load_recording(path)._script) == 3
+
+
 def test_recordings_made_before_the_model_field_still_load(tmp_path):
     path = tmp_path / "old.jsonl"
     usage = Usage(1, 2).__dict__
