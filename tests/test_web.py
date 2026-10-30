@@ -36,6 +36,8 @@ def lb_row(pid, rating=1600.0, rd=100.0):
         "elo": 1516.0,
         "games": 3,
         "points": 2.5,
+        "final": None,
+        "final_tournament_id": None,
     }
 
 
@@ -120,6 +122,25 @@ def test_leaderboard_escapes_player_ids_and_shows_confidence():
     assert ">9.75<" in html and "27.75 ± 18.00" in html  # Weng-Lin ranks the board
     assert "1600.0 ± 200.0" in html and ">1516.0<" in html
     assert "No rated matches yet." in html  # liars_dice has none
+
+
+def test_leaderboard_labels_live_ratings_and_shows_the_final_rating():
+    final = {"rating": 1620.4, "low": 1500.1, "high": 1740.7}
+    row = lb_row("<b>x</b>") | {"final": final, "final_tournament_id": 4}
+    other = lb_row("newcomer") | {"final_tournament_id": 4}
+    html = render("index.html", URLS, boards={"liars_dice": [row, other]}, role_stats=[])
+    assert "Final rating (95%)" in html and "Live ordinal" in html and "Live Elo" in html
+    assert "1620.4 (1500.1 – 1740.7)" in html
+    assert 'href="/tournaments/4"' in html
+    assert ">–<" in html  # a player outside that tournament has no final rating
+
+
+def test_tournament_page_lists_final_ratings_only_when_there_are_any():
+    t = tournament()
+    final = {"<b>x</b>": {"rating": 1700.0, "low": 1600.0, "high": 1800.0}}
+    html = render("tournament.html", URLS, t=t, matches=[], final=final)
+    assert "Final ratings" in html and "1600.0 – 1800.0" in html and "<b>x</b>" not in html
+    assert "Final ratings" not in render("tournament.html", URLS, t=t, matches=[], final=None)
 
 
 def test_werewolf_role_stats_show_win_rates_by_role_and_claims():
@@ -214,10 +235,16 @@ def test_tournaments_show_round_failures_pause_reason_and_budget():
 def test_tournament_page_lists_its_matches():
     ms = [list_row(status="queued")]
     html = render(
-        "tournament.html", URLS, t=tournament(status="paused", last_error="x"), matches=ms
+        "tournament.html",
+        URLS,
+        t=tournament(status="paused", last_error="x"),
+        matches=ms,
+        final=None,
     )
     assert 'href="/matches/3"' in html and "a vs b" in html and "Paused because" in html
-    assert "No matches yet." in render("tournament.html", URLS, t=tournament(), matches=[])
+    assert "No matches yet." in render(
+        "tournament.html", URLS, t=tournament(), matches=[], final=None
+    )
 
 
 def test_match_page_shows_moves_rejections_and_forfeits():

@@ -6,6 +6,7 @@ Each test drops and recreates the public schema, so never point this at real dat
 
 import asyncio
 import json
+import math
 import os
 import re
 import time
@@ -991,3 +992,63 @@ async def test_rejections_survive_the_turn_log_and_reach_the_api(pool):
     first, second = await store.load_turns(str(m.id))
     assert first.rejections == rejected and second.rejections == []
     assert (await read.match_detail(pool, m.id))["turns"][0]["rejections"] == rejected
+
+
+async def _finish(pool, tid):
+    """Complete every queued match of a tournament: the first-listed player wins."""
+    i = 0
+    while (m := await queue.claim(pool, f"f{i}", 30)) is not None:
+        winner = min(m.seats)
+        scores = [1.0, 0.0] if m.seats[0] == winner else [0.0, 1.0]
+        assert await queue.complete(pool, m.id, f"f{i}", scores, placements_from_scores(scores))
+        i += 1
+
+
+async def test_round_robin_matches_are_stored_in_shuffled_order(pool):
+    tid, n = await create_round_robin(pool, "connect4", FIVE[:3], 10, budget_usd=None, seed=4)
+    rows = await pool.fetch(
+        "SELECT array_agg(s.player_id ORDER BY s.seat) AS seats FROM matches m "
+        "JOIN match_seats s ON s.match_id = m.id WHERE m.tournament_id = $1 "
+        "GROUP BY m.id ORDER BY m.id",
+        tid,
+    )
+    pairs = [frozenset(r["seats"]) for r in rows]
+    assert n == 30 and sum(a != b for a, b in pairwise(pairs)) > 8
+
+
+async def test_final_ratings_ignore_play_order_and_reach_the_leaderboard(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, 6, budget_usd=None, seed=1)
+    assert await ratings.final_ratings(pool, tid) is None  # not finished
+
+    ids = [r["id"] for r in await pool.fetch("SELECT id FROM matches ORDER BY id")]
+    for i, match_id in enumerate(ids):  # r1 wins 4, r2 wins 2, in claim order
+        m = await queue.claim(pool, f"w{i}", 30)
+        assert m.id == match_id
+        r1_wins = i < 4
+        scores = [1.0, 0.0] if (m.seats[0] == "r1") == r1_wins else [0.0, 1.0]
+        assert await queue.complete(pool, m.id, f"w{i}", scores, placements_from_scores(scores))
+    assert await tournament_status(pool, tid) == "completed"
+
+    final = await ratings.final_ratings(pool, tid)
+    assert list(final) == ["r1", "r2"]
+    gap = final["r1"]["rating"] - final["r2"]["rating"]
+    assert gap == pytest.approx(400 * math.log10(2), abs=0.2)  # 4:2 odds
+    assert final["r1"]["low"] < final["r1"]["rating"] < final["r1"]["high"]
+
+    board = {r["player_id"]: r for r in await leaderboard(pool, "connect4")}
+    assert board["r1"]["final"] == final["r1"] and board["r1"]["final_tournament_id"] == tid
+    assert "Final ratings" in await web.tournament_page(pool, web.Urls(), tid)
+    assert "Final rating (95%)" in await web.index_page(pool, web.Urls())
+
+
+async def test_no_finite_estimate_or_multi_seat_means_no_final_rating(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, 2, budget_usd=None, seed=1)
+    await _finish(pool, tid)  # r1 wins everything
+    assert await tournament_status(pool, tid) == "completed"
+    assert await ratings.final_ratings(pool, tid) is None
+    assert all(r["final"] is None for r in await leaderboard(pool, "connect4"))
+
+    wid, _ = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=2)
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)
+    assert await ratings.final_ratings(pool, wid) is None
+    assert all(r["final_tournament_id"] is None for r in await leaderboard(pool, "werewolf"))

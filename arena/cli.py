@@ -199,10 +199,15 @@ async def _leaderboard(args: argparse.Namespace) -> None:
         rows = await leaderboard(pool, args.game)
     finally:
         await pool.close()
-    # Ranked by Weng-Lin ordinal (mu - 3*sigma); Glicko-2 and Elo are heads-up-only extras.
+    # Ranked by live Weng-Lin ordinal (mu - 3*sigma); Glicko-2 and Elo are heads-up-only.
+    if rows and rows[0]["final_tournament_id"] is not None:
+        print(f"final = Bradley-Terry fit of tournament {rows[0]['final_tournament_id']}")
     for i, r in enumerate(rows, 1):
+        f = r["final"]
+        final = f"{f['rating']} ({f['low']}-{f['high']})" if f else "-"
         print(
-            f"{i:>2}. {r['player_id']:<28} {r['ordinal']:>7} (mu={r['mu']} sigma={r['sigma']})"
+            f"{i:>2}. {r['player_id']:<28} final={final}"
+            f" live: {r['ordinal']:>7} (mu={r['mu']} sigma={r['sigma']})"
             f" glicko={r['rating']} +/- {2 * r['rd']:<6}"
             f" elo={r['elo']:<7} games={r['games']}  pts={r['points']}"
         )

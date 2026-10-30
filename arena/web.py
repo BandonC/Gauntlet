@@ -16,7 +16,7 @@ from jinja2 import Environment, PackageLoader, StrictUndefined, select_autoescap
 from markupsafe import Markup
 
 from arena.games.registry import list_games
-from arena.store import metrics, read
+from arena.store import metrics, ratings, read
 from arena.store.ratings import leaderboard
 
 SERVER_ROUTES = {
@@ -119,7 +119,8 @@ async def tournament_page(pool: asyncpg.Pool, urls: Urls, tournament_id: int) ->
     if not found:
         return None
     matches = await read.list_matches(pool, tournament_id, limit=500)
-    return render("tournament.html", urls, t=found[0], matches=matches)
+    final = await ratings.final_ratings(pool, tournament_id)
+    return render("tournament.html", urls, t=found[0], matches=matches, final=final)
 
 
 async def matches_page(pool: asyncpg.Pool, urls: Urls) -> str:

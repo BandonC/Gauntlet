@@ -9,6 +9,7 @@ JSON endpoints:
   GET /api/health
   GET /api/games
   GET /api/tournaments                 progress and spend per tournament
+  GET /api/tournaments/{id}/final      order-independent final ratings, or null
   GET /api/leaderboard/{game}
   GET /api/metrics/{game}?tournament_id=   illegal-move rate, forfeits, latency, cost, cache
   GET /api/matches?tournament_id=&limit=
@@ -27,7 +28,7 @@ from arena import live, web
 from arena.config import settings
 from arena.games.registry import list_games
 from arena.store import metrics as m_store
-from arena.store import read
+from arena.store import ratings, read
 from arena.store import tournaments as t_store
 from arena.store.db import create_pool
 
@@ -89,6 +90,11 @@ async def games() -> list[str]:
 @app.get("/api/tournaments")
 async def tournaments() -> list[dict]:
     return await read.list_tournaments(app.state.pool)
+
+
+@app.get("/api/tournaments/{tournament_id}/final")
+async def tournament_final(tournament_id: int) -> dict | None:
+    return await ratings.final_ratings(app.state.pool, tournament_id)
 
 
 @app.get("/api/leaderboard/{game}")
