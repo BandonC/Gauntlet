@@ -12,13 +12,14 @@ from itertools import pairwise
 import asyncpg
 import pytest
 
+from arena import web
 from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer
 from arena.ratings.glicko2 import Glicko, update_pair
 from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
-from arena.store import queue, ratings
+from arena.store import queue, ratings, read
 from arena.store.db import create_pool
 from arena.store.metrics import player_metrics
 from arena.store.migrate import migrate
@@ -621,3 +622,27 @@ async def test_swiss_paused_on_failure_and_resumed_round_carries_on(pool):
     await run_worker(pool, FIVE_FACTORY, FAST, concurrency=2, exit_when_idle=True)
     t = await pool.fetchrow("SELECT status, current_round FROM tournaments WHERE id = $1", tid)
     assert (t["status"], t["current_round"]) == ("completed", 2)
+
+
+async def test_every_page_renders_from_a_real_tournament(pool):
+    tid, n = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    urls = web.Urls()
+
+    index = await web.index_page(pool, urls)
+    assert "<h2>connect4</h2>" in index and "r1" in index and "r2" in index
+    assert "<h2>liars_dice</h2>" in index and "No rated matches yet." in index
+
+    ids = [m["id"] for m in await read.list_matches(pool, tid)]
+    assert len(ids) == n
+    t_html = await web.tournament_page(pool, urls, tid)
+    assert all(f'href="/matches/{i}"' in t_html for i in ids) and "completed" in t_html
+    assert f'href="/tournaments/{tid}"' in await web.tournaments_page(pool, urls)
+    recent = await web.matches_page(pool, urls)
+    assert all(f'href="/matches/{i}"' in recent for i in ids)
+
+    detail = await read.match_detail(pool, ids[0])
+    m_html = await web.match_page(pool, urls, ids[0])
+    assert m_html.count("<tr>") == 1 + len(detail["turns"])  # header + one row per turn
+    assert await web.match_page(pool, urls, 10**9) is None
+    assert await web.tournament_page(pool, urls, 10**9) is None

@@ -1,0 +1,20 @@
+{% macro match_table(matches, url) %}
+{% if matches %}
+<div class="wrap"><table>
+  <thead><tr><th>ID</th><th>Players</th><th>Status</th><th>Scores</th><th class="num">Cost</th></tr></thead>
+  <tbody>
+  {% for m in matches %}
+    <tr>
+      <td><a href="{{ url('match', id=m.id) }}">#{{ m.id }}</a></td>
+      <td>{{ m.seats | join(' vs ') }}</td>
+      <td>{{ m.status }}</td>
+      <td>{{ m.scores | join(' – ') if m.scores else '' }}</td>
+      <td class="num">{{ m.cost_usd | usd }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="muted">No matches yet.</p>
+{% endif %}
+{% endmacro %}

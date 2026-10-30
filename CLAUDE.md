@@ -20,7 +20,7 @@ Optimise for correctness and clear failure semantics over features.
 | Game contract, Connect 4, match runner, players, Elo, round-robin | Done, unit-tested |
 | Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
-| API + placeholder UI (leaderboard, tournaments, replay) | Works end to end; UI is a stopgap |
+| JSON API + Jinja2 pages (leaderboards, tournaments, matches, match turns) | Done; replay stepping is the next UI item |
 | Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats; tournaments stay heads-up) | Done, unit-tested; no UI renderer yet |
@@ -77,7 +77,9 @@ arena/
   store/                asyncpg pool, migrations runner, queue (claim/heartbeat/complete),
                         PostgresTurnStore (fenced), tournament creation, leaderboard
   worker.py             claim → run with heartbeat → complete / release for retry
-  api.py, static/       FastAPI read API + placeholder page
+  api.py                FastAPI: JSON API + HTML routes
+  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export
+  store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2}.py, tournaments.py (round_robin), cli.py, config.py
 migrations/             forward-only SQL, applied in filename order
@@ -197,7 +199,7 @@ runs (loops, scheduled tasks) skip them.
       FastAPI; `arena export` renders the same templates to static HTML + JSON. Replay
       stepping in plain JS from frames embedded in the page. No Vite, no HTMX, no build
       step. Adding `jinja2` to the project dependencies is approved.
-- [ ] Jinja2 templates replace `static/index.html`: leaderboard (rating ± 2·RD, Elo,
+- [x] Jinja2 templates replace `static/index.html`: leaderboard (rating ± 2·RD, Elo,
       games), tournaments (round, paused reason), match list, replay page. Same data as
       the JSON API, which stays.
 - [ ] Replay page: every turn's `spectator_view` frame embedded as JSON; plain-JS
@@ -288,6 +290,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   scrambles other seats' dice at every turn of random games to prove it. Bots must stay
   stateless (decide from the view). `LiarsDiceBot` isn't a roster provider yet, so
   Postgres tournaments can only use it once roster.py learns a bot provider.
+- Pages: `web.py` page builders take `(pool, Urls)` and return HTML; FastAPI wraps them
+  and `arena export` should call the same builders with file-path `Urls`. Never hard-code
+  an href in a template: use `url('match', id=...)`. Templates use StrictUndefined, so a
+  missing field raises (tested in `tests/test_web.py`); test pages by calling the builders
+  (no `TestClient`: it needs `httpx`). Read queries live in `store/read.py`, shared with
+  the JSON API so both always show the same data.
   Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
   re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
