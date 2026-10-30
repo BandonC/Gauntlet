@@ -100,6 +100,11 @@ async def metrics(game: str, tournament_id: int | None = None) -> list[dict]:
     return await m_store.player_metrics(app.state.pool, game, tournament_id)
 
 
+@app.get("/api/werewolf/roles")
+async def werewolf_roles(tournament_id: int | None = None) -> list[dict]:
+    return await m_store.werewolf_metrics(app.state.pool, tournament_id)
+
+
 @app.get("/api/matches")
 async def matches(tournament_id: int | None = None, limit: int = 50) -> list[dict]:
     return await read.list_matches(app.state.pool, tournament_id, limit)

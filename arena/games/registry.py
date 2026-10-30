@@ -3,11 +3,12 @@ from __future__ import annotations
 from arena.games.base import Game
 from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
+from arena.games.werewolf import Werewolf
 
 _GAMES: dict[str, Game] = {
     "connect4": Connect4(),
     "liars_dice": LiarsDice(),
-    # v2: "werewolf": Werewolf(),
+    "werewolf": Werewolf(),
 }
 
 

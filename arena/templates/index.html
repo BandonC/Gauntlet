@@ -26,4 +26,25 @@
 <p class="muted">No rated matches yet.</p>
 {% endif %}
 {% endfor %}
+{% if role_stats %}
+<h2>Werewolf roles</h2>
+<p class="muted">Roles shape results, so read ratings beside win rate by role. Claims are literal matches only: paraphrases are missed.</p>
+<div class="wrap"><table>
+  <thead><tr><th>Player</th><th class="num">Wolf</th><th class="num">Seer</th><th class="num">Villager</th><th class="num">True claims</th><th class="num">Bluffs</th><th class="num">Leaks</th><th class="num">Truncated</th></tr></thead>
+  <tbody>
+  {% for r in role_stats %}
+    <tr>
+      <td>{{ r.player_id }}</td>
+      {% for role in ('wolf', 'seer', 'villager') %}
+      <td class="num">{{ r[role ~ '_win_rate'] if r[role ~ '_win_rate'] is not none else '–' }} ({{ r[role ~ '_games'] }})</td>
+      {% endfor %}
+      <td class="num">{{ r.true_claims }}</td>
+      <td class="num">{{ r.false_claims }}</td>
+      <td class="num">{{ r.leaks }}</td>
+      <td class="num">{{ r.truncated_messages }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
 {% endblock %}

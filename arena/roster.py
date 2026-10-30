@@ -13,7 +13,7 @@ from pathlib import Path
 
 from arena.costs import FREE, Pricing
 from arena.players.base import Player
-from arena.players.bots import RandomPlayer
+from arena.players.bots import RandomPlayer, build_bot
 from arena.players.llm import LLMPlayer, identity_hash
 from arena.players.prompting import load_prompt
 from arena.providers.base import Provider
@@ -25,7 +25,7 @@ from arena.providers.retry import RetryingProvider
 @dataclass(frozen=True)
 class PlayerConfig:
     id: str
-    provider: str  # "anthropic" | "openai" | "random"
+    provider: str  # "anthropic" | "openai" | "random" | "bot" (model = the bot's game)
     model: str = ""
     prompt: str = ""
     temperature: float | None = 0.0
@@ -70,6 +70,8 @@ def config_hash(cfg: PlayerConfig) -> str:
     """Stable identity for the players table (no API key or provider object needed)."""
     if cfg.provider == "random":
         return f"random-{cfg.seed}"
+    if cfg.provider == "bot":
+        return f"bot-{cfg.model}-{cfg.seed}"
     return identity_hash(
         cfg.provider, cfg.model, load_prompt(cfg.prompt), cfg.temperature, cfg.max_tokens
     )
@@ -132,6 +134,8 @@ class PlayerFactory:
             raise ValueError(f"player {player_id!r} not in roster")
         if cfg.provider == "random":
             return RandomPlayer(cfg.id, cfg.seed), FREE
+        if cfg.provider == "bot":
+            return build_bot(cfg.model, cfg.id, cfg.seed), FREE
         player = LLMPlayer(
             cfg.id,
             self._provider(cfg.provider),

@@ -12,6 +12,10 @@ Design rules (see CLAUDE.md):
 - Free-text actions (e.g. Werewolf discussion) can't be enumerated, so legality is
   checked by `validate_action`; `legal_actions_hint` is optional help for prompts
   and random players.
+- `options` are per-match settings from `matches.options` (e.g. Werewolf's scheduled
+  roles). They're part of the match's identity for replay, so they go through
+  `MatchSpec` to `initial_state`. Games that take none ignore them. Without options a
+  game must still be fully playable from its seed alone.
 """
 
 from __future__ import annotations
@@ -33,7 +37,7 @@ class Game(Protocol):
         """Plain-language rules, included in the (cacheable) system prompt."""
         ...
 
-    def initial_state(self, num_players: int, seed: int) -> State: ...
+    def initial_state(self, num_players: int, seed: int, options: JSON | None = None) -> State: ...
 
     def current_player(self, state: State) -> int:
         """Seat index that must act next. Only called when not terminal."""
@@ -62,6 +66,16 @@ class Game(Protocol):
     def validate_action(self, state: State, seat: int, action: Action) -> str | None:
         """None if legal; otherwise a short error shown back to the player."""
         ...
+
+    def normalize_action(self, state: State, seat: int, action: Action) -> Action:
+        """The action as it enters the log, for a VALIDATED action (Werewolf truncates long
+        messages). If this changes it, MatchRunner flags the turn as truncated."""
+        return action
+
+    def role_pool(self, num_players: int) -> list[str] | None:
+        """Roles a table of this size deals out, one per seat, if the game has any.
+        Table tournaments balance them per player and pass them in options["roles"]."""
+        return None
 
     def apply(self, state: State, seat: int, action: Action) -> State:
         """Apply a VALIDATED action. Must not mutate `state`."""

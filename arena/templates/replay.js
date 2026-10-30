@@ -55,6 +55,38 @@ const RENDERERS = {
       `<tbody>${rows}</tbody></table><p class="ld-bids">Bids: ${bids}</p>${reveal}<p class="status">${status}</p>`
     );
   },
+
+  werewolf(f, seats) {
+    const dead = new Map(f.deaths.map((d) => [d.seat, d]));
+    const fate = { night: "killed at night", vote: "voted out", forfeit: "forfeited" };
+    const rows = f.roles
+      .map((role, i) => {
+        const cls = i === f.to_move ? ' class="turn"' : "";
+        const d = dead.get(i);
+        const status = d ? `<span class="muted">${esc(fate[d.cause])}, day ${d.day}</span>` : "alive";
+        return `<tr${cls}><td>${name(seats, i)}</td><td>${esc(role)}</td><td>${status}</td></tr>`;
+      })
+      .join("");
+    const said = f.messages
+      .map((m) => `<li>${name(seats, m.seat)} (round ${m.round}): ${esc(m.text)}</li>`)
+      .join("");
+    const pick = (v) => `${name(seats, v.seat)} → ${name(seats, v.target)}`;
+    const line = (label, items) => (items.length ? `<p class="ld-bids">${label}: ${items.join(", ")}</p>` : "");
+    const found = f.inspections.map((i) => `night ${i.night}: ${name(seats, i.seat)} ${i.wolf ? "is a wolf" : "is not a wolf"}`);
+    let status;
+    if (f.winner) status = `The ${esc(f.winner)} win${f.winner === "wolves" ? "" : "s"}`;
+    else if (f.phase === "night") status = `Night ${f.day}: ${name(seats, f.to_move)} to act`;
+    else if (f.phase === "vote") status = `Day ${f.day} vote: ${name(seats, f.to_move)} to vote`;
+    else status = `Day ${f.day}, discussion round ${f.discussion_round}: ${name(seats, f.to_move)} to speak`;
+    return (
+      `<table class="ld"><thead><tr><th>Player</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>` +
+      (said ? `<ul>${said}</ul>` : "") +
+      line("Wolf votes tonight", f.wolf_votes.map(pick)) +
+      line("Day votes", f.votes.map(pick)) +
+      line("Seer", found) +
+      `<p class="status">${status}</p>`
+    );
+  },
 };
 
 const fallback = (f) => `<pre>${esc(JSON.stringify(f, null, 1))}</pre>`;
@@ -68,7 +100,10 @@ function describeTurn(t, seats) {
   const why = t.error ? `; last rejected: ${t.error}` : "";
   let move;
   if (t.forfeited) move = `forfeit after ${t.attempts} invalid attempts${why}`;
-  else move = (t.label ?? JSON.stringify(t.action)) + (t.attempts > 1 ? ` (attempt ${t.attempts}${why})` : "");
+  else {
+    move = (t.label ?? JSON.stringify(t.action)) + (t.attempts > 1 ? ` (attempt ${t.attempts}${why})` : "");
+    if (t.truncated) move += " (truncated)";
+  }
   return `Turn ${t.turn_no}: ${name(seats, t.seat)} → ${esc(move)}`;
 }
 

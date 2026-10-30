@@ -24,7 +24,8 @@ Optimise for correctness and clear failure semantics over features.
 | Ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
-| Presentation, Werewolf | See Roadmap |
+| Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer. **No real model has played it.** |
+| Presentation | See Roadmap |
 
 ## Commands
 
@@ -72,6 +73,7 @@ arena/
   games/base.py         Game protocol  ← read first
   games/connect4.py     reference implementation
   games/liars_dice.py   hidden information (dice), per-round randomness
+  games/werewolf.py     hidden roles, free text, phases, role-claim classifier
   engine/match_runner.py  MatchRunner, iter_states (replay), TurnStore, LeaseLost
   players/              Player protocol, RandomPlayer/ScriptedPlayer, LLMPlayer, prompts
   players/prompts/<game>/<version>/{system,turn}.txt
@@ -218,9 +220,9 @@ runs (loops, scheduled tasks) skip them.
       dice from `Random(f"{seed}:{r}")`; first real test of `player_view` hiding.
 - [x] Multiplayer ratings and pairing: Weng-Lin Plackett-Luce on every match, placements
       on matches, `--format tables` (round-robin, Swiss, Elo and Glicko-2 stay heads-up).
-- [ ] Werewolf engine + scripted bots (flagship): multi-phase turns (discussion → vote →
-      night), per-seat views, discussion log in state with summarisation of old rounds
-      to bound context (cost grows ~quadratically otherwise), "role leaked" metric.
+- [x] Werewolf engine + scripted bots (flagship): 7 seats, multi-phase turns (night →
+      discussion → vote), per-seat views, discussion log in state reduced only past a token
+      limit, scheduled role balance, role-claim metric, `bot` roster provider.
 - [ ] `[human]` First real Liar's Dice and Werewolf tournaments.
 
 ## Unattended runs (loops and scheduled tasks)
@@ -280,9 +282,10 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   mu - 3*sigma. `tests/test_weng_lin.py` holds reference values from openskill 6.2.0
   with `PlackettLuce(tau=0.0)`, which is not a dependency. After applying migration 0005
   run `arena ratings rebuild` once: existing rows start at the Weng-Lin defaults.
-- Werewolf will bias Weng-Lin: wolves and villagers are asymmetric teams, and ties at
-  rank 1 rate each winner individually with no idea of which side they were on. Handling
-  that is part of the Werewolf design; multi-player teams aren't modelled in `rate`.
+- Werewolf biases Weng-Lin: wolves and villagers are asymmetric teams, and ties at rank 1
+  rate each winner individually with no idea of which side they were on. The mitigation
+  is balancing roles per player and showing win rate by role beside the rating; the
+  maths is unchanged, and multi-player teams aren't modelled in `rate`.
 - Placements: per-seat ranks on `matches.placements`, 1 is best, ties allowed.
   `Game.placements()` defaults to competition ranking of `scores()` (1, 2, 2, 4); only
   their order matters to ratings. `MatchRunner` then moves forfeits below everyone with
@@ -317,8 +320,31 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   `player_view` has only your own dice plus public info (counts, this round's bids, the
   previous challenge's reveal); `test_player_view_never_depends_on_other_players_dice`
   scrambles other seats' dice at every turn of random games to prove it. Bots must stay
-  stateless (decide from the view). `LiarsDiceBot` isn't a roster provider yet, so
-  Postgres tournaments can only use it once roster.py learns a bot provider.
+  stateless (decide from the view). Bots reach Postgres tournaments through the roster:
+  `provider = "bot"`, `model = "liars_dice"` or `"werewolf"`, each with its own `seed`
+  (identity is `bot-<model>-<seed>`, and the players table keeps those unique).
+- Werewolf: exactly 7 seats (2 wolves, seer, 4 villagers); the engine docstring has the
+  rules. `player_view` has no `to_move`: at night it would expose the wolves and seer.
+  Only the night kill draws ties (`Random(f"{seed}:night:{n}")`); a tied day vote
+  eliminates nobody, so wolves killing every night is what guarantees the game ends.
+  Random players can't play it: discussion is free text, so `legal_actions_hint` is None.
+- `Game.normalize_action` runs after validation and the result is what enters the log;
+  if it differs, the turn gets `truncated=true` (the full text stays in `raw_response`).
+  Werewolf messages over 300 characters are truncated, never invalid.
+- `matches.options` goes through `MatchSpec` to `Game.initial_state`, so it's part of
+  replay. `Game.role_pool()` opts a game into `assign_roles`, which `create_tables` calls
+  and stores as `options.roles`; without options Werewolf shuffles from the seed. Role
+  counts differ by at most 1 per role when the search finds that, else it logs a warning.
+  Any new read of `initial_state` for a stored match must pass the options.
+- Werewolf context: full text by default. `context_token_limit` (option, default 20,000,
+  estimated at 4 characters a token over rules + view) reduces the oldest finished days
+  to votes and deaths inside `player_view`. The current day always stays in full, so a
+  low limit can still be exceeded. A 7-seat game doesn't approach the default: it needs
+  longer games or an explicit low limit.
+- Role claims (`werewolf.classify_claims`, reported by `store/metrics.werewolf_metrics`,
+  `/api/werewolf/roles` and the index page) are literal matches only: "I am a/the X",
+  "I'm X", "player/seat N is X". Paraphrases, negations and hedged wording are missed, and
+  quoted or hypothetical phrasing is counted as if it were a claim.
 - Pages: `web.py` page builders take `(pool, Urls)` and return HTML; FastAPI wraps them
   and `arena export` should call the same builders with file-path `Urls`. Never hard-code
   an href in a template: use `url('match', id=...)`. Templates use StrictUndefined, so a

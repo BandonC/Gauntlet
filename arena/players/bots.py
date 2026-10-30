@@ -6,7 +6,7 @@ import json
 import math
 import random
 
-from arena.players.base import Decision, TurnContext
+from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
 
@@ -81,6 +81,47 @@ class LiarsDiceBot:
             return Decision(action={"action": "challenge"})
         _, q, neg_f = min(options)
         return Decision(action={"action": "bid", "quantity": q, "face": -neg_f})
+
+
+class WerewolfBot:
+    """Scripted Werewolf player. Stateless: every choice is a pure function of (seed, view,
+    attempt). Wolves back their partner's kill, the seer inspects new seats and names any
+    wolf it finds, and everyone else claims to be a villager and votes at random."""
+
+    def __init__(self, player_id: str = "werewolf-bot", seed: int = 0):
+        self.player_id = player_id
+        self.seed = seed
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        rng = random.Random(f"{self.seed}|{json.dumps(v, sort_keys=True)}|{ctx.attempt}")
+        targets = v["legal_targets"]
+        found = [r["seat"] for r in v["seer_results"] if r["wolf"] and r["seat"] in v["alive"]]
+        if v["phase"] == "discussion":
+            others = [s for s in v["alive"] if s != v["you"]]
+            text = f"I am a villager. I suspect player {rng.choice(others)}."
+            if found:
+                text = f"Player {found[0]} is a wolf. Vote with me."
+            return Decision(action={"action": "say", "message": text})
+        if v["phase"] == "vote":
+            target = found[0] if found else rng.choice(targets)
+            return Decision(action={"action": "vote", "target": target})
+        if v["role"] == "wolf":
+            backed = [w["target"] for w in v["wolf_votes"] if w["day"] == v["day"]]
+            target = next((t for t in backed if t in targets), rng.choice(targets))
+            return Decision(action={"action": "kill", "target": target})
+        seen = {r["seat"] for r in v["seer_results"]}
+        fresh = [t for t in targets if t not in seen]
+        return Decision(action={"action": "inspect", "target": rng.choice(fresh or targets)})
+
+
+def build_bot(kind: str, player_id: str, seed: int) -> Player:
+    """Roster `provider = "bot"`: `model` names which game's bot."""
+    if kind == "werewolf":
+        return WerewolfBot(player_id, seed)
+    if kind == "liars_dice":
+        return LiarsDiceBot(player_id)
+    raise ValueError(f"unknown bot {kind!r}; known: liars_dice, werewolf")
 
 
 def _at_least(k: int, n: int, p: float) -> float:

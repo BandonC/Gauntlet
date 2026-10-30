@@ -4,8 +4,9 @@ from itertools import combinations
 import pytest
 
 from arena.games.base import placements_from_scores, rank_forfeits_last
+from arena.games.werewolf import ROLES
 from arena.ratings.elo import EloTable, expected_score, update
-from arena.tournaments import round_robin, table_schedule
+from arena.tournaments import assign_roles, role_counts, round_robin, table_schedule
 
 
 def test_elo_is_zero_sum_and_symmetric():
@@ -129,3 +130,37 @@ def test_table_schedule_rejects_bad_input():
     ]:
         with pytest.raises(ValueError):
             table_schedule(ids, k, tables, 0)
+
+
+# (players, tables): 7 seats and Werewolf's role pool, with some players sitting out when
+# there are more than 7.
+ROLE_CONFIGS = [(7, 7), (7, 14), (7, 20), (8, 8), (8, 16), (9, 9), (10, 10), (10, 21), (12, 24)]
+
+
+@pytest.mark.parametrize(("n", "tables"), ROLE_CONFIGS)
+@pytest.mark.parametrize("seed", [0, 1, 2])
+def test_role_counts_differ_by_at_most_one_across_the_schedule(n, tables, seed):
+    ids = [f"p{i}" for i in range(n)]
+    pool = list(ROLES)
+    seatings = table_schedule(ids, len(pool), tables, seed)
+    roles = assign_roles(ids, seatings, pool, seed)
+
+    assert len(roles) == tables and all(sorted(t) == sorted(pool) for t in roles)
+    for role in set(pool):
+        counts = Counter(dict.fromkeys(ids, 0))
+        for seats, table in zip(seatings, roles, strict=True):
+            counts.update(p for p, r in zip(seats, table, strict=True) if r == role)
+        assert max(counts.values()) - min(counts.values()) <= 1, (role, counts)
+
+
+def test_assign_roles_is_pure():
+    ids = [f"p{i}" for i in range(8)]
+    seatings = table_schedule(ids, 7, 16, 3)
+    pool = list(ROLES)
+    assert assign_roles(ids, seatings, pool, 3) == assign_roles(ids, seatings, pool, 3)
+    assert assign_roles(ids, seatings, pool, 3) != assign_roles(ids, seatings, pool, 4)
+
+
+def test_role_counts_includes_players_who_never_held_the_role():
+    counts = role_counts(["a", "b"], [["a", "b"]], [["wolf", "seer"]])
+    assert counts == {"wolf": {"a": 1, "b": 0}, "seer": {"a": 0, "b": 1}}
