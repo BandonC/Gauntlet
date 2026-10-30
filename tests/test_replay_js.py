@@ -73,7 +73,7 @@ def test_liars_dice_frames_show_dice_bids_reveals_and_the_winner():
     html = out["frames"]
     assert html[0].count('class="die') == 15 and "no bids yet this round" in html[0]
     with_bids = next(i for i, f in enumerate(frames) if f["bids"])
-    assert "Bids: " in html[with_bids] and " × " in html[with_bids]
+    assert "Bids: " in html[with_bids] and ' × <span class="die">' in html[with_bids]
     with_reveal = next(i for i, f in enumerate(frames) if f["last_reveal"])
     assert "Revealed:" in html[with_reveal] and "lost a die" in html[with_reveal]
     winner = seats[frames[-1]["winner"]].replace("<", "&lt;").replace(">", "&gt;")
@@ -86,6 +86,8 @@ def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():
         {"turn_no": 0, "seat": 0, "action": {"column": 3}, "forfeited": False,
          "attempts": 2, "error": "column 9 is out of range"},
         {"turn_no": 1, "seat": 1, "action": None, "forfeited": True, "attempts": 3, "error": None},
+        {"turn_no": 2, "seat": 0, "action": {"column": 1}, "forfeited": False,
+         "attempts": 1, "error": None, "label": "column 1"},
     ]  # fmt: skip
     out = node(RENDER, {"game": "werewolf", "seats": [EVIL, "b"], "frames": [{"x": EVIL}],
                         "turns": turns})  # fmt: skip
@@ -93,6 +95,7 @@ def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():
     assert "Turn 0: &lt;b&gt;evil&lt;/b&gt;" in out["turns"][0]
     assert "last rejected: column 9 is out of range" in out["turns"][0]
     assert out["turns"][1] == "Turn 1: b → forfeit after 3 invalid attempts"
+    assert out["turns"][2] == "Turn 2: &lt;b&gt;evil&lt;/b&gt; → column 1"  # server label wins
 
 
 STEP = """

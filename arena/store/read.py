@@ -21,13 +21,13 @@ GROUP BY t.id ORDER BY t.id DESC
 """
 
 MATCHES_SQL = """
-SELECT m.id, m.tournament_id, m.game, m.status, m.scores, m.run_attempts,
+SELECT m.id, m.tournament_id, m.round, m.game, m.status, m.scores, m.run_attempts,
        array_agg(s.player_id ORDER BY s.seat) AS seats,
        (SELECT coalesce(sum(cost_usd), 0)::float
         FROM turns WHERE match_id = m.id) AS cost_usd
 FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE $1::bigint IS NULL OR m.tournament_id = $1
-GROUP BY m.id ORDER BY m.id DESC LIMIT $2
+GROUP BY m.id, m.round ORDER BY m.id DESC LIMIT $2
 """
 
 

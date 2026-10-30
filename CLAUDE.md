@@ -250,7 +250,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
    For free-text actions, add a scripted bot instead.
 5. Prompt in `players/prompts/<name>/v1/`.
 6. A small JS renderer for its `spectator_view` frames on the replay page (one function
-   per game, no framework).
+   per game, no framework), and a move label formatter in `web.MOVE_LABELS`.
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
@@ -302,7 +302,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   `{% include %}`: JS braces clash with Jinja), so pages stay single-file for export. It
   must never contain the text `</script`. Frame data is embedded with `| tojson`, which
   escapes `<>&`. A new game adds one function to `RENDERERS` (escape everything with
-  `esc`). `tests/test_replay_js.py` runs the real file in Node against engine frames,
+  `esc`) and a move formatter to `web.MOVE_LABELS` (turn table + replay info line;
+  unknown games fall back to sorted JSON, since jsonb reorders keys). `tests/test_replay_js.py` runs the real file in Node against engine frames,
   including stepping on a fake DOM; it is skipped when `node` isn't installed.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second

@@ -36,7 +36,7 @@ const RENDERERS = {
       })
       .join("");
     const bids = f.bids.length
-      ? f.bids.map((b) => `${name(seats, b.seat)}: ${b.quantity} × ${DIE[b.face]}`).join(" → ")
+      ? f.bids.map((b) => `${name(seats, b.seat)}: ${b.quantity} × <span class="die">${DIE[b.face]}</span>`).join(" → ")
       : '<span class="muted">no bids yet this round</span>';
     let reveal = "";
     const r = f.last_reveal;
@@ -44,7 +44,7 @@ const RENDERERS = {
       const shown = r.dice.map((d, i) => `${name(seats, i)} ${dice(d, r.face) || "–"}`).join("; ");
       reveal =
         `<p class="reveal">Round ${r.round}: ${name(seats, r.challenger)} challenged ` +
-        `${name(seats, r.bidder)}'s ${r.quantity} × ${DIE[r.face]}. Revealed: ${shown}. ` +
+        `${name(seats, r.bidder)}'s ${r.quantity} × <span class="die">${DIE[r.face]}</span>. Revealed: ${shown}. ` +
         `${r.actual} on the table, so ${name(seats, r.loser)} lost a die.</p>`;
     }
     const status = over
@@ -52,7 +52,7 @@ const RENDERERS = {
       : `Round ${f.round}, ${f.total_dice} dice in play: ${name(seats, f.to_move)} to act`;
     return (
       `<table class="ld"><thead><tr><th>Player</th><th>Dice</th><th class="num">Left</th></tr></thead>` +
-      `<tbody>${rows}</tbody></table><p>Bids: ${bids}</p>${reveal}<p class="status">${status}</p>`
+      `<tbody>${rows}</tbody></table><p class="ld-bids">Bids: ${bids}</p>${reveal}<p class="status">${status}</p>`
     );
   },
 };
@@ -68,7 +68,7 @@ function describeTurn(t, seats) {
   const why = t.error ? `; last rejected: ${t.error}` : "";
   let move;
   if (t.forfeited) move = `forfeit after ${t.attempts} invalid attempts${why}`;
-  else move = JSON.stringify(t.action) + (t.attempts > 1 ? ` (attempt ${t.attempts}${why})` : "");
+  else move = (t.label ?? JSON.stringify(t.action)) + (t.attempts > 1 ? ` (attempt ${t.attempts}${why})` : "");
   return `Turn ${t.turn_no}: ${name(seats, t.seat)} → ${esc(move)}`;
 }
 
