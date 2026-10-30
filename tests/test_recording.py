@@ -1,3 +1,6 @@
+import json
+
+from arena import cli
 from arena.cli import _build_player
 from arena.costs import FREE
 from arena.players.bots import LiarsDiceBot
@@ -22,6 +25,58 @@ async def test_recording_round_trips_through_load_recording(tmp_path):
     assert [await replay.complete(CompletionRequest("m", "s", "u", TOOL)) for _ in replies] == (
         replies
     )
+
+
+async def test_recorded_lines_say_which_model_produced_them(tmp_path):
+    path = tmp_path / "rec.jsonl"
+    replies = [
+        Completion({"column": 3}, "", Usage(10, 2)),
+        Completion({"column": 4}, "", Usage(9, 2)),
+    ]
+    rec = RecordingProvider(MockProvider(list(replies), name="anthropic"), path)
+    await rec.complete(CompletionRequest("claude-a", "s", "u", TOOL))
+    await rec.complete(CompletionRequest("claude-b", "s", "u", TOOL))
+    lines = [json.loads(line) for line in path.read_text().splitlines()]
+    assert [line["model"] for line in lines] == ["claude-a", "claude-b"]
+
+
+def test_recordings_made_before_the_model_field_still_load(tmp_path):
+    path = tmp_path / "old.jsonl"
+    usage = Usage(1, 2).__dict__
+    path.write_text(json.dumps({"tool_input": {}, "raw_text": "", "usage": usage}) + "\n")
+    assert len(load_recording(path)._script) == 1
+
+
+def test_worker_record_flag_reaches_the_factory_it_runs_with(tmp_path, monkeypatch):
+    seen = {}
+
+    class Pool:
+        async def close(self):
+            pass
+
+    async def create_pool(*a, **k):
+        return Pool()
+
+    async def seed_rate_limits(pool, limits):
+        return []
+
+    async def run_worker(pool, factory, cfg, **kwargs):
+        seen["factory"] = factory
+
+    monkeypatch.setattr("arena.store.db.create_pool", create_pool)
+    monkeypatch.setattr("arena.store.ratelimit.seed_rate_limits", seed_rate_limits)
+    monkeypatch.setattr("arena.store.ratelimit.postgres_buckets", lambda pool, vendors: {"v": 1})
+    monkeypatch.setattr("arena.worker.run_worker", run_worker)
+    monkeypatch.setattr("arena.worker.install_stop_signals", lambda stop: lambda: None)
+
+    def run(*flags):
+        cli.main(["worker", "--exit-when-idle", *flags])
+        return seen["factory"]
+
+    recorded = run("--record", str(tmp_path / "rec"))
+    assert recorded._record_dir == tmp_path / "rec"
+    assert recorded._token_sources == {"v": 1}  # shared rate limits survive the swap
+    assert run()._record_dir is None
 
 
 def test_factory_with_record_dir_wraps_each_vendor_adapter(tmp_path):

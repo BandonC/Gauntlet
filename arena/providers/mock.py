@@ -44,6 +44,7 @@ class RecordingProvider:
             f.write(
                 json.dumps(
                     {
+                        "model": req.model,  # a vendor's players share one file
                         "tool_input": out.tool_input,
                         "raw_text": out.raw_text,
                         "usage": out.usage.__dict__,
