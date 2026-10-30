@@ -62,6 +62,7 @@ class TurnRecord:
     cost_usd: float
     latency_ms: int
     truncated: bool = False  # the engine shortened this action (Game.normalize_action)
+    rejections: list[JSON] = field(default_factory=list)  # {attempt, action, reason}, in order
 
 
 @dataclass(frozen=True)
@@ -187,6 +188,7 @@ class MatchRunner:
         usage = Usage()
         latency = 0
         error: str | None = None
+        rejections: list[JSON] = []
         raw: str | None = None
 
         for attempt in range(1, self.max_attempts + 1):
@@ -207,9 +209,10 @@ class MatchRunner:
             raw = decision.raw
             if decision.action is None:
                 error = "no move was returned; call the tool with a legal move"
-                continue
-            error = self.game.validate_action(state, seat, decision.action)
+            else:
+                error = self.game.validate_action(state, seat, decision.action)
             if error is None:
+                last_rejection = rejections[-1]["reason"] if rejections else None
                 action = self.game.normalize_action(state, seat, decision.action)
                 record = self._record(
                     turn_no,
@@ -218,16 +221,27 @@ class MatchRunner:
                     False,
                     attempt,
                     raw,
-                    None,
+                    last_rejection,
                     usage,
                     latency,
                     truncated=action != decision.action,
+                    rejections=rejections,
                 )
                 return record, self.game.apply(state, seat, action)
+            rejections.append({"attempt": attempt, "action": decision.action, "reason": error})
 
         # Every attempt was invalid: forfeit. (Infra errors never reach here; they raise.)
         record = self._record(
-            turn_no, seat, None, True, self.max_attempts, raw, error, usage, latency
+            turn_no,
+            seat,
+            None,
+            True,
+            self.max_attempts,
+            raw,
+            error,
+            usage,
+            latency,
+            rejections=rejections,
         )
         return record, self.game.forfeit(state, seat)
 
@@ -243,6 +257,7 @@ class MatchRunner:
         usage: Usage,
         latency_ms: int,
         truncated: bool = False,
+        rejections: list[JSON] | None = None,
     ) -> TurnRecord:
         return TurnRecord(
             turn_no=turn_no,
@@ -256,6 +271,7 @@ class MatchRunner:
             cost_usd=self.pricing[seat].cost(usage),
             latency_ms=latency_ms,
             truncated=truncated,
+            rejections=rejections or [],
         )
 
     def _outcome(self, spec: MatchSpec, state: State, turns: list[TurnRecord]) -> MatchOutcome:

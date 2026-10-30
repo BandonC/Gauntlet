@@ -55,9 +55,12 @@ class RecordingProvider:
         return out
 
 
-def load_recording(path: Path) -> MockProvider:
+def load_recording(path: Path, model: str | None = None) -> MockProvider:
+    """A MockProvider that replays a recording, or only `model`'s lines of it (players of
+    one vendor share a file)."""
     script: list[Completion | ProviderError] = []
     for line in path.read_text().splitlines():
         d = json.loads(line)
-        script.append(Completion(d["tool_input"], d["raw_text"], Usage(**d["usage"])))
+        if model is None or d.get("model") == model:
+            script.append(Completion(d["tool_input"], d["raw_text"], Usage(**d["usage"])))
     return MockProvider(script, name="recording")
