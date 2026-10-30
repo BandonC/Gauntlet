@@ -114,4 +114,10 @@ async def matches_page(pool: asyncpg.Pool, urls: Urls) -> str:
 
 async def match_page(pool: asyncpg.Pool, urls: Urls, match_id: int) -> str | None:
     m = await read.match_detail(pool, match_id)
-    return None if m is None else render("match.html", urls, m=m)
+    return None if m is None else match_html(urls, m)
+
+
+def match_html(urls: Urls, m: dict) -> str:
+    """The match page from an already-loaded `read.match_detail` (export reuses it for
+    the JSON file instead of replaying the log twice)."""
+    return render("match.html", urls, m=m)

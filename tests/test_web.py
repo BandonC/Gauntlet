@@ -227,3 +227,23 @@ def test_match_list_shows_game_and_tournament_round():
     html = render("matches.html", URLS, matches=rows)
     assert "<td>liars_dice</td>" in html and "<td>connect4</td>" in html
     assert '<a href="/tournaments/7">#7</a>, round 2' in html
+
+
+def test_export_routes_are_flat_and_cover_every_server_route():
+    from arena.export import FILE_ROUTES
+
+    assert FILE_ROUTES.keys() == SERVER_ROUTES.keys()
+    # Every page sits in the same directory, so relative links work from any of them.
+    assert not any("/" in r or r.startswith(".") for r in FILE_ROUTES.values())
+    assert len(set(FILE_ROUTES.values())) == len(FILE_ROUTES)
+
+
+def test_export_json_encodes_postgres_decimals_as_numbers():
+    from decimal import Decimal
+
+    from arena.export import _json_default
+
+    out = json.dumps({"n": Decimal(3), "x": Decimal("0.25")}, default=_json_default)
+    assert json.loads(out) == {"n": 3, "x": 0.25}
+    with pytest.raises(TypeError):
+        json.dumps({"s": {1}}, default=_json_default)
