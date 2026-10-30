@@ -5,7 +5,9 @@ Each test drops and recreates the public schema, so never point this at real dat
 """
 
 import asyncio
+import json
 import os
+import re
 import time
 from itertools import pairwise
 
@@ -15,6 +17,7 @@ import pytest
 from arena import web
 from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
+from arena.export import export_site
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer
 from arena.ratings.glicko2 import Glicko, update_pair
@@ -647,3 +650,41 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     assert 'id="replay-data"' in m_html and "initReplay" in m_html
     assert await web.match_page(pool, urls, 10**9) is None
     assert await web.tournament_page(pool, urls, 10**9) is None
+
+
+async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_path):
+    tid, n = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    ids = await read.match_ids(pool)
+    assert len(ids) == n
+
+    summary = await export_site(pool, tmp_path)
+    assert summary.pages == 3 + 1 + n  # index, tournaments, matches, one tournament, n matches
+    assert (tmp_path / ".nojekyll").exists()
+
+    pages = sorted(tmp_path.glob("*.html"))
+    assert len(pages) == summary.pages
+    for html_file in pages:
+        html = html_file.read_text(encoding="utf-8")
+        hrefs = re.findall(r'href="([^"]+)"', html)
+        assert hrefs, html_file.name
+        for href in hrefs:
+            assert not href.startswith("/"), (html_file.name, href)  # would break on disk
+            assert (tmp_path / href).is_file(), (html_file.name, href)
+    t_html = (tmp_path / f"tournament-{tid}.html").read_text(encoding="utf-8")
+    assert all(f'href="match-{i}.html"' in t_html for i in ids)
+    assert 'id="replay-data"' in (tmp_path / f"match-{ids[0]}.html").read_text(encoding="utf-8")
+
+    api = tmp_path / "api"
+    assert len(list(api.rglob("*.json"))) == summary.json_files
+    assert json.loads((api / "matches" / f"{ids[0]}.json").read_text(encoding="utf-8")) == (
+        json.loads(json.dumps(await read.match_detail(pool, ids[0])))
+    )
+    board = json.loads((api / "leaderboard" / "connect4.json").read_text(encoding="utf-8"))
+    assert {r["player_id"] for r in board} == {"r1", "r2"}
+    metrics = json.loads((api / "metrics" / "connect4.json").read_text(encoding="utf-8"))
+    assert all(isinstance(r["attempts"], int) for r in metrics)  # Decimal -> number
+    assert json.loads((api / "tournaments.json").read_text(encoding="utf-8"))[0]["id"] == tid
+
+    # Re-exporting into the same directory overwrites cleanly.
+    assert (await export_site(pool, tmp_path)).pages == summary.pages
