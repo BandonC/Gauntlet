@@ -1,5 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
+{% block head %}
+<style>
+  .controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin: 8px 0; }
+  .controls button { font: inherit; padding: 2px 10px; }
+  .controls input[type=range] { flex: 1; min-width: 120px; }
+  #replay-info { min-height: 1.5em; }
+  .c4 { display:grid; grid-template-columns: repeat(7, 34px); gap: 4px; padding: 8px;
+        background: color-mix(in srgb, var(--o) 18%, transparent); border-radius: 8px; width: max-content; }
+  .c4 .cell { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); }
+  .c4 .disc.X { background: var(--x); } .c4 .disc.O { background: var(--o); }
+  .ld { width: auto; } .ld .dice { font-size: 26px; line-height: 1; letter-spacing: 2px; }
+  .ld tr.turn td { font-weight: 600; } .die.hit { color: var(--x); }
+  .status { font-weight: 600; }
+  tr[data-frame] { cursor: pointer; } tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
+</style>
+{% endblock %}
 {% block content %}
 <h1>Match #{{ m.id }}</h1>
 <dl>
@@ -11,13 +27,30 @@
   <dt>Status</dt><dd>{{ m.status }}</dd>
   {% if m.last_error %}<dt>Last error</dt><dd class="bad">{{ m.last_error }}</dd>{% endif %}
 </dl>
+<h2>Replay</h2>
+<div class="controls">
+  <button id="replay-first" title="Start">⏮</button>
+  <button id="replay-prev" title="Previous (←)">◀</button>
+  <button id="replay-play">▶ Play</button>
+  <button id="replay-next" title="Next (→)">▶</button>
+  <button id="replay-last" title="End">⏭</button>
+  <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
+  <span id="replay-label" class="muted"></span>
+</div>
+<div id="replay-frame"><noscript><p class="muted">The replay needs JavaScript; the turn list below works without it.</p></noscript></div>
+<p id="replay-info" class="muted"></p>
+<script id="replay-data" type="application/json">{{ {"game": m.game, "seats": m.seats, "frames": m.frames, "turns": m.turns} | tojson }}</script>
+<script>
+{{ replay_js }}
+</script>
+
 <h2>Turns</h2>
 {% if m.turns %}
 <div class="wrap"><table>
   <thead><tr><th>#</th><th>Player</th><th>Move</th><th class="num">Attempts</th><th class="num">Tokens in / out / cached</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead>
   <tbody>
   {% for t in m.turns %}
-    <tr>
+    <tr data-frame="{{ t.turn_no + 1 }}">
       <td>{{ t.turn_no }}</td>
       <td>{{ m.seats[t.seat] }}</td>
       <td>{% if t.forfeited %}<span class="bad">forfeit</span>{% else %}<code>{{ t.action | action }}</code>{% endif %}

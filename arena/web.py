@@ -9,9 +9,11 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import asyncpg
 from jinja2 import Environment, PackageLoader, StrictUndefined, select_autoescape
+from markupsafe import Markup
 
 from arena.games.registry import list_games
 from arena.store import read
@@ -54,6 +56,10 @@ env = Environment(
 )
 env.filters["usd"] = _usd
 env.filters["action"] = _action
+# Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
+# the page works as a single file in a static export. Tests load it in Node directly.
+REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"
+env.globals["replay_js"] = Markup(REPLAY_JS.read_text(encoding="utf-8"))
 
 
 def render(template: str, urls: Urls, **context: object) -> str:

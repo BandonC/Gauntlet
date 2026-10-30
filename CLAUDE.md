@@ -20,10 +20,10 @@ Optimise for correctness and clear failure semantics over features.
 | Game contract, Connect 4, match runner, players, Elo, round-robin | Done, unit-tested |
 | Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
-| JSON API + Jinja2 pages (leaderboards, tournaments, matches, match turns) | Done; replay stepping is the next UI item |
+| JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping) | Done; static export is next |
 | Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, pause/resume on failed matches | Done, db-tested |
-| Liar's Dice engine + bots (2-6 seats; tournaments stay heads-up) | Done, unit-tested; no UI renderer yet |
+| Liar's Dice engine + bots (2-6 seats; tournaments stay heads-up) | Done, unit-tested, replay renderer |
 | Presentation, Werewolf, multiplayer ratings | See Roadmap |
 
 ## Commands
@@ -202,7 +202,7 @@ runs (loops, scheduled tasks) skip them.
 - [x] Jinja2 templates replace `static/index.html`: leaderboard (rating ± 2·RD, Elo,
       games), tournaments (round, paused reason), match list, replay page. Same data as
       the JSON API, which stays.
-- [ ] Replay page: every turn's `spectator_view` frame embedded as JSON; plain-JS
+- [x] Replay page: every turn's `spectator_view` frame embedded as JSON; plain-JS
       prev/next/play stepping; one small renderer function per game: Connect 4 (board),
       Liar's Dice (all dice, bids, reveals).
 - [ ] `arena export`: render the same templates to static HTML + JSON files for GitHub
@@ -298,6 +298,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   missing field raises (tested in `tests/test_web.py`); test pages by calling the builders
   (no `TestClient`: it needs `httpx`). Read queries live in `store/read.py`, shared with
   the JSON API so both always show the same data.
+- Replay: `templates/replay.js` is inlined into the match page (a Markup global, not
+  `{% include %}`: JS braces clash with Jinja), so pages stay single-file for export. It
+  must never contain the text `</script`. Frame data is embedded with `| tojson`, which
+  escapes `<>&`. A new game adds one function to `RENDERERS` (escape everything with
+  `esc`). `tests/test_replay_js.py` runs the real file in Node against engine frames,
+  including stepping on a fake DOM; it is skipped when `node` isn't installed.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
