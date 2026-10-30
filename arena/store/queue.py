@@ -54,7 +54,7 @@ RETURNING id
 
 COMPLETE_SQL = """
 UPDATE matches
-SET status = 'completed', scores = $3, completed_at = now(),
+SET status = 'completed', scores = $3, placements = $4, completed_at = now(),
     lease_owner = NULL, lease_expires_at = NULL, last_error = NULL
 WHERE id = $1 AND lease_owner = $2 AND status = 'running'
 RETURNING game, tournament_id
@@ -116,15 +116,17 @@ async def heartbeat(
     return await pool.fetchval(HEARTBEAT_SQL, match_id, worker_id, lease_seconds) is not None
 
 
-async def complete(pool: asyncpg.Pool, match_id: int, worker_id: str, scores: list[float]) -> bool:
+async def complete(
+    pool: asyncpg.Pool, match_id: int, worker_id: str, scores: list[float], placements: list[int]
+) -> bool:
     """Mark the match completed and rate it, atomically. False if the lease was lost
     (nothing is written)."""
     async with pool.acquire() as conn, conn.transaction():
-        row = await conn.fetchrow(COMPLETE_SQL, match_id, worker_id, scores)
+        row = await conn.fetchrow(COMPLETE_SQL, match_id, worker_id, scores, placements)
         if row is None:
             return False
         seats = [r["player_id"] for r in await conn.fetch(SEATS_SQL, match_id)]
-        if await ratings.apply_match_result(conn, match_id, row["game"], seats, scores):
+        if await ratings.apply_match_result(conn, match_id, row["game"], seats, scores, placements):
             # Re-stamp while holding the players' rating locks: (completed_at, id) is
             # then exactly the order ratings were applied in, which rebuild replays.
             await conn.execute(RESTAMP_SQL, match_id)

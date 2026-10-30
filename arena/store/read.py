@@ -21,7 +21,8 @@ GROUP BY t.id ORDER BY t.id DESC
 """
 
 MATCHES_SQL = """
-SELECT m.id, m.tournament_id, m.round, m.game, m.status, m.scores, m.run_attempts,
+SELECT m.id, m.tournament_id, m.round, m.game, m.status, m.scores, m.placements,
+       m.run_attempts,
        array_agg(s.player_id ORDER BY s.seat) AS seats,
        (SELECT coalesce(sum(cost_usd), 0)::float
         FROM turns WHERE match_id = m.id) AS cost_usd
@@ -72,6 +73,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
         "game": m["game"],
         "status": m["status"],
         "scores": m["scores"],
+        "placements": m["placements"],
         "last_error": m["last_error"],
         "seats": seats,
         "turns": [

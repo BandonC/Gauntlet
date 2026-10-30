@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from typing import Protocol
 
 from arena.costs import FREE, Budget, Pricing
-from arena.games.base import Game, State
+from arena.games.base import Game, State, rank_forfeits_last
 from arena.players.base import Player, TurnContext
 from arena.types import Action, Usage
 
@@ -66,6 +66,7 @@ class TurnRecord:
 class MatchOutcome:
     match_id: str
     scores: list[float]
+    placements: list[int]  # per seat, 1 is best, forfeits last
     num_turns: int
     forfeits: list[int]
     usage_by_seat: list[Usage]
@@ -247,11 +248,13 @@ class MatchRunner:
         usage_by_seat = [Usage() for _ in spec.seats]
         for t in turns:
             usage_by_seat[t.seat] += t.usage
+        forfeits = [t.seat for t in turns if t.forfeited]
         return MatchOutcome(
             match_id=spec.match_id,
             scores=self.game.scores(state),
+            placements=rank_forfeits_last(self.game.placements(state), forfeits),
             num_turns=len(turns),
-            forfeits=[t.seat for t in turns if t.forfeited],
+            forfeits=forfeits,
             usage_by_seat=usage_by_seat,
             cost_usd=sum(t.cost_usd for t in turns),
             turns=turns,

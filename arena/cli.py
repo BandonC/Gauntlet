@@ -3,6 +3,7 @@
 arena play connect4 --p1 random --p2 haiku-5.5/c4-v1     one match, in memory, printed
 arena migrate                                            apply SQL migrations
 arena tournament --game connect4 --players a,b,c --games-per-pair 10 --budget 5
+arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
 arena worker --concurrency 4                             run matches from the queue
 arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
@@ -97,7 +98,12 @@ async def _migrate(args: argparse.Namespace) -> None:
 
 async def _tournament(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
-    from arena.store.tournaments import create_round_robin, create_swiss, resume_tournament
+    from arena.store.tournaments import (
+        create_round_robin,
+        create_swiss,
+        create_tables,
+        resume_tournament,
+    )
 
     if args.tournament_cmd == "resume":
         pool = await create_pool(settings().database_url)
@@ -125,6 +131,16 @@ async def _tournament(args: argparse.Namespace) -> None:
                 pool, args.game, cfgs, args.budget, rounds=args.rounds, seed=args.seed
             )
             print(f"tournament {tid}: swiss, round 1 queued ({n} matches)")
+        elif args.format == "tables":
+            if not args.table_size or not args.tables:
+                sys.exit("arena tournament: --format tables needs --table-size and --tables")
+            try:
+                tid, n = await create_tables(
+                    pool, args.game, cfgs, args.table_size, args.tables, args.budget, args.seed
+                )
+            except ValueError as e:
+                sys.exit(f"arena tournament: {e}")
+            print(f"tournament {tid}: {n} tables of {args.table_size} queued")
         else:
             tid, n = await create_round_robin(
                 pool, args.game, cfgs, args.games_per_pair, args.budget, seed=args.seed
@@ -175,10 +191,11 @@ async def _leaderboard(args: argparse.Namespace) -> None:
         rows = await leaderboard(pool, args.game)
     finally:
         await pool.close()
-    # Ranked by rating - 2*RD (Glicko-2); Elo is the v1 rating, shown alongside.
+    # Ranked by Weng-Lin ordinal (mu - 3*sigma); Glicko-2 and Elo are heads-up-only extras.
     for i, r in enumerate(rows, 1):
         print(
-            f"{i:>2}. {r['player_id']:<28} {r['rating']:>7} +/- {2 * r['rd']:<6}"
+            f"{i:>2}. {r['player_id']:<28} {r['ordinal']:>7} (mu={r['mu']} sigma={r['sigma']})"
+            f" glicko={r['rating']} +/- {2 * r['rd']:<6}"
             f" elo={r['elo']:<7} games={r['games']}  pts={r['points']}"
         )
 
@@ -230,9 +247,11 @@ def main(argv: list[str] | None = None) -> None:
     t = sub.add_parser("tournament", help="queue a tournament, or resume a paused one")
     t.add_argument("--game")
     t.add_argument("--players", help="comma-separated roster ids")
-    t.add_argument("--format", choices=["round_robin", "swiss"], default="round_robin")
+    t.add_argument("--format", choices=["round_robin", "swiss", "tables"], default="round_robin")
     t.add_argument("--games-per-pair", type=int, default=10, help="round robin only")
     t.add_argument("--rounds", type=int, default=None, help="swiss only (default ceil(log2 N))")
+    t.add_argument("--table-size", type=int, default=None, help="tables only: seats per match")
+    t.add_argument("--tables", type=int, default=None, help="tables only: number of matches")
     t.add_argument("--budget", type=float, default=None, help="USD cap (strongly advised)")
     t.add_argument("--seed", type=int, default=None)
     t_sub = t.add_subparsers(dest="tournament_cmd")
@@ -248,7 +267,7 @@ def main(argv: list[str] | None = None) -> None:
 
     rt = sub.add_parser("ratings", help="maintain the ratings tables")
     rt_sub = rt.add_subparsers(dest="ratings_cmd", required=True)
-    rb = rt_sub.add_parser("rebuild", help="replay completed matches into Elo + Glicko-2")
+    rb = rt_sub.add_parser("rebuild", help="replay completed matches into every rating")
     rb.add_argument("--game", help="only this game (default: all)")
 
     s = sub.add_parser("serve", help="API + UI")

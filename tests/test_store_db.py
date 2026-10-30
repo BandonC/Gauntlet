@@ -18,20 +18,23 @@ from arena import web
 from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
 from arena.export import export_site
+from arena.games.base import placements_from_scores
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer
 from arena.ratings.glicko2 import Glicko, update_pair
+from arena.ratings.weng_lin import WengLin, rate
 from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue, ratings, read
 from arena.store.db import create_pool
 from arena.store.metrics import player_metrics
-from arena.store.migrate import migrate
+from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import (
     NEXT_ROUND_SQL,
     advance_tournament,
     create_round_robin,
     create_swiss,
+    create_tables,
     leaderboard,
     resume_tournament,
     swiss_entrants,
@@ -158,7 +161,7 @@ async def test_complete_writes_ratings_and_history_in_one_step(pool):
     (m,) = await _claim_all(pool, 1)
     winner, loser = m.seats
 
-    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])
 
     rows = await pool.fetch("SELECT player_id, rating, games_played FROM ratings ORDER BY rating")
     assert [(r["player_id"], r["rating"], r["games_played"]) for r in rows] == [
@@ -182,6 +185,12 @@ async def test_complete_writes_ratings_and_history_in_one_step(pool):
         (loser, round(gl.rating, 1), round(gl.rd, 1), 1484.0, 1, 0.0),
     ]
     assert board[0]["low"] == round(gw.rating - 2 * gw.rd, 1)
+    # Weng-Lin rates heads-up matches too, and ranks the board.
+    wl_w, wl_l = rate([WengLin(), WengLin()], [1, 2])
+    assert [(r["ordinal"], r["mu"], r["sigma"]) for r in board] == [
+        (round(wl_w.ordinal, 2), round(wl_w.mu, 2), round(wl_w.sigma, 2)),
+        (round(wl_l.ordinal, 2), round(wl_l.mu, 2), round(wl_l.sigma, 2)),
+    ]
 
 
 async def test_complete_after_lost_lease_writes_no_ratings(pool):
@@ -190,7 +199,7 @@ async def test_complete_after_lost_lease_writes_no_ratings(pool):
     await pool.execute("UPDATE matches SET lease_expires_at = now() - interval '1 second'")
     assert (await queue.claim(pool, "B", 30)).id == m.id
 
-    assert not await queue.complete(pool, m.id, "w0", [1.0, 0.0])  # old owner
+    assert not await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])  # old owner
     assert await pool.fetchval("SELECT count(*) FROM ratings") == 0
     assert await pool.fetchval("SELECT count(*) FROM rating_history") == 0
 
@@ -206,7 +215,7 @@ async def test_double_rating_rolls_back_completion(pool):
         m.id,
     )
     with pytest.raises(asyncpg.UniqueViolationError):
-        await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+        await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])
 
     row = await pool.fetchrow("SELECT status, lease_owner FROM matches WHERE id = $1", m.id)
     assert row["status"] == "running" and row["lease_owner"] == "w0"
@@ -220,7 +229,7 @@ async def test_concurrent_completions_lose_no_rating_updates(pool):
 
     # Every match shares a player with others; complete them all at once.
     oks = await asyncio.gather(
-        *(queue.complete(pool, c.id, f"w{i}", [1.0, 0.0]) for i, c in enumerate(claims))
+        *(queue.complete(pool, c.id, f"w{i}", [1.0, 0.0], [1, 2]) for i, c in enumerate(claims))
     )
     assert all(oks)
 
@@ -244,16 +253,16 @@ async def test_tournament_completes_only_after_last_match(pool):
     tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
     first, second = await _claim_all(pool, 2)
 
-    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0])
+    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0], [1, 2])
     assert await tournament_status(pool, tid) == "running"
-    assert await queue.complete(pool, second.id, "w1", [0.5, 0.5])
+    assert await queue.complete(pool, second.id, "w1", [0.5, 0.5], [1, 1])
     assert await tournament_status(pool, tid) == "completed"
 
 
 async def test_failed_match_pauses_tournament_until_resumed(pool):
     tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=3, budget_usd=None)
     first, second, third = await _claim_all(pool, 3)
-    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0])
+    assert await queue.complete(pool, first.id, "w0", [1.0, 0.0], [1, 2])
 
     retry = dict(max_attempts=2, backoff_seconds=0)
     assert await queue.release_for_retry(pool, second.id, "w1", "boom", **retry) == "queued"
@@ -375,7 +384,7 @@ async def test_player_metrics_from_turn_log(pool):
         str(m.id),
         rec(2, 0, attempts=3, forfeited=True, latency=300, usage=Usage(100, 10, 0, 100), cost=0.02),
     )
-    assert await queue.complete(pool, m.id, "w0", [0.0, 1.0])
+    assert await queue.complete(pool, m.id, "w0", [0.0, 1.0], [2, 1])
 
     # A second tournament with a match still running: counts for turns, not cost per game.
     tid2, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
@@ -460,12 +469,14 @@ async def test_unseeded_vendor_raises_instead_of_waiting_forever(pool):
 
 
 RATING_COLS = (
-    "SELECT player_id, game, rating, glicko_rating, glicko_rd, glicko_vol, games_played "
+    "SELECT player_id, game, rating, glicko_rating, glicko_rd, glicko_vol, wl_mu, wl_sigma, "
+    "games_played "
     "FROM ratings ORDER BY game, player_id"
 )
 HISTORY_COLS = (
     "SELECT player_id, match_id, rating_before, rating_after, glicko_rating_before, "
-    "glicko_rating_after, glicko_rd_before, glicko_rd_after FROM rating_history "
+    "glicko_rating_after, glicko_rd_before, glicko_rd_after, wl_mu_before, wl_mu_after, "
+    "wl_sigma_before, wl_sigma_after FROM rating_history "
     "ORDER BY player_id, match_id"
 )
 
@@ -487,7 +498,13 @@ async def test_rebuild_reproduces_live_ratings_exactly(pool):
         batch = claims[start : start + 8]
         oks = await asyncio.gather(
             *(
-                queue.complete(pool, c.id, f"w{start + i}", outcomes[(start + i) % 3])
+                queue.complete(
+                    pool,
+                    c.id,
+                    f"w{start + i}",
+                    outcomes[(start + i) % 3],
+                    placements_from_scores(outcomes[(start + i) % 3]),
+                )
                 for i, c in enumerate(batch)
             )
         )
@@ -496,7 +513,9 @@ async def test_rebuild_reproduces_live_ratings_exactly(pool):
     assert len(live[1]) == 2 * n
 
     # Wreck the tables, then rebuild from the match log: bit-for-bit identical floats.
-    await pool.execute("UPDATE ratings SET glicko_rating = 0, rating = 0, glicko_rd = 1")
+    await pool.execute(
+        "UPDATE ratings SET glicko_rating = 0, rating = 0, glicko_rd = 1, wl_mu = 0, wl_sigma = 1"
+    )
     assert await ratings.rebuild(pool) == n
     assert await _snapshot(pool) == live
 
@@ -504,7 +523,7 @@ async def test_rebuild_reproduces_live_ratings_exactly(pool):
 async def test_rebuild_of_one_game_leaves_other_games_alone(pool):
     await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
     (m,) = await _claim_all(pool, 1)
-    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0], [1, 2])
     await pool.execute(
         "INSERT INTO ratings (player_id, game, rating, games_played) "
         "VALUES ('r1', 'other', 1234, 9)"
@@ -560,7 +579,7 @@ async def test_bye_counts_two_points_and_is_unrated(pool):
     winner = "r1"
     for i, m in enumerate((m1, m2)):
         scores = [1.0, 0.0] if m.seats[0] == winner else [0.0, 1.0]
-        assert await queue.complete(pool, m.id, f"w{i}", scores)
+        assert await queue.complete(pool, m.id, f"w{i}", scores, placements_from_scores(scores))
 
     async with pool.acquire() as conn:
         entrants = {e.player_id: e for e in await swiss_entrants(conn, tid, "connect4")}
@@ -569,6 +588,9 @@ async def test_bye_counts_two_points_and_is_unrated(pool):
     # r2 lost both, but round 2 is already queued with r2 on the bye: 0 + 2.
     assert (entrants["r2"].points, entrants["r2"].had_bye) == (2.0, True)
     assert await pool.fetchval("SELECT count(*) FROM ratings WHERE player_id = 'r3'") == 0
+    # Seeds and tie-breaks use the same number the leaderboard ranks by.
+    assert entrants["r3"].rating == WengLin().ordinal
+    assert entrants["r1"].rating > entrants["r2"].rating
     # Round 2 was queued by the second completion: r1 v r3, and r2 sits out.
     assert (await _round_pairs(pool, tid))[2] == [frozenset({"r1", "r3"})] * 2
     assert await pool.fetchval("SELECT player_id FROM tournament_byes WHERE round = 2") == "r2"
@@ -580,7 +602,7 @@ async def test_round_finishing_together_queues_next_round_exactly_once(pool):
     assert n == 4
     claims = await _claim_all(pool, 4)
     for i, c in enumerate(claims[:2]):
-        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0])
+        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0], [1, 2])
     a, b = claims[2:]
     done = "UPDATE matches SET status = 'completed', scores = '[1, 0]' WHERE id = $1"
     async with pool.acquire() as c1, pool.acquire() as c2:
@@ -614,7 +636,7 @@ async def test_swiss_paused_on_failure_and_resumed_round_carries_on(pool):
     tid, _ = await create_swiss(pool, "connect4", FIVE[:4], budget_usd=None)
     claims = await _claim_all(pool, 4)
     for i, c in enumerate(claims[:3]):
-        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0])
+        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0], [1, 2])
     last = claims[3]
     fail = dict(max_attempts=1, backoff_seconds=0)
     assert await queue.release_for_retry(pool, last.id, "w3", "boom", **fail) == "failed"
@@ -688,3 +710,119 @@ async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_
 
     # Re-exporting into the same directory overwrites cleanly.
     assert (await export_site(pool, tmp_path)).pages == summary.pages
+
+
+async def test_tables_tournament_runs_rates_every_seat_and_rebuilds(pool):
+    tid, n = await create_tables(pool, "liars_dice", FIVE, 3, 10, budget_usd=None, seed=4)
+    assert n == 10
+    await run_worker(pool, FIVE_FACTORY, FAST, concurrency=3, exit_when_idle=True)
+    assert await tournament_status(pool, tid) == "completed"
+
+    rows = await pool.fetch("SELECT scores, placements FROM matches WHERE tournament_id = $1", tid)
+    assert len(rows) == 10
+    for r in rows:
+        assert sorted(r["placements"]) == [1, 2, 3]
+        assert r["scores"][r["placements"].index(1)] == 1.0
+
+    # Every seat of every match rated; Elo and Glicko-2 never moved at three seats.
+    assert await pool.fetchval("SELECT sum(games_played) FROM ratings") == 30
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 30
+    assert await pool.fetchval(
+        "SELECT count(*) FROM rating_history WHERE rating_before <> rating_after "
+        "OR glicko_rating_before <> glicko_rating_after"
+    ) == 0  # fmt: skip
+    assert await pool.fetchval(
+        "SELECT count(*) FROM rating_history WHERE wl_sigma_after >= wl_sigma_before"
+    ) == 0  # fmt: skip
+    board = await leaderboard(pool, "liars_dice")
+    assert [r["ordinal"] for r in board] == sorted((r["ordinal"] for r in board), reverse=True)
+    assert all((r["elo"], r["rating"]) == (1500.0, 1500.0) for r in board)
+
+    live = await _snapshot(pool)
+    await pool.execute("UPDATE ratings SET wl_mu = 0, wl_sigma = 1")
+    assert await ratings.rebuild(pool, "liars_dice") == 10
+    assert await _snapshot(pool) == live
+
+
+async def test_tied_placements_reach_the_rating(pool):
+    await create_tables(pool, "liars_dice", FIVE[:3], 3, 1, budget_usd=None, seed=1)
+    (m,) = await _claim_all(pool, 1)
+    assert await queue.complete(pool, m.id, "w0", [1.0, 1.0, 0.0], [1, 1, 3])
+    expected = rate([WengLin()] * 3, [1, 1, 3])
+    rows = await pool.fetch(
+        "SELECT s.seat, r.wl_mu, r.wl_sigma FROM ratings r "
+        "JOIN match_seats s ON s.player_id = r.player_id WHERE s.match_id = $1 ORDER BY s.seat",
+        m.id,
+    )
+    assert [(r["wl_mu"], r["wl_sigma"]) for r in rows] == [(e.mu, e.sigma) for e in expected]
+    assert await pool.fetchval("SELECT placements FROM matches WHERE id = $1", m.id) == [1, 1, 3]
+
+
+async def test_overlapping_tables_completing_at_once_serialise_and_rebuild_exactly(pool):
+    # Tables of 4 from 5 players share at least 3 players, seated in different orders, so
+    # concurrent completions all want the same rating rows. Unordered locks would deadlock.
+    _, n = await create_tables(pool, "liars_dice", FIVE, 4, 24, budget_usd=None, seed=9)
+    claims = await _claim_all(pool, n)
+    finishes = [[1, 2, 3, 4], [4, 3, 2, 1], [2, 1, 4, 3], [1, 1, 3, 3]]
+    for start in range(0, n, 8):
+        oks = await asyncio.gather(
+            *(
+                queue.complete(
+                    pool,
+                    c.id,
+                    f"w{start + i}",
+                    [float(p == 1) for p in finishes[(start + i) % 4]],
+                    finishes[(start + i) % 4],
+                )
+                for i, c in enumerate(claims[start : start + 8])
+            )
+        )
+        assert all(oks)
+    live = await _snapshot(pool)
+    assert len(live[1]) == 4 * n
+
+    await pool.execute("UPDATE ratings SET wl_mu = 0, wl_sigma = 1")
+    assert await ratings.rebuild(pool) == n
+    assert await _snapshot(pool) == live
+
+
+async def test_tables_refuse_a_size_the_game_cannot_seat(pool):
+    with pytest.raises(ValueError, match="connect4 takes 2-2"):
+        await create_tables(pool, "connect4", FIVE, 3, 4, budget_usd=None)
+    assert await pool.fetchval("SELECT count(*) FROM tournaments") == 0
+
+
+async def test_migration_backfills_placements_and_rebuild_rates_old_matches(pool):
+    # Rebuild the database as it stood at 0004, with matches already completed.
+    conn = await asyncpg.connect(DSN)
+    await conn.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    await conn.execute(
+        "CREATE TABLE schema_migrations ("
+        " name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())"
+    )
+    for path in sorted(MIGRATIONS_DIR.glob("*.sql"))[:4]:
+        await conn.execute(path.read_text())
+        await conn.execute("INSERT INTO schema_migrations (name) VALUES ($1)", path.name)
+    await conn.execute(
+        """
+        INSERT INTO players (id, provider, model, prompt_key, config_hash)
+        VALUES ('a', 'random', 'm', 'p', 'ha'), ('b', 'random', 'm', 'p', 'hb');
+        INSERT INTO matches (id, game, seed, status, scores, completed_at) VALUES
+            (1, 'connect4', 1, 'completed', '[0.0, 1.0]', now()),
+            (2, 'connect4', 2, 'completed', '[0.5, 0.5]', now()),
+            (3, 'connect4', 3, 'queued', NULL, NULL);
+        INSERT INTO match_seats (match_id, seat, player_id) VALUES
+            (1, 0, 'a'), (1, 1, 'b'), (2, 0, 'a'), (2, 1, 'b'), (3, 0, 'a'), (3, 1, 'b');
+        """
+    )
+    await conn.close()
+
+    assert await migrate(DSN) == ["0005_weng_lin.sql"]
+    rows = await pool.fetch("SELECT placements FROM matches ORDER BY id")
+    assert [r["placements"] for r in rows] == [[2, 1], [1, 1], None]
+
+    assert await ratings.rebuild(pool, "connect4") == 2
+    win_b = rate([WengLin(), WengLin()], [2, 1])
+    a, b = rate(win_b, [1, 1])
+    board = {r["player_id"]: r for r in await leaderboard(pool, "connect4")}
+    assert (board["a"]["mu"], board["b"]["mu"]) == (round(a.mu, 2), round(b.mu, 2))
