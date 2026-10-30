@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: arena
       POSTGRES_DB: arena
     ports:
-      - "5432:5432"
+      - "5434:5432"  # 5432 is often taken by a native Postgres install
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

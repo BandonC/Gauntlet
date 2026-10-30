@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = "postgresql://arena:arena@localhost:5432/arena"
+    database_url: str = "postgresql://arena:arena@localhost:5434/arena"
     anthropic_api_key: str | None = None
     openai_api_key: str | None = None
 
