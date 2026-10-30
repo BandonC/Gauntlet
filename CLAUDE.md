@@ -23,7 +23,8 @@ Optimise for correctness and clear failure semantics over features.
 | API + placeholder UI (leaderboard, tournaments, replay) | Works end to end; UI is a stopgap |
 | Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, pause/resume on failed matches | Done, db-tested |
-| Presentation, v2 games | See Roadmap |
+| Liar's Dice engine + bots (2-6 seats; tournaments stay heads-up) | Done, unit-tested; no UI renderer yet |
+| Presentation, Werewolf, multiplayer ratings | See Roadmap |
 
 ## Commands
 
@@ -68,6 +69,7 @@ arena/
   types.py              Action (JSON dict), ActionSpec (tool schema), Usage
   games/base.py         Game protocol  ← read first
   games/connect4.py     reference implementation
+  games/liars_dice.py   hidden information (dice), per-round randomness
   engine/match_runner.py  MatchRunner, iter_states (replay), TurnStore, LeaseLost
   players/              Player protocol, RandomPlayer/ScriptedPlayer, LLMPlayer, prompts
   players/prompts/<game>/<version>/{system,turn}.txt
@@ -193,11 +195,15 @@ runs (loops, scheduled tasks) skip them.
 **Phase 4: presentation**
 - [ ] `[human]` Pick the UI approach: HTMX templates or a small Vite app.
 - [ ] Replace `static/index.html` with the chosen approach.
+- [ ] Liar's Dice spectator renderer (frames from `spectator_view`), after the UI decision.
 - [ ] `arena export` → static JSON + page for GitHub Pages ($0 hosting).
 - [ ] Live match view via Server-Sent Events (optional).
 
 **Phase 5: v2 games**
-- [ ] Liar's Dice: hidden dice, RNG in state; first real test of `player_view` hiding.
+- [x] Liar's Dice engine, `LiarsDiceBot`, prompt `liars_dice/v1`: hidden dice, round r's
+      dice from `Random(f"{seed}:{r}")`; first real test of `player_view` hiding.
+- [ ] Multiplayer ratings and pairing. Engines take more than 2 seats (Liar's Dice 2-6,
+      Werewolf), but round-robin, Swiss, Elo and Glicko-2 are heads-up only today.
 - [ ] Werewolf engine + scripted bots (flagship): multi-phase turns (discussion → vote →
       night), per-seat views, discussion log in state with summarisation of old rounds
       to bound context (cost grows ~quadratically otherwise), "role leaked" metric.
@@ -266,6 +272,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   pairing) and live in `tournament_byes`; they are not matches, so ratings ignore them.
   After migration 0004, round-robin tournaments made earlier have no `tournament_players`
   rows (only Swiss reads them).
+- Liar's Dice: randomness is derived, not stored. Round r's dice are
+  `Random(f"{seed}:{r}")` over the current dice counts, so replay re-rolls them exactly.
+  `player_view` has only your own dice plus public info (counts, this round's bids, the
+  previous challenge's reveal); `test_player_view_never_depends_on_other_players_dice`
+  scrambles other seats' dice at every turn of random games to prove it. Bots must stay
+  stateless (decide from the view). `LiarsDiceBot` isn't a roster provider yet, so
+  Postgres tournaments can only use it once roster.py learns a bot provider.
   Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
   re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
