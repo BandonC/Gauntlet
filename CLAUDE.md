@@ -22,7 +22,8 @@ Optimise for correctness and clear failure semantics over features.
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
 | API + placeholder UI (leaderboard, tournaments, replay) | Works end to end; UI is a stopgap |
 | Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
-| Glicko-2 confidence, Swiss pairing, presentation, v2 games | See Roadmap |
+| Swiss tournaments, pause/resume on failed matches | Done, db-tested |
+| Presentation, v2 games | See Roadmap |
 
 ## Commands
 
@@ -184,7 +185,10 @@ runs (loops, scheduled tasks) skip them.
 - [x] Cross-process rate limiting. The limiter is per process today; options: a token
       table with `SELECT ... FOR UPDATE`, or a static per-worker share of the quota.
 - [x] Glicko-2 beside Elo, post-v1 (rating deviation → confidence on the leaderboard).
-- [ ] Swiss pairing.
+- [x] Swiss pairing (`--format swiss`). Prefer round-robin below about 10 players: Swiss
+      plays fewer matches at every size (2 games per pairing: 6 players 18 vs 30,
+      10 players 40 vs 90, 16 players 64 vs 240), but each player meets only
+      ceil(log2 N) opponents, so a small field gets a noisier ranking for a small saving.
 
 **Phase 4: presentation**
 - [ ] `[human]` Pick the UI approach: HTMX templates or a small Vite app.
@@ -250,9 +254,18 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   After applying migration 0003 run `arena ratings rebuild` once: existing rows start at
   Glicko defaults. Rebuild replays by (completed_at, id), and `queue.complete` re-stamps
   completed_at with clock_timestamp() under the rating locks so that order is exact.
-- Tournaments close in the transaction that moves their last match to `completed` or
-  `failed` (failed counts as done). A budget-capped tournament with queued matches stays
-  `running`. Lock order in a completion: match row, ratings rows, tournament row last.
+- Tournaments advance in the transaction that completes a match (`advance_tournament`):
+  once nothing is queued, running or failed, Swiss queues the next round or the
+  tournament completes. A budget-capped tournament with queued matches stays `running`.
+  Lock order in a completion: match row, ratings rows, tournament row last.
+- A match that fails for good (run attempts used up, or a setup error) pauses its
+  tournament, both formats: nothing is claimed or paired until `arena tournament resume
+  <id>` re-queues failed matches with fresh run attempts. Failed matches are never scored.
+- Swiss: round n+1 is created only under the tournament row lock AND by the conditional
+  `current_round = n -> n+1` UPDATE. Byes are worth 2 points (winning both games of a
+  pairing) and live in `tournament_byes`; they are not matches, so ratings ignore them.
+  After migration 0004, round-robin tournaments made earlier have no `tournament_players`
+  rows (only Swiss reads them).
   Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
   re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
