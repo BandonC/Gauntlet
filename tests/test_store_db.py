@@ -643,6 +643,7 @@ async def test_every_page_renders_from_a_real_tournament(pool):
 
     detail = await read.match_detail(pool, ids[0])
     m_html = await web.match_page(pool, urls, ids[0])
-    assert m_html.count("<tr>") == 1 + len(detail["turns"])  # header + one row per turn
+    assert m_html.count("<tr data-frame=") == len(detail["turns"])  # one row per turn
+    assert 'id="replay-data"' in m_html and "initReplay" in m_html
     assert await web.match_page(pool, urls, 10**9) is None
     assert await web.tournament_page(pool, urls, 10**9) is None

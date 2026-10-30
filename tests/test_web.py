@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from jinja2 import UndefinedError
 
@@ -151,3 +153,34 @@ def test_template_typos_fail_loudly():
     del m["seats"]
     with pytest.raises(UndefinedError):
         render("match.html", URLS, m=m)
+
+
+def _embedded(html):
+    start = html.index('<script id="replay-data" type="application/json">') + len(
+        '<script id="replay-data" type="application/json">'
+    )
+    return html[start : html.index("</script>", start)]
+
+
+def test_match_page_embeds_replay_data_and_rows_jump_to_frames():
+    m = match(frames=[{"n": 0}, {"n": 1}, {"n": 2}])
+    html = render("match.html", URLS, m=m)
+    data = json.loads(_embedded(html))
+    assert data["frames"] == m["frames"] and data["seats"] == m["seats"]
+    assert data["game"] == "connect4" and len(data["turns"]) == 2
+    assert '<tr data-frame="1">' in html and '<tr data-frame="2">' in html
+    assert "function initReplay" in html  # the stepping script is inlined
+
+
+def test_hostile_player_id_cannot_close_the_data_script():
+    evil = "</script><script>alert(1)</script>"
+    html = render("match.html", URLS, m=match(seats=[evil, "b"], frames=[{"x": evil}]))
+    blob = _embedded(html)
+    assert "</script" not in blob and "<script" not in blob
+    assert json.loads(blob)["seats"][0] == evil  # still round-trips exactly
+
+
+def test_inlined_replay_script_cannot_close_its_own_tag():
+    from arena.web import REPLAY_JS
+
+    assert "</script" not in REPLAY_JS.read_text(encoding="utf-8").lower()
