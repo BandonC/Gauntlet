@@ -8,7 +8,7 @@ from arena.engine import InMemoryTurnStore, MatchRunner, MatchSpec
 from arena.engine.match_runner import iter_states
 from arena.games.liars_dice import Bid, LiarsDice, roll
 from arena.games.registry import get_game
-from arena.players.base import TurnContext
+from arena.players.base import Decision, TurnContext
 from arena.players.bots import LiarsDiceBot, RandomPlayer
 
 G = LiarsDice()
@@ -129,6 +129,23 @@ def test_forfeit_removes_the_player_and_the_game_goes_on_if_others_remain():
     assert G.scores(G.forfeit(out, 1)) == [0.0, 0.0, 1.0]
 
 
+def test_placements_are_reverse_elimination_order():
+    # Seat 1's last die goes on a false bid: first out, so last place.
+    s = state_with([(2,), (5,), (3,)], to_move=2, bids=[(1, 1, 4)])
+    out = G.apply(s, 2, CHALLENGE)
+    assert out.eliminated == (1,) and not G.is_terminal(out)
+    # Then seat 2's goes the same way, and seat 0 is the last player with dice.
+    two_left = replace(out, dice=((2,), (), (3,)), bids=(Bid(2, 1, 4),), to_move=0)
+    final = G.apply(two_left, 0, CHALLENGE)
+    assert final.winner == 0 and final.eliminated == (1, 2)
+    assert G.placements(final) == [1, 3, 2]
+
+
+def test_placements_refuse_a_game_in_progress():
+    with pytest.raises(ValueError):
+        G.placements(G.initial_state(3, 5))
+
+
 def test_apply_does_not_mutate():
     s = state_with([(1, 2), (3, 4)], to_move=1, bids=[(0, 1, 2)])
     before = repr(s)
@@ -234,8 +251,38 @@ async def test_bot_is_stateless_and_legal():
 
 
 async def test_engine_runs_multiplayer_games_through_the_match_runner():
-    # Tournaments are heads-up for now, but the engine itself takes 2-6 seats.
     seats = ["a", "b", "c"]
     players = [RandomPlayer(p, i) for i, p in enumerate(seats)]
     out = await MatchRunner(G, players, InMemoryTurnStore()).run(spec(5, seats))
     assert sorted(out.scores) == [0.0, 0.0, 1.0]
+    assert sorted(out.placements) == [1, 2, 3]
+    assert out.scores[out.placements.index(1)] == 1.0
+
+
+class ForfeitsOnceSomeoneIsOut(RandomPlayer):
+    """Plays until another seat has lost all its dice, then stops returning moves."""
+
+    async def act(self, ctx):
+        if 0 in ctx.view["dice_counts"]:
+            return Decision(action=None)
+        return await super().act(ctx)
+
+
+async def test_a_late_forfeit_ranks_below_a_player_already_out_on_dice():
+    seats = ["quitter", "b", "c", "d"]
+    players = [ForfeitsOnceSomeoneIsOut("quitter", 1)]
+    players += [RandomPlayer(p, i) for i, p in enumerate(seats[1:], 2)]
+    for seed in range(50):
+        match = spec(seed, seats)
+        store = InMemoryTurnStore()
+        runner = MatchRunner(G, players, store)
+        out = await runner.run(match)
+        if not out.forfeits:
+            continue  # the quitter itself ran out of dice first
+        final = runner.replay(match, out.turns)
+        assert out.forfeits == [0] and final.eliminated[0] != 0
+        assert G.placements(final)[0] < 4  # by elimination order someone is below it
+        assert out.placements[0] == 4 and sorted(out.placements) == [1, 2, 3, 4]
+        assert out.placements[final.eliminated[0]] == 3  # the dice loser moves up one
+        return
+    pytest.fail("no seed produced a late forfeit")

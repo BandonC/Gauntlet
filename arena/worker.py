@@ -91,7 +91,9 @@ async def run_one(
             return True
 
         outcome = run_task.result()  # raises if the match run failed
-        if not await queue.complete(pool, claimed.id, worker_id, outcome.scores):
+        if not await queue.complete(
+            pool, claimed.id, worker_id, outcome.scores, outcome.placements
+        ):
             log.warning("match %s finished but lease was gone; result not recorded", claimed.id)
         else:
             log.info(

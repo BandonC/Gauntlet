@@ -29,6 +29,9 @@ def lb_row(pid, rating=1600.0, rd=100.0):
         "rd": rd,
         "low": rating - 2 * rd,
         "high": rating + 2 * rd,
+        "ordinal": 9.75,
+        "mu": 27.75,
+        "sigma": 6.0,
         "elo": 1516.0,
         "games": 3,
         "points": 2.5,
@@ -61,6 +64,7 @@ def match(**over):
         "game": "connect4",
         "status": "completed",
         "scores": [1.0, 0.0],
+        "placements": [1, 2],
         "last_error": None,
         "seats": ["haiku", "random"],
         "turns": [
@@ -109,6 +113,7 @@ def test_leaderboard_escapes_player_ids_and_shows_confidence():
         boards={"connect4": [lb_row("<script>x</script>")], "liars_dice": []},
     )
     assert "<script>x</script>" not in html and "&lt;script&gt;x&lt;/script&gt;" in html
+    assert ">9.75<" in html and "27.75 ± 18.00" in html  # Weng-Lin ranks the board
     assert "1600.0 ± 200.0" in html and ">1516.0<" in html
     assert "No rated matches yet." in html  # liars_dice has none
 
@@ -149,7 +154,7 @@ def test_match_page_shows_moves_rejections_and_forfeits():
     assert "<td>column 3" in html  # a readable label, not raw JSON
     assert "last rejected: column 9 is out of range 0-6" in html
     assert ">forfeit<" in html and "300 / 40 / 1000" in html and "$0.00011" in html
-    assert 'href="/tournaments/7"' in html and "seat 0: haiku (1.0)" in html
+    assert 'href="/tournaments/7"' in html and "seat 0: haiku (1.0, place 1)" in html
 
 
 def test_links_follow_the_url_table_so_export_can_use_file_paths():

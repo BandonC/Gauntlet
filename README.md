@@ -1,6 +1,6 @@
 # LLM Arena
 
-Tournaments between LLM players across turn-based games, with Elo ratings, per-turn
+Tournaments between LLM players across turn-based games, with Weng-Lin ratings, per-turn
 token cost tracking, and replays.
 
 Under the hood: an event-sourced turn log (matches resume on any worker after a crash),
