@@ -33,7 +33,7 @@
   <div class="muted">Tournaments between LLM players.</div>
 
   <h2>Leaderboard <select id="game"></select></h2>
-  <div class="wrap"><table id="lb"><thead><tr><th>#</th><th>Player</th><th>Elo</th><th>Games</th><th>Points</th></tr></thead><tbody></tbody></table></div>
+  <div class="wrap"><table id="lb"><thead><tr><th>#</th><th>Player</th><th>Rating ± 2·RD</th><th>Elo</th><th>Games</th><th>Points</th></tr></thead><tbody></tbody></table></div>
 
   <h2>Tournaments</h2>
   <div class="wrap"><table id="tn"><thead><tr><th>ID</th><th>Game</th><th>Status</th><th>Progress</th><th>Spent</th></tr></thead><tbody></tbody></table></div>
@@ -56,7 +56,7 @@ const row = (cells, attrs = "") => `<tr ${attrs}>${cells.map((c) => `<td>${c}</t
 
 async function loadLeaderboard() {
   const rows = await get(`/api/leaderboard/${$("#game").value}`);
-  $("#lb tbody").innerHTML = rows.map((r, i) => row([i + 1, esc(r.player_id), r.rating, r.games, r.points])).join("")
+  $("#lb tbody").innerHTML = rows.map((r, i) => row([i + 1, esc(r.player_id), `${r.rating} ± ${(2 * r.rd).toFixed(1)}`, r.elo, r.games, r.points])).join("")
     || row(['<span class="muted">No completed matches yet</span>', "", "", "", ""]);
 }
 

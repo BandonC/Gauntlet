@@ -16,8 +16,9 @@ from arena.costs import FREE
 from arena.engine.match_runner import LeaseLost, TurnRecord
 from arena.players.base import Decision, TurnContext
 from arena.players.bots import RandomPlayer
+from arena.ratings.glicko2 import Glicko, update_pair
 from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
-from arena.store import queue
+from arena.store import queue, ratings
 from arena.store.db import create_pool
 from arena.store.metrics import player_metrics
 from arena.store.migrate import migrate
@@ -160,11 +161,15 @@ async def test_complete_writes_ratings_and_history_in_one_step(pool):
         (winner, 1500.0, 1516.0),
         (loser, 1500.0, 1484.0),
     }
+    gw, gl = update_pair(Glicko(), Glicko(), 1.0)
     board = await leaderboard(pool, "connect4")
-    assert [(r["player_id"], r["rating"], r["games"], r["points"]) for r in board] == [
-        (winner, 1516.0, 1, 1.0),
-        (loser, 1484.0, 1, 0.0),
+    assert [
+        (r["player_id"], r["rating"], r["rd"], r["elo"], r["games"], r["points"]) for r in board
+    ] == [
+        (winner, round(gw.rating, 1), round(gw.rd, 1), 1516.0, 1, 1.0),
+        (loser, round(gl.rating, 1), round(gl.rd, 1), 1484.0, 1, 0.0),
     ]
+    assert board[0]["low"] == round(gw.rating - 2 * gw.rd, 1)
 
 
 async def test_complete_after_lost_lease_writes_no_ratings(pool):
@@ -427,3 +432,57 @@ async def test_seed_rate_limits_upserts_and_keeps_fill_level(pool):
 async def test_unseeded_vendor_raises_instead_of_waiting_forever(pool):
     with pytest.raises(RuntimeError, match="no rate_limits row"):
         await PostgresTokenBucket(pool, "nobody").take()
+
+
+RATING_COLS = (
+    "SELECT player_id, game, rating, glicko_rating, glicko_rd, glicko_vol, games_played "
+    "FROM ratings ORDER BY game, player_id"
+)
+HISTORY_COLS = (
+    "SELECT player_id, match_id, rating_before, rating_after, glicko_rating_before, "
+    "glicko_rating_after, glicko_rd_before, glicko_rd_after FROM rating_history "
+    "ORDER BY player_id, match_id"
+)
+
+
+async def _snapshot(pool):
+    return [tuple(r) for r in await pool.fetch(RATING_COLS)], [
+        tuple(r) for r in await pool.fetch(HISTORY_COLS)
+    ]
+
+
+async def test_rebuild_reproduces_live_ratings_exactly(pool):
+    # Live: 4 players, 24 matches completed in concurrent batches, so completions that
+    # share a player race for the rating locks and commit in a nondeterministic order.
+    players = PLAYERS + [PlayerConfig("r3", "random", seed=3), PlayerConfig("r4", "random", seed=4)]
+    _, n = await create_round_robin(pool, "connect4", players, games_per_pair=4, budget_usd=None)
+    claims = await _claim_all(pool, n)
+    outcomes = [[1.0, 0.0], [0.0, 1.0], [0.5, 0.5]]
+    for start in range(0, n, 8):
+        batch = claims[start : start + 8]
+        oks = await asyncio.gather(
+            *(
+                queue.complete(pool, c.id, f"w{start + i}", outcomes[(start + i) % 3])
+                for i, c in enumerate(batch)
+            )
+        )
+        assert all(oks)
+    live = await _snapshot(pool)
+    assert len(live[1]) == 2 * n
+
+    # Wreck the tables, then rebuild from the match log: bit-for-bit identical floats.
+    await pool.execute("UPDATE ratings SET glicko_rating = 0, rating = 0, glicko_rd = 1")
+    assert await ratings.rebuild(pool) == n
+    assert await _snapshot(pool) == live
+
+
+async def test_rebuild_of_one_game_leaves_other_games_alone(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    assert await queue.complete(pool, m.id, "w0", [1.0, 0.0])
+    await pool.execute(
+        "INSERT INTO ratings (player_id, game, rating, games_played) "
+        "VALUES ('r1', 'other', 1234, 9)"
+    )
+    assert await ratings.rebuild(pool, "connect4") == 1
+    assert await pool.fetchval("SELECT rating FROM ratings WHERE game = 'other'") == 1234

@@ -21,7 +21,8 @@ Optimise for correctness and clear failure semantics over features.
 | Anthropic/OpenAI adapters, retries, rate limiter | Done, tested against canned HTTP responses. **No real API call has been made yet.** |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
 | API + placeholder UI (leaderboard, tournaments, replay) | Works end to end; UI is a stopgap |
-| Ratings persistence, tournament completion, metrics, v2 games | Not started (see Roadmap) |
+| Ratings (Elo + Glicko-2) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
+| Glicko-2 confidence, Swiss pairing, presentation, v2 games | See Roadmap |
 
 ## Commands
 
@@ -75,7 +76,7 @@ arena/
   worker.py             claim → run with heartbeat → complete / release for retry
   api.py, static/       FastAPI read API + placeholder page
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
-  costs.py, ratings/elo.py, tournaments.py (round_robin), cli.py, config.py
+  costs.py, ratings/{elo,glicko2}.py, tournaments.py (round_robin), cli.py, config.py
 migrations/             forward-only SQL, applied in filename order
 ```
 
@@ -160,7 +161,8 @@ migrations/             forward-only SQL, applied in filename order
 
 **v1 definition of done:** Connect 4 · Postgres workers with leases · round-robin ·
 Elo · cost tracking + budget cap · replay page · first real tournament with at least
-3 LLM players.
+3 LLM players. v1 uses Elo; Glicko-2 runs beside it as a post-v1 addition (it ranks the
+leaderboard, but Elo stays the v1 rating and is always shown).
 
 Items tagged `[human]` need real API calls or a decision from the user. Unattended
 runs (loops, scheduled tasks) skip them.
@@ -181,7 +183,7 @@ runs (loops, scheduled tasks) skip them.
       cost per game, cache hit rate.
 - [x] Cross-process rate limiting. The limiter is per process today; options: a token
       table with `SELECT ... FOR UPDATE`, or a static per-worker share of the quota.
-- [ ] Glicko-2 (rating deviation → confidence on the leaderboard).
+- [x] Glicko-2 beside Elo, post-v1 (rating deviation → confidence on the leaderboard).
 - [ ] Swiss pairing.
 
 **Phase 4: presentation**
@@ -241,11 +243,18 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - `arena play` uses an in-memory store and a per-match `--budget` (default $0.50); it
   never touches Postgres.
 - Ratings are written only by `queue.complete` (`store/ratings.py`). Matches completed
-  before that existed are unrated, and Elo skips matches without exactly 2 seats.
+  before that existed are unrated, and ratings skip matches without exactly 2 seats.
   Ratings rows are locked in `player_id` order; keep that order to avoid deadlocks.
+- Glicko-2: every match is its own rating period, tau = 0.3, and RD never grows from
+  inactivity (skill is fixed by config_hash). The leaderboard ranks by rating - 2·RD.
+  After applying migration 0003 run `arena ratings rebuild` once: existing rows start at
+  Glicko defaults. Rebuild replays by (completed_at, id), and `queue.complete` re-stamps
+  completed_at with clock_timestamp() under the rating locks so that order is exact.
 - Tournaments close in the transaction that moves their last match to `completed` or
   `failed` (failed counts as done). A budget-capped tournament with queued matches stays
   `running`. Lock order in a completion: match row, ratings rows, tournament row last.
+  Lock the tournament `FOR NO KEY UPDATE`, never `FOR UPDATE`: the completed_at re-stamp
+  re-runs the matches→tournaments FK check (KEY SHARE), and upgrading that deadlocks.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);

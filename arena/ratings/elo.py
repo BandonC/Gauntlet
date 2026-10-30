@@ -1,5 +1,5 @@
-"""Two-player Elo. v1 rating system; Glicko-2 (with rating deviation, so the
-leaderboard can show confidence) is a planned replacement in v2."""
+"""Two-player Elo: the v1 rating system. Glicko-2 (ratings/glicko2.py, with a rating
+deviation so the leaderboard can show confidence) runs beside it as a post-v1 addition."""
 
 from __future__ import annotations
 

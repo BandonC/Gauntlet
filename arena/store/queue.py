@@ -82,8 +82,12 @@ RETURNING id
 # other's match as still running and neither would close it. Locking the tournament
 # row serialises them; the check is a separate statement so it sees the other's commit.
 # Taken last in the transaction (after match and ratings rows), the same order as
-# turns.append_turn, so it can't deadlock with it.
-LOCK_TOURNAMENT_SQL = "SELECT id FROM tournaments WHERE id = $1 FOR UPDATE"
+# turns.append_turn, so it can't deadlock with it. NO KEY UPDATE, not UPDATE: re-stamping
+# completed_at updates the match row a second time, which re-runs its tournament_id FK
+# check and takes KEY SHARE on this row; two completions each holding KEY SHARE and
+# both upgrading to FOR UPDATE would deadlock. NO KEY UPDATE doesn't conflict with KEY
+# SHARE but still conflicts with itself, so completions still serialise here.
+LOCK_TOURNAMENT_SQL = "SELECT id FROM tournaments WHERE id = $1 FOR NO KEY UPDATE"
 
 FINISH_TOURNAMENT_SQL = """
 UPDATE tournaments SET status = 'completed'
@@ -92,6 +96,8 @@ WHERE id = $1 AND status <> 'completed'
       SELECT 1 FROM matches WHERE tournament_id = $1 AND status IN ('queued', 'running')
   )
 """
+
+RESTAMP_SQL = "UPDATE matches SET completed_at = clock_timestamp() WHERE id = $1"
 
 SEATS_SQL = "SELECT seat, player_id FROM match_seats WHERE match_id = $1 ORDER BY seat"
 
@@ -136,7 +142,10 @@ async def complete(pool: asyncpg.Pool, match_id: int, worker_id: str, scores: li
         if row is None:
             return False
         seats = [r["player_id"] for r in await conn.fetch(SEATS_SQL, match_id)]
-        await ratings.apply_match_result(conn, match_id, row["game"], seats, scores)
+        if await ratings.apply_match_result(conn, match_id, row["game"], seats, scores):
+            # Re-stamp while holding the players' rating locks: (completed_at, id) is
+            # then exactly the order ratings were applied in, which rebuild replays.
+            await conn.execute(RESTAMP_SQL, match_id)
         await finish_tournament_if_done(conn, row["tournament_id"])
     return True
 
