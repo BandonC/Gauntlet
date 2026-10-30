@@ -6,6 +6,7 @@ arena tournament --game connect4 --players a,b,c --games-per-pair 10 --budget 5
 arena worker --concurrency 4                             run matches from the queue
 arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
+arena export --out site                                  static HTML + JSON (GitHub Pages)
 """
 
 from __future__ import annotations
@@ -194,6 +195,19 @@ async def _ratings(args: argparse.Namespace) -> None:
     print(f"replayed {n} completed matches into ratings")
 
 
+async def _export(args: argparse.Namespace) -> None:
+    from arena.export import export_site
+    from arena.store.db import create_pool
+
+    pool = await create_pool(settings().database_url)
+    try:
+        summary = await export_site(pool, Path(args.out))
+    finally:
+        await pool.close()
+    print(f"wrote {summary.pages} pages and {summary.json_files} JSON files to {args.out}")
+    print(f"open {Path(args.out) / 'index.html'}")
+
+
 def main(argv: list[str] | None = None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
     ap = argparse.ArgumentParser(prog="arena")
@@ -240,6 +254,9 @@ def main(argv: list[str] | None = None) -> None:
     s = sub.add_parser("serve", help="API + UI")
     s.add_argument("--port", type=int, default=8000)
 
+    e = sub.add_parser("export", help="render the site to static HTML + JSON files")
+    e.add_argument("--out", default="site", help="output directory (default: site)")
+
     args = ap.parse_args(argv)
     if args.cmd == "serve":
         import uvicorn
@@ -253,6 +270,7 @@ def main(argv: list[str] | None = None) -> None:
         "worker": _worker,
         "leaderboard": _leaderboard,
         "ratings": _ratings,
+        "export": _export,
     }[args.cmd]
     asyncio.run(handler(args))
 
