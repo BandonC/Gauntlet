@@ -1,6 +1,11 @@
-"""Read-only HTTP API plus a minimal UI page. Run: arena serve
+"""Read-only HTTP API plus server-rendered pages (Jinja2, see web.py). Run: arena serve
 
-Endpoints:
+Pages:
+  GET /                      leaderboards for every game
+  GET /tournaments           GET /tournaments/{id}
+  GET /matches               GET /matches/{id}
+
+JSON endpoints:
   GET /api/health
   GET /api/games
   GET /api/tournaments                 progress and spend per tournament
@@ -13,20 +18,19 @@ Endpoints:
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 
+from arena import web
 from arena.config import settings
-from arena.engine.match_runner import MatchSpec, iter_states
-from arena.games.registry import get_game, list_games
+from arena.games.registry import list_games
 from arena.store import metrics as m_store
+from arena.store import read
 from arena.store import tournaments as t_store
 from arena.store.db import create_pool
-from arena.store.turns import PostgresTurnStore
 
-STATIC = Path(__file__).parent / "static"
+URLS = web.Urls()
 
 
 @asynccontextmanager
@@ -39,9 +43,35 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="LLM Arena", lifespan=lifespan)
 
 
-@app.get("/")
-async def index() -> FileResponse:
-    return FileResponse(STATIC / "index.html")
+def _page(html: str | None, what: str) -> HTMLResponse:
+    if html is None:
+        raise HTTPException(404, f"{what} not found")
+    return HTMLResponse(html)
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index_page() -> HTMLResponse:
+    return _page(await web.index_page(app.state.pool, URLS), "page")
+
+
+@app.get("/tournaments", response_class=HTMLResponse)
+async def tournaments_page() -> HTMLResponse:
+    return _page(await web.tournaments_page(app.state.pool, URLS), "page")
+
+
+@app.get("/tournaments/{tournament_id}", response_class=HTMLResponse)
+async def tournament_page(tournament_id: int) -> HTMLResponse:
+    return _page(await web.tournament_page(app.state.pool, URLS, tournament_id), "tournament")
+
+
+@app.get("/matches", response_class=HTMLResponse)
+async def matches_page() -> HTMLResponse:
+    return _page(await web.matches_page(app.state.pool, URLS), "page")
+
+
+@app.get("/matches/{match_id}", response_class=HTMLResponse)
+async def match_page(match_id: int) -> HTMLResponse:
+    return _page(await web.match_page(app.state.pool, URLS, match_id), "match")
 
 
 @app.get("/api/health")
@@ -57,18 +87,7 @@ async def games() -> list[str]:
 
 @app.get("/api/tournaments")
 async def tournaments() -> list[dict]:
-    rows = await app.state.pool.fetch(
-        """
-        SELECT t.id, t.game, t.format, t.status, t.rounds, t.current_round, t.last_error,
-               t.budget_usd::float, t.spent_usd::float,
-               count(m.*) AS total,
-               count(m.*) FILTER (WHERE m.status = 'completed') AS completed,
-               count(m.*) FILTER (WHERE m.status = 'failed') AS failed
-        FROM tournaments t LEFT JOIN matches m ON m.tournament_id = t.id
-        GROUP BY t.id ORDER BY t.id DESC
-        """
-    )
-    return [dict(r) for r in rows]
+    return await read.list_tournaments(app.state.pool)
 
 
 @app.get("/api/leaderboard/{game}")
@@ -83,61 +102,12 @@ async def metrics(game: str, tournament_id: int | None = None) -> list[dict]:
 
 @app.get("/api/matches")
 async def matches(tournament_id: int | None = None, limit: int = 50) -> list[dict]:
-    rows = await app.state.pool.fetch(
-        """
-        SELECT m.id, m.tournament_id, m.game, m.status, m.scores, m.run_attempts,
-               array_agg(s.player_id ORDER BY s.seat) AS seats,
-               (SELECT coalesce(sum(cost_usd), 0)::float
-                FROM turns WHERE match_id = m.id) AS cost_usd
-        FROM matches m JOIN match_seats s ON s.match_id = m.id
-        WHERE $1::bigint IS NULL OR m.tournament_id = $1
-        GROUP BY m.id ORDER BY m.id DESC LIMIT $2
-        """,
-        tournament_id,
-        min(limit, 500),
-    )
-    return [dict(r) for r in rows]
+    return await read.list_matches(app.state.pool, tournament_id, limit)
 
 
 @app.get("/api/matches/{match_id}")
 async def match_detail(match_id: int) -> dict:
-    pool = app.state.pool
-    m = await pool.fetchrow("SELECT * FROM matches WHERE id = $1", match_id)
+    m = await read.match_detail(app.state.pool, match_id)
     if m is None:
         raise HTTPException(404, "match not found")
-    seats = [
-        r["player_id"]
-        for r in await pool.fetch(
-            "SELECT player_id FROM match_seats WHERE match_id = $1 ORDER BY seat", match_id
-        )
-    ]
-    turns = await PostgresTurnStore(pool, worker_id="api").load_turns(str(match_id))
-
-    # Rebuild a spectator frame for every turn by replaying the log through the engine.
-    game = get_game(m["game"])
-    spec = MatchSpec(str(match_id), m["game"], m["seed"], seats)
-    frames = [game.spectator_view(s) for s in iter_states(game, spec, turns)]
-
-    return {
-        "id": m["id"],
-        "game": m["game"],
-        "status": m["status"],
-        "scores": m["scores"],
-        "last_error": m["last_error"],
-        "seats": seats,
-        "turns": [
-            {
-                "turn_no": t.turn_no,
-                "seat": t.seat,
-                "action": t.action,
-                "forfeited": t.forfeited,
-                "attempts": t.attempts,
-                "error": t.error,
-                "cost_usd": t.cost_usd,
-                "latency_ms": t.latency_ms,
-                "tokens": t.usage.__dict__,
-            }
-            for t in turns
-        ],
-        "frames": frames,  # frames[i] = board before turn i; frames[-1] = final
-    }
+    return m

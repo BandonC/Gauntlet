@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
+{% block content %}
+<h1>Match #{{ m.id }}</h1>
+<dl>
+  <dt>Game</dt><dd>{{ m.game }}</dd>
+  {% if m.tournament_id is not none %}
+  <dt>Tournament</dt><dd><a href="{{ url('tournament', id=m.tournament_id) }}">#{{ m.tournament_id }}</a>{% if m.round %}, round {{ m.round }}{% endif %}</dd>
+  {% endif %}
+  <dt>Players</dt><dd>{% for p in m.seats %}seat {{ loop.index0 }}: {{ p }}{% if m.scores %} ({{ m.scores[loop.index0] }}){% endif %}{{ '; ' if not loop.last }}{% endfor %}</dd>
+  <dt>Status</dt><dd>{{ m.status }}</dd>
+  {% if m.last_error %}<dt>Last error</dt><dd class="bad">{{ m.last_error }}</dd>{% endif %}
+</dl>
+<h2>Turns</h2>
+{% if m.turns %}
+<div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th>Move</th><th class="num">Attempts</th><th class="num">Tokens in / out / cached</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead>
+  <tbody>
+  {% for t in m.turns %}
+    <tr>
+      <td>{{ t.turn_no }}</td>
+      <td>{{ m.seats[t.seat] }}</td>
+      <td>{% if t.forfeited %}<span class="bad">forfeit</span>{% else %}<code>{{ t.action | action }}</code>{% endif %}
+        {% if t.error %}<div class="muted">last rejected: {{ t.error }}</div>{% endif %}</td>
+      <td class="num">{{ t.attempts }}</td>
+      <td class="num">{{ t.tokens.input_tokens }} / {{ t.tokens.output_tokens }} / {{ t.tokens.cache_read_tokens }}</td>
+      <td class="num">{{ t.latency_ms }} ms</td>
+      <td class="num">{{ t.cost_usd | usd(5) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="muted">No turns played yet.</p>
+{% endif %}
+{% endblock %}

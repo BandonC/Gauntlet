@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "_macros.html" import match_table %}
+{% block title %}Tournament #{{ t.id }} · LLM Arena{% endblock %}
+{% block content %}
+<h1>Tournament #{{ t.id }}</h1>
+<dl>
+  <dt>Game</dt><dd>{{ t.game }}</dd>
+  <dt>Format</dt><dd>{{ t.format }}{% if t.rounds %}, round {{ t.current_round }} of {{ t.rounds }}{% endif %}</dd>
+  <dt>Status</dt><dd>{{ t.status }}</dd>
+  {% if t.last_error %}<dt>Paused because</dt><dd class="bad">{{ t.last_error }}</dd>{% endif %}
+  <dt>Progress</dt><dd>{{ t.completed }}/{{ t.total }} completed{% if t.failed %}, <span class="bad">{{ t.failed }} failed</span>{% endif %}</dd>
+  <dt>Spent</dt><dd>{{ t.spent_usd | usd }}{% if t.budget_usd is not none %} of {{ t.budget_usd | usd(2) }} budget{% endif %}</dd>
+</dl>
+<h2>Matches</h2>
+{{ match_table(matches, url) }}
+{% endblock %}

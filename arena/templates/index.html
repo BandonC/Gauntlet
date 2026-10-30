@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Leaderboards</h1>
+<p class="muted">Ranked by Glicko-2 rating − 2·RD (a conservative estimate). Elo is the v1 rating.</p>
+{% for game, rows in boards.items() %}
+<h2>{{ game }}</h2>
+{% if rows %}
+<div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Rating ± 2·RD</th><th class="num">Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ r.player_id }}</td>
+      <td class="num">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>
+      <td class="num">{{ r.elo }}</td>
+      <td class="num">{{ r.games }}</td>
+      <td class="num">{{ r.points }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="muted">No rated matches yet.</p>
+{% endif %}
+{% endfor %}
+{% endblock %}

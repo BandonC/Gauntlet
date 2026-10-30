@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Tournaments · LLM Arena{% endblock %}
+{% block content %}
+<h1>Tournaments</h1>
+{% if tournaments %}
+<div class="wrap"><table>
+  <thead><tr><th>ID</th><th>Game</th><th>Format</th><th>Status</th><th>Round</th><th>Progress</th><th class="num">Spent</th></tr></thead>
+  <tbody>
+  {% for t in tournaments %}
+    <tr>
+      <td><a href="{{ url('tournament', id=t.id) }}">#{{ t.id }}</a></td>
+      <td>{{ t.game }}</td>
+      <td>{{ t.format }}</td>
+      <td>{{ t.status }}{% if t.last_error %} <span class="bad" title="{{ t.last_error }}">⚠</span>{% endif %}</td>
+      <td>{{ '%d / %d' | format(t.current_round, t.rounds) if t.rounds else '' }}</td>
+      <td>{{ t.completed }}/{{ t.total }}{% if t.failed %} <span class="bad">({{ t.failed }} failed)</span>{% endif %}</td>
+      <td class="num">{{ t.spent_usd | usd }}{% if t.budget_usd is not none %} / {{ t.budget_usd | usd(2) }}{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+<p class="muted">No tournaments yet. Create one with <code>arena tournament</code>.</p>
+{% endif %}
+{% endblock %}
