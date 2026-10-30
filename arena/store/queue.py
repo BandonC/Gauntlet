@@ -18,6 +18,7 @@ from dataclasses import dataclass
 import asyncpg
 
 from arena.store import ratings
+from arena.store import tournaments as t_store
 
 CLAIM_SQL = """
 UPDATE matches m
@@ -78,25 +79,6 @@ WHERE id = $1 AND lease_owner = $2 AND status = 'running'
 RETURNING id
 """
 
-# Two workers finishing a tournament's last two matches at once would each see the
-# other's match as still running and neither would close it. Locking the tournament
-# row serialises them; the check is a separate statement so it sees the other's commit.
-# Taken last in the transaction (after match and ratings rows), the same order as
-# turns.append_turn, so it can't deadlock with it. NO KEY UPDATE, not UPDATE: re-stamping
-# completed_at updates the match row a second time, which re-runs its tournament_id FK
-# check and takes KEY SHARE on this row; two completions each holding KEY SHARE and
-# both upgrading to FOR UPDATE would deadlock. NO KEY UPDATE doesn't conflict with KEY
-# SHARE but still conflicts with itself, so completions still serialise here.
-LOCK_TOURNAMENT_SQL = "SELECT id FROM tournaments WHERE id = $1 FOR NO KEY UPDATE"
-
-FINISH_TOURNAMENT_SQL = """
-UPDATE tournaments SET status = 'completed'
-WHERE id = $1 AND status <> 'completed'
-  AND NOT EXISTS (
-      SELECT 1 FROM matches WHERE tournament_id = $1 AND status IN ('queued', 'running')
-  )
-"""
-
 RESTAMP_SQL = "UPDATE matches SET completed_at = clock_timestamp() WHERE id = $1"
 
 SEATS_SQL = "SELECT seat, player_id FROM match_seats WHERE match_id = $1 ORDER BY seat"
@@ -146,7 +128,7 @@ async def complete(pool: asyncpg.Pool, match_id: int, worker_id: str, scores: li
             # Re-stamp while holding the players' rating locks: (completed_at, id) is
             # then exactly the order ratings were applied in, which rebuild replays.
             await conn.execute(RESTAMP_SQL, match_id)
-        await finish_tournament_if_done(conn, row["tournament_id"])
+        await t_store.advance_tournament(conn, row["tournament_id"])
     return True
 
 
@@ -159,7 +141,8 @@ async def release_for_retry(
     max_attempts: int,
     backoff_seconds: float,
 ) -> str | None:
-    """Give the match back after an infrastructure failure. Returns the new status."""
+    """Give the match back after an infrastructure failure. Returns the new status.
+    A match that fails for good pauses its tournament until `arena tournament resume`."""
     async with pool.acquire() as conn, conn.transaction():
         row = await conn.fetchrow(
             RELEASE_SQL, match_id, worker_id, error[:2000], max_attempts, backoff_seconds
@@ -167,7 +150,9 @@ async def release_for_retry(
         if row is None:
             return None
         if row["status"] == "failed":
-            await finish_tournament_if_done(conn, row["tournament_id"])
+            await t_store.pause_tournament(
+                conn, row["tournament_id"], f"match {match_id} failed: {error}"
+            )
     return row["status"]
 
 
@@ -175,12 +160,3 @@ async def release_on_shutdown(pool: asyncpg.Pool, match_id: int, worker_id: str)
     """Give back a match interrupted by shutdown, claimable immediately. False if the
     lease was already lost."""
     return await pool.fetchval(SHUTDOWN_RELEASE_SQL, match_id, worker_id) is not None
-
-
-async def finish_tournament_if_done(conn: asyncpg.Connection, tournament_id: int | None) -> None:
-    """Mark the tournament completed once no match is queued or running (failed matches
-    count as done). Call inside the transaction that moved a match to a final state."""
-    if tournament_id is None:
-        return
-    await conn.execute(LOCK_TOURNAMENT_SQL, tournament_id)
-    await conn.execute(FINISH_TOURNAMENT_SQL, tournament_id)

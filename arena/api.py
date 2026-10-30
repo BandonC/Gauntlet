@@ -59,7 +59,8 @@ async def games() -> list[str]:
 async def tournaments() -> list[dict]:
     rows = await app.state.pool.fetch(
         """
-        SELECT t.id, t.game, t.format, t.status, t.budget_usd::float, t.spent_usd::float,
+        SELECT t.id, t.game, t.format, t.status, t.rounds, t.current_round, t.last_error,
+               t.budget_usd::float, t.spent_usd::float,
                count(m.*) AS total,
                count(m.*) FILTER (WHERE m.status = 'completed') AS completed,
                count(m.*) FILTER (WHERE m.status = 'failed') AS failed

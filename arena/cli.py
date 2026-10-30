@@ -86,7 +86,20 @@ async def _migrate(args: argparse.Namespace) -> None:
 
 async def _tournament(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
-    from arena.store.tournaments import create_round_robin
+    from arena.store.tournaments import create_round_robin, create_swiss, resume_tournament
+
+    if args.tournament_cmd == "resume":
+        pool = await create_pool(settings().database_url)
+        try:
+            n = await resume_tournament(pool, args.tournament_id)
+        except ValueError as e:
+            sys.exit(f"arena tournament resume: {e}")
+        finally:
+            await pool.close()
+        print(f"tournament {args.tournament_id}: running, {n} failed matches re-queued")
+        return
+    if not args.game or not args.players:
+        sys.exit("arena tournament: --game and --players are required")
 
     factory, path = _factory(args.roster)
     ids = [p.strip() for p in args.players.split(",") if p.strip()]
@@ -96,12 +109,18 @@ async def _tournament(args: argparse.Namespace) -> None:
     cfgs = [factory.roster.players[i] for i in ids]
     pool = await create_pool(settings().database_url)
     try:
-        tid, n = await create_round_robin(
-            pool, args.game, cfgs, args.games_per_pair, args.budget, seed=args.seed
-        )
+        if args.format == "swiss":
+            tid, n = await create_swiss(
+                pool, args.game, cfgs, args.budget, rounds=args.rounds, seed=args.seed
+            )
+            print(f"tournament {tid}: swiss, round 1 queued ({n} matches)")
+        else:
+            tid, n = await create_round_robin(
+                pool, args.game, cfgs, args.games_per_pair, args.budget, seed=args.seed
+            )
+            print(f"tournament {tid}: {n} matches queued")
     finally:
         await pool.close()
-    print(f"tournament {tid}: {n} matches queued")
 
 
 async def _worker(args: argparse.Namespace) -> None:
@@ -181,12 +200,17 @@ def main(argv: list[str] | None = None) -> None:
 
     sub.add_parser("migrate", help="apply SQL migrations")
 
-    t = sub.add_parser("tournament", help="queue a round-robin tournament")
-    t.add_argument("--game", required=True)
-    t.add_argument("--players", required=True, help="comma-separated roster ids")
-    t.add_argument("--games-per-pair", type=int, default=10)
+    t = sub.add_parser("tournament", help="queue a tournament, or resume a paused one")
+    t.add_argument("--game")
+    t.add_argument("--players", help="comma-separated roster ids")
+    t.add_argument("--format", choices=["round_robin", "swiss"], default="round_robin")
+    t.add_argument("--games-per-pair", type=int, default=10, help="round robin only")
+    t.add_argument("--rounds", type=int, default=None, help="swiss only (default ceil(log2 N))")
     t.add_argument("--budget", type=float, default=None, help="USD cap (strongly advised)")
     t.add_argument("--seed", type=int, default=None)
+    t_sub = t.add_subparsers(dest="tournament_cmd")
+    tr = t_sub.add_parser("resume", help="re-queue failed matches and unpause")
+    tr.add_argument("tournament_id", type=int)
 
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)

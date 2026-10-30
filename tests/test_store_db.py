@@ -23,7 +23,15 @@ from arena.store.db import create_pool
 from arena.store.metrics import player_metrics
 from arena.store.migrate import migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
-from arena.store.tournaments import create_round_robin, leaderboard
+from arena.store.tournaments import (
+    NEXT_ROUND_SQL,
+    advance_tournament,
+    create_round_robin,
+    create_swiss,
+    leaderboard,
+    resume_tournament,
+    swiss_entrants,
+)
 from arena.store.turns import PostgresTurnStore
 from arena.types import Usage
 from arena.worker import WorkerConfig, run_one, run_worker
@@ -238,18 +246,31 @@ async def test_tournament_completes_only_after_last_match(pool):
     assert await tournament_status(pool, tid) == "completed"
 
 
-async def test_failed_match_counts_as_done_but_retry_does_not(pool):
-    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
-    first, second = await _claim_all(pool, 2)
+async def test_failed_match_pauses_tournament_until_resumed(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=3, budget_usd=None)
+    first, second, third = await _claim_all(pool, 3)
     assert await queue.complete(pool, first.id, "w0", [1.0, 0.0])
 
     retry = dict(max_attempts=2, backoff_seconds=0)
     assert await queue.release_for_retry(pool, second.id, "w1", "boom", **retry) == "queued"
-    assert await tournament_status(pool, tid) == "running"
+    assert await tournament_status(pool, tid) == "running"  # a retry is not a failure
 
-    again = await queue.claim(pool, "w2", 30)
+    again = await queue.claim(pool, "w3", 30)
     assert again.id == second.id and again.run_attempts == 2
-    assert await queue.release_for_retry(pool, second.id, "w2", "boom", **retry) == "failed"
+    assert await queue.release_for_retry(pool, second.id, "w3", "boom", **retry) == "failed"
+    row = await pool.fetchrow("SELECT status, last_error FROM tournaments WHERE id = $1", tid)
+    assert row["status"] == "paused" and row["last_error"] == f"match {second.id} failed: boom"
+    # The third match gets retried too, but nothing is claimable while paused.
+    assert await queue.release_for_retry(pool, third.id, "w2", "x", **retry) == "queued"
+    assert await queue.claim(pool, "w4", 30) is None
+
+    assert await resume_tournament(pool, tid) == 1
+    m = await pool.fetchrow("SELECT status, run_attempts FROM matches WHERE id = $1", second.id)
+    assert (m["status"], m["run_attempts"]) == ("queued", 0)
+    row = await pool.fetchrow("SELECT status, last_error FROM tournaments WHERE id = $1", tid)
+    assert (row["status"], row["last_error"]) == ("running", None)
+
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
     assert await tournament_status(pool, tid) == "completed"
 
 
@@ -266,8 +287,8 @@ async def test_last_two_matches_finishing_together_close_the_tournament(pool):
         await t2.start()
         await c1.execute(done, a.id)
         await c2.execute(done, b.id)
-        await queue.finish_tournament_if_done(c1, tid)  # sees b running: no-op
-        second = asyncio.create_task(queue.finish_tournament_if_done(c2, tid))
+        await advance_tournament(c1, tid)  # sees b running: no-op
+        second = asyncio.create_task(advance_tournament(c2, tid))
         await asyncio.sleep(0.2)  # let it block on the tournament row lock
         await t1.commit()
         await second
@@ -486,3 +507,117 @@ async def test_rebuild_of_one_game_leaves_other_games_alone(pool):
     )
     assert await ratings.rebuild(pool, "connect4") == 1
     assert await pool.fetchval("SELECT rating FROM ratings WHERE game = 'other'") == 1234
+
+
+FIVE = PLAYERS + [PlayerConfig(f"r{i}", "random", seed=i) for i in (3, 4, 5)]
+FIVE_FACTORY = PlayerFactory(Roster({p.id: p for p in FIVE}, {}), {})
+
+
+async def _round_pairs(pool, tid):
+    rows = await pool.fetch(
+        "SELECT m.round, array_agg(s.player_id ORDER BY s.player_id) AS seats "
+        "FROM matches m JOIN match_seats s ON s.match_id = m.id "
+        "WHERE m.tournament_id = $1 GROUP BY m.id ORDER BY m.round, m.id",
+        tid,
+    )
+    by_round: dict[int, list[frozenset]] = {}
+    for r in rows:
+        by_round.setdefault(r["round"], []).append(frozenset(r["seats"]))
+    return by_round
+
+
+async def test_swiss_runs_every_round_without_rematches(pool):
+    tid, n = await create_swiss(pool, "connect4", FIVE, budget_usd=None)
+    t = await pool.fetchrow("SELECT rounds, current_round FROM tournaments WHERE id = $1", tid)
+    assert (t["rounds"], t["current_round"], n) == (3, 1, 4)  # ceil(log2 5); 2 pairings x 2
+
+    await run_worker(pool, FIVE_FACTORY, FAST, concurrency=3, exit_when_idle=True)
+
+    t = await pool.fetchrow("SELECT status, current_round FROM tournaments WHERE id = $1", tid)
+    assert (t["status"], t["current_round"]) == ("completed", 3)
+    by_round = await _round_pairs(pool, tid)
+    assert sorted(by_round) == [1, 2, 3]
+    pairings = []
+    for games in by_round.values():
+        assert len(games) == 4 and all(games.count(g) == 2 for g in games)  # seats swapped
+        pairings += set(games)
+    assert len(pairings) == len(set(pairings)) == 6  # nobody met twice
+    byes = await pool.fetch("SELECT player_id FROM tournament_byes WHERE tournament_id = $1", tid)
+    assert len({b["player_id"] for b in byes}) == 3  # a different player sat out each round
+    # Byes are not matches: only the 12 played games touched the ratings.
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 2 * 12
+
+
+async def test_bye_counts_two_points_and_is_unrated(pool):
+    three = FIVE[:3]
+    tid, _ = await create_swiss(pool, "connect4", three, budget_usd=None, rounds=2)
+    assert await pool.fetchval("SELECT player_id FROM tournament_byes") == "r3"
+    m1, m2 = await _claim_all(pool, 2)  # r1 v r2, seats swapped
+    winner = "r1"
+    for i, m in enumerate((m1, m2)):
+        scores = [1.0, 0.0] if m.seats[0] == winner else [0.0, 1.0]
+        assert await queue.complete(pool, m.id, f"w{i}", scores)
+
+    async with pool.acquire() as conn:
+        entrants = {e.player_id: e for e in await swiss_entrants(conn, tid, "connect4")}
+    assert (entrants["r3"].points, entrants["r3"].had_bye) == (2.0, True)
+    assert entrants["r1"].points == 2.0  # won both games
+    # r2 lost both, but round 2 is already queued with r2 on the bye: 0 + 2.
+    assert (entrants["r2"].points, entrants["r2"].had_bye) == (2.0, True)
+    assert await pool.fetchval("SELECT count(*) FROM ratings WHERE player_id = 'r3'") == 0
+    # Round 2 was queued by the second completion: r1 v r3, and r2 sits out.
+    assert (await _round_pairs(pool, tid))[2] == [frozenset({"r1", "r3"})] * 2
+    assert await pool.fetchval("SELECT player_id FROM tournament_byes WHERE round = 2") == "r2"
+
+
+async def test_round_finishing_together_queues_next_round_exactly_once(pool):
+    four = FIVE[:4]
+    tid, n = await create_swiss(pool, "connect4", four, budget_usd=None)
+    assert n == 4
+    claims = await _claim_all(pool, 4)
+    for i, c in enumerate(claims[:2]):
+        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0])
+    a, b = claims[2:]
+    done = "UPDATE matches SET status = 'completed', scores = '[1, 0]' WHERE id = $1"
+    async with pool.acquire() as c1, pool.acquire() as c2:
+        t1, t2 = c1.transaction(), c2.transaction()
+        await t1.start()
+        await t2.start()
+        await c1.execute(done, a.id)
+        await c2.execute(done, b.id)
+        await advance_tournament(c1, tid)  # sees b running: no-op
+        second = asyncio.create_task(advance_tournament(c2, tid))
+        await asyncio.sleep(0.2)  # blocks on the tournament row lock
+        await t1.commit()
+        await second
+        await t2.commit()
+    assert await pool.fetchval("SELECT current_round FROM tournaments WHERE id = $1", tid) == 2
+    assert len((await _round_pairs(pool, tid))[2]) == 4  # one round 2, not zero or two
+
+    async with pool.acquire() as conn, conn.transaction():
+        await advance_tournament(conn, tid)  # round 2 is pending: nothing happens
+    assert await pool.fetchval("SELECT max(round) FROM matches WHERE tournament_id = $1", tid) == 2
+
+
+async def test_round_counter_only_advances_once_per_round(pool):
+    tid, _ = await create_swiss(pool, "connect4", FIVE[:4], budget_usd=None)
+    # The conditional UPDATE is the second guard: a stale "current_round = 1" loses.
+    assert await pool.fetchval(NEXT_ROUND_SQL, tid, 1) == 2
+    assert await pool.fetchval(NEXT_ROUND_SQL, tid, 1) is None
+
+
+async def test_swiss_paused_on_failure_and_resumed_round_carries_on(pool):
+    tid, _ = await create_swiss(pool, "connect4", FIVE[:4], budget_usd=None)
+    claims = await _claim_all(pool, 4)
+    for i, c in enumerate(claims[:3]):
+        assert await queue.complete(pool, c.id, f"w{i}", [1.0, 0.0])
+    last = claims[3]
+    fail = dict(max_attempts=1, backoff_seconds=0)
+    assert await queue.release_for_retry(pool, last.id, "w3", "boom", **fail) == "failed"
+    assert await tournament_status(pool, tid) == "paused"
+    assert 2 not in await _round_pairs(pool, tid)  # no pairing while paused
+
+    assert await resume_tournament(pool, tid) == 1
+    await run_worker(pool, FIVE_FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    t = await pool.fetchrow("SELECT status, current_round FROM tournaments WHERE id = $1", tid)
+    assert (t["status"], t["current_round"]) == ("completed", 2)
