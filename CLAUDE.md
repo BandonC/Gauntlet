@@ -43,6 +43,7 @@ arena migrate
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
+arena worker --record recordings         # also append every model reply for fixtures
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
@@ -375,6 +376,11 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   public while models play. New turns reach the replay controls, not the server-rendered
   turn table: the page says to reload once the match ends. Exports set the route to ""
   (`FILE_ROUTES`), and the page only sends a URL while a match is queued or running.
+- Recordings: `--record` (`arena play`, `arena worker`) writes one file per vendor per
+  process, so two players of one vendor share a file; each line's `model` tells them
+  apart, and files recorded before that field still load. With `--concurrency` above 1,
+  lines from different matches interleave, so record fixtures at concurrency 1. Only
+  successful completions are written: failed calls never reach RecordingProvider.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
   signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
