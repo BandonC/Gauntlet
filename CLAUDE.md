@@ -193,11 +193,19 @@ runs (loops, scheduled tasks) skip them.
       ceil(log2 N) opponents, so a small field gets a noisier ranking for a small saving.
 
 **Phase 4: presentation**
-- [ ] `[human]` Pick the UI approach: HTMX templates or a small Vite app.
-- [ ] Replace `static/index.html` with the chosen approach.
-- [ ] Liar's Dice spectator renderer (frames from `spectator_view`), after the UI decision.
-- [ ] `arena export` → static JSON + page for GitHub Pages ($0 hosting).
-- [ ] Live match view via Server-Sent Events (optional).
+- [x] `[human]` Pick the UI approach (decided 2026-10-29): Jinja2 templates served by
+      FastAPI; `arena export` renders the same templates to static HTML + JSON. Replay
+      stepping in plain JS from frames embedded in the page. No Vite, no HTMX, no build
+      step. Adding `jinja2` to the project dependencies is approved.
+- [ ] Jinja2 templates replace `static/index.html`: leaderboard (rating ± 2·RD, Elo,
+      games), tournaments (round, paused reason), match list, replay page. Same data as
+      the JSON API, which stays.
+- [ ] Replay page: every turn's `spectator_view` frame embedded as JSON; plain-JS
+      prev/next/play stepping; one small renderer function per game: Connect 4 (board),
+      Liar's Dice (all dice, bids, reveals).
+- [ ] `arena export`: render the same templates to static HTML + JSON files for GitHub
+      Pages ($0 hosting). No server needed to browse the result.
+- [ ] Live match view via Server-Sent Events. Optional; do it last.
 
 **Phase 5: v2 games**
 - [x] Liar's Dice engine, `LiarsDiceBot`, prompt `liars_dice/v1`: hidden dice, round r's
@@ -239,7 +247,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 4. `RandomPlayer` vs `RandomPlayer` through `MatchRunner` (needs `legal_actions_hint`).
    For free-text actions, add a scripted bot instead.
 5. Prompt in `players/prompts/<name>/v1/`.
-6. A `spectator_view` renderer in the UI (frames are game-specific).
+6. A small JS renderer for its `spectator_view` frames on the replay page (one function
+   per game, no framework).
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
