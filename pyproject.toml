@@ -30,7 +30,11 @@ packages = ["arena"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-markers = ["db: needs a running Postgres (DATABASE_URL)"]
+addopts = '-m "not slow"'  # a -m on the command line replaces this one
+markers = [
+    "db: needs a running Postgres (DATABASE_URL)",
+    "slow: long simulations, run with pytest -m slow",
+]
 
 [tool.ruff]
 line-length = 100

@@ -10,7 +10,8 @@ Definitions (all per player, for one game, optionally one tournament):
 - cache_hit_rate: cache reads / (uncached input + cache reads + cache writes).
 Rates are None when their denominator is zero.
 
-werewolf_metrics (per player, computed in Python from the match seeds and turn log):
+werewolf_metrics (per player, every Werewolf ruleset, computed in Python from the match
+seeds and turn log):
 - <role>_games / <role>_win_rate: completed matches played in that role and the share
   won. Roles strongly affect results, so read ratings beside these.
 - true_claims / false_claims / leaks: explicit role claims in messages, classified by
@@ -58,25 +59,27 @@ ORDER BY player_id
 """
 
 
+WEREWOLF_GAMES = ["werewolf", "werewolf_dayfirst"]  # rulesets are told apart by player id
+
 WEREWOLF_MATCHES_SQL = """
-SELECT m.id, m.seed, m.options, m.status, m.scores,
+SELECT m.id, m.game, m.seed, m.options, m.status, m.scores,
        array_agg(s.player_id ORDER BY s.seat) AS seats
 FROM matches m JOIN match_seats s ON s.match_id = m.id
-WHERE m.game = 'werewolf' AND ($1::bigint IS NULL OR m.tournament_id = $1)
+WHERE m.game = ANY($2::text[]) AND ($1::bigint IS NULL OR m.tournament_id = $1)
 GROUP BY m.id
 """
 
 WEREWOLF_MESSAGES_SQL = """
 SELECT t.match_id, t.seat, t.action ->> 'message' AS message, t.truncated
 FROM turns t JOIN matches m ON m.id = t.match_id
-WHERE m.game = 'werewolf' AND ($1::bigint IS NULL OR m.tournament_id = $1)
+WHERE m.game = ANY($2::text[]) AND ($1::bigint IS NULL OR m.tournament_id = $1)
   AND t.action ->> 'action' = 'say'
 """
 
 WEREWOLF_FORFEITS_SQL = """
 SELECT t.match_id, t.seat, count(*) AS forfeits
 FROM turns t JOIN matches m ON m.id = t.match_id
-WHERE m.game = 'werewolf' AND ($1::bigint IS NULL OR m.tournament_id = $1) AND t.forfeited
+WHERE m.game = ANY($2::text[]) AND ($1::bigint IS NULL OR m.tournament_id = $1) AND t.forfeited
 GROUP BY t.match_id, t.seat
 """
 
@@ -111,13 +114,14 @@ async def player_metrics(
 
 
 async def werewolf_metrics(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
-    game = get_game("werewolf")
-    matches = {r["id"]: r for r in await pool.fetch(WEREWOLF_MATCHES_SQL, tournament_id)}
+    args = (tournament_id, WEREWOLF_GAMES)
+    matches = {r["id"]: r for r in await pool.fetch(WEREWOLF_MATCHES_SQL, *args)}
     tally: dict[str, Counter] = {}
     roles_of = {}
     for mid, m in matches.items():
         seats = list(m["seats"])
         # Scheduled roles are in options; otherwise the seed deals them, as in the match.
+        game = get_game(m["game"])
         roles = list(game.initial_state(len(seats), m["seed"], m["options"]).roles)
         roles_of[mid] = roles
         for seat, pid in enumerate(seats):
@@ -125,12 +129,12 @@ async def werewolf_metrics(pool: asyncpg.Pool, tournament_id: int | None = None)
             if m["status"] == "completed":
                 c[f"{roles[seat]}_games"] += 1
                 c[f"{roles[seat]}_wins"] += m["scores"][seat] == 1.0
-    for r in await pool.fetch(WEREWOLF_MESSAGES_SQL, tournament_id):
+    for r in await pool.fetch(WEREWOLF_MESSAGES_SQL, *args):
         c = tally[matches[r["match_id"]]["seats"][r["seat"]]]
         c["truncated_messages"] += r["truncated"]
         for claim in classify_claims(r["message"], r["seat"], roles_of[r["match_id"]]):
             c[{"true": "true_claims", "false": "false_claims", "leak": "leaks"}[claim.kind]] += 1
-    for r in await pool.fetch(WEREWOLF_FORFEITS_SQL, tournament_id):
+    for r in await pool.fetch(WEREWOLF_FORFEITS_SQL, *args):
         tally[matches[r["match_id"]]["seats"][r["seat"]]]["forfeits"] += r["forfeits"]
     out = []
     for pid, c in sorted(tally.items()):

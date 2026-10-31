@@ -167,6 +167,7 @@ def test_werewolf_role_stats_show_win_rates_by_role_and_claims():
 
 def test_werewolf_moves_have_readable_labels():
     assert move_label("werewolf", {"action": "kill", "target": 3}) == "kill seat 3"
+    assert move_label("werewolf_dayfirst", {"action": "kill", "target": 3}) == "kill seat 3"
     assert move_label("werewolf", {"action": "vote", "target": 0}) == "vote seat 0"
     assert move_label("werewolf", {"action": "say", "message": "hi"}) == "says: hi"
 
