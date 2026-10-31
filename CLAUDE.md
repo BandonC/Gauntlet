@@ -405,6 +405,16 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   latest 50, like the server. Export writes over files of the same name and deletes
   nothing. asyncpg returns `sum()` over bigint as Decimal; `_json_default` turns it into
   a number.
+- Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in
+  as a villager. Spectator frames hold every role, so `blindSteps` copies out public facts
+  only; `test_blind_steps_depend_on_nothing_a_villager_cannot_know` destroys the hidden
+  fields and requires identical output, and any new step field must keep that test passing.
+  The data is still in the page, so this keeps a game honest, not secret. Per Emil Kowalski's
+  rules, stepping stays instant and only the final reveal animates.
+- `RENDERERS.werewolf_dayfirst` must be set before `initReplay` runs. It was set after at
+  first, so day-first replays opened on raw JSON, which tests missed by requiring the whole
+  file before rendering. `npx impeccable detect <url>` found it as a `pre` overflow.
+  Scan rendered pages: file scans don't execute the page, and found nothing here.
 - Partial export (`--tournaments`, `--matches`): `export.PartialUrls` returns "" for a page
   left out, and templates use the `link` macro so it shows as plain text. A new link to a
   match or tournament page must use that macro too, or a partial export gets a dead link.

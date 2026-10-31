@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Match #142 · LLM Arena</title>
 <style>
-  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c; }
+  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c;
+          --ease-out:cubic-bezier(0.23, 1, 0.32, 1); }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; --bad:#f87171; }
   }
@@ -16,7 +17,12 @@
   nav { display:flex; gap:16px; align-items:baseline; padding-bottom:12px;
         border-bottom:1px solid var(--line); margin-bottom:8px; }
   nav .brand { font-weight:700; margin-right:auto; }
-  a { color: inherit; } nav a { text-decoration:none; } nav a:hover { text-decoration:underline; }
+  a { color: inherit; } nav a { text-decoration:none; }
+  @media (hover: hover) and (pointer: fine) { nav a:hover { text-decoration:underline; } }
+  button { transition: transform 120ms var(--ease-out); }
+  button:active:not(:disabled) { transform: scale(0.97); }
+  @media (prefers-reduced-motion: reduce) { button:active:not(:disabled) { transform: none; } }
+  p, dd, li { max-width: 62ch; text-wrap: pretty; }
   h1 { font-size: 20px; margin: 16px 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
   .muted { color: var(--muted); } .bad { color: var(--bad); }
   table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
@@ -28,6 +34,7 @@
   dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 8px 0; }
   dt { color: var(--muted); }
 </style>
+<script>if (location.hash === "#blind") document.documentElement.classList.add("blind");</script>
 <style>
   .controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin: 8px 0; }
   .controls button { font: inherit; padding: 2px 10px; }
@@ -43,6 +50,29 @@
   .ld-bids .die, .reveal .die { font-size: 22px; line-height: 1; vertical-align: -3px; }
   .status { font-weight: 600; }
   tr[data-frame] { cursor: pointer; } tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
+  /* Play blind. Stepping is instant on purpose: only press feedback and the final unmasking move. */
+  #blind { display: none; }
+  .blind #blind { display: block; }
+  .blind .spoiler { display: none; }
+  .blind-head { position: sticky; top: 0; background: var(--bg); padding: 4px 0;
+                border-bottom: 1px solid var(--line); }
+  .blind-head p { margin: 6px 0; }
+  .blind-foot { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; margin: 0;
+                border-top: 1px solid var(--line); }
+  .seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .seat { font: inherit; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: none; color: inherit; }
+  button.seat { cursor: pointer; }
+  .seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+  .seat.dead { color: var(--muted); text-decoration: line-through; }
+  .seat.dead small { display: inline-block; }
+  .transcript h3 { font-size: 13px; color: var(--muted); margin: 16px 0 4px; }
+  .said { margin: 4px 0; }
+  tr.wolf td { color: var(--bad); font-weight: 600; }
+  tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms); }
+  @keyframes unmask { from { opacity: 0; transform: translateY(4px); } }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes unmask { from { opacity: 0; } }
+  }
 </style>
 </head>
 <body>
@@ -54,7 +84,16 @@
     <a href="matches.html">Matches</a>
   </nav>
 <h1>Match #142</h1>
-<dl>
+<section id="blind">
+  <div id="blind-view"></div>
+  <div class="controls blind-foot">
+    <button id="blind-next">Next</button>
+    <button id="blind-skip">Skip to the vote</button>
+    <button id="blind-exit">Full replay</button>
+  </div>
+</section>
+<div class="spoiler">
+<p><button id="blind-start">Play blind</button> <span class="muted">Sit in as a villager and find the wolves before the roles are shown.</span></p><dl>
   <dt>Game</dt><dd>werewolf_dayfirst</dd>
   <dt>Tournament</dt><dd><a href="tournament-7.html">#7</a></dd>
   <dt>Players</dt><dd>seat 0: haiku-4.5/wwdf-v1-plain (0.0, place 6); seat 1: haiku-5.5/wwdf-v1-aggressive (1.0, place 1); seat 2: haiku-4.5/wwdf-v1-aggressive (0.0, place 6); seat 3: haiku-5.5/wwdf-v1-plain (1.0, place 1); seat 4: haiku-4.5/wwdf-v1-analytical (1.0, place 1); seat 5: haiku-4.5/wwdf-v1-cautious (1.0, place 1); seat 6: haiku-5.5/wwdf-v1-cautious (1.0, place 1)</dd>
@@ -256,10 +295,215 @@ function initReplay(doc) {
   if (data.events && typeof EventSource !== "undefined") follow();
 }
 
-if (typeof document !== "undefined") initReplay(document);
-RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+// Play blind (Werewolf): the game as a villager sees it. Spectator frames hold every role,
+// so blindSteps copies out only public facts, and renderBlind sees nothing else until the
+// end. Seats are "Player N" because that's what the models call each other, and because
+// the page's model names shouldn't carry over. The data is in the page, so this keeps a
+// game honest for a player, not secret from someone reading the source.
+const STARTING_WOLVES = 2;
+const player = (seat) => `Player ${Number(seat)}`;
 
-if (typeof module !== "undefined") module.exports = { RENDERERS, renderFrame, describeTurn, esc, initReplay };
+function blindSteps(frames, turns) {
+  const final = frames[frames.length - 1];
+  const steps = [];
+  let past = [];
+  let seen = -1;
+  let votedOn = 0;
+  const publicFacts = (f) => ({
+    day: f.day,
+    alive: [...f.alive],
+    dead: f.deaths.map(({ seat, role, cause, day }) => ({ seat, role, cause, day })),
+  });
+  const said = (f) => f.messages.map(({ seat, text }) => ({ day: f.day, seat, text }));
+  frames.forEach((f, i) => {
+    if (f.winner || f.phase === "night") return;
+    if (f.phase === "discussion") {
+      const key = f.day * 1000 + f.messages.length;
+      if (key === seen) return; // a forfeited turn says nothing, so there's nothing to step to
+      seen = key;
+      steps.push({ kind: "talk", ...publicFacts(f), messages: [...past, ...said(f)] });
+    } else if (f.day !== votedOn) {
+      votedOn = f.day;
+      past = [...past, ...said(f)];
+      const facts = publicFacts(f);
+      steps.push({ kind: "vote", ...facts, messages: past });
+      const votes = turns
+        .filter((t) => t.action?.action === "vote" && frames[t.turn_no].day === f.day)
+        .map((t) => ({ seat: t.seat, target: t.action.target }));
+      const out = final.deaths.find((d) => d.day === f.day && d.cause === "vote") ?? null;
+      steps.push({
+        kind: "result",
+        day: f.day,
+        alive: out ? facts.alive.filter((s) => s !== out.seat) : facts.alive,
+        dead: out ? [...facts.dead, { seat: out.seat, role: out.role, cause: "vote", day: f.day }] : facts.dead,
+        messages: past,
+        votes,
+        out: out && { seat: out.seat, role: out.role },
+      });
+    }
+  });
+  steps.push({ kind: "end" });
+  return steps;
+}
+
+const wolvesLeft = (step) => STARTING_WOLVES - step.dead.filter((d) => d.role === "wolf").length;
+
+function renderSeats(step, chosen) {
+  const fate = new Map(step.dead.map((d) => [d.seat, d]));
+  const seats = [...step.alive, ...step.dead.map((d) => d.seat)].sort((a, b) => a - b);
+  return seats
+    .map((seat) => {
+      const d = fate.get(seat);
+      if (d) return `<span class="seat dead">${player(seat)} <small>${esc(d.role)}</small></span>`;
+      if (step.kind !== "vote") return `<span class="seat">${player(seat)}</span>`;
+      const on = chosen.has(seat);
+      return `<button class="seat${on ? " on" : ""}" data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
+    })
+    .join("");
+}
+
+function renderTranscript(messages) {
+  let day = 0;
+  return messages
+    .map((m) => {
+      const head = m.day === day ? "" : `<h3>Day ${Number(m.day)}</h3>`;
+      day = m.day;
+      return `${head}<p class="said"><b>${player(m.seat)}</b> ${esc(m.text)}</p>`;
+    })
+    .join("");
+}
+
+function renderBlind(step, chosen = new Set()) {
+  const head = (lines) =>
+    `<div class="blind-head">${lines}<div class="seats">${renderSeats(step, chosen)}</div></div>`;
+  const log = `<div class="transcript">${renderTranscript(step.messages)}</div>`;
+  if (step.kind === "talk") {
+    const killed = step.dead
+      .filter((d) => d.day === step.day && d.cause === "night")
+      .map((d) => `${player(d.seat)} was killed in the night: a ${esc(d.role)}.`);
+    const opening = step.messages.length ? [] : ["Two wolves are at this table. Nobody has spoken yet."];
+    const note = [...killed, ...opening].map((line) => `<p>${line}</p>`).join("");
+    return head(`<p class="status">Day ${Number(step.day)}</p>${note}`) + log;
+  }
+  if (step.kind === "vote") {
+    const n = wolvesLeft(step);
+    const ask = `Day ${Number(step.day)} vote: who ${n === 1 ? "is the wolf" : `are the ${n} wolves`}?`;
+    return head(`<p class="status">${ask}</p>`) + log;
+  }
+  const votes = step.votes.map((v) => `${player(v.seat)} → ${player(v.target)}`).join(", ");
+  const out = step.out
+    ? `${player(step.out.seat)} is voted out: a ${esc(step.out.role)}.`
+    : "A tied vote: nobody goes.";
+  return head(`<p class="status">${out}</p><p class="ld-bids">Votes: ${votes || "none"}</p>`) + log;
+}
+
+// Per day: how many of your picks were wolves, and how the village's own votes did.
+function blindScore(frames, turns, picks) {
+  const roles = frames[frames.length - 1].roles;
+  return Object.keys(picks)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((day) => {
+      const chosen = [...picks[day]];
+      const votes = turns.filter(
+        (t) => t.action?.action === "vote" && frames[t.turn_no].day === day && roles[t.seat] !== "wolf",
+      );
+      return {
+        day,
+        hits: chosen.filter((s) => roles[s] === "wolf").length,
+        picked: chosen.length,
+        villageHits: votes.filter((t) => roles[t.action.target] === "wolf").length,
+        villageVotes: votes.length,
+      };
+    });
+}
+
+function renderBlindEnd(frames, turns, picks, seats) {
+  const final = frames[frames.length - 1];
+  const fates = new Map(final.deaths.map((d) => [d.seat, d]));
+  const how = { night: "killed at night", vote: "voted out" };
+  const rows = final.roles
+    .map((role, i) => {
+      const d = fates.get(i);
+      const fate = d ? `${how[d.cause]}, day ${Number(d.day)}` : "survived";
+      return `<tr class="unmask${role === "wolf" ? " wolf" : ""}" style="--i:${i}"><td>${player(i)}</td><td>${esc(role)}</td><td>${name(seats, i)}</td><td>${fate}</td></tr>`;
+    })
+    .join("");
+  const score = blindScore(frames, turns, picks)
+    .map((s) => {
+      const you = `${s.hits} of your ${s.picked} picks were wolves`;
+      const them = `the village put ${s.villageHits} of ${s.villageVotes} votes on a wolf`;
+      return `<li>Day ${s.day}: ${you}, and ${them}.</li>`;
+    })
+    .join("");
+  return (
+    `<p class="status">The ${esc(final.winner)} win${final.winner === "wolves" ? "" : "s"}.</p>` +
+    (score ? `<ul>${score}</ul>` : "") +
+    `<div class="wrap"><table class="ld"><thead><tr><th>Seat</th><th>Role</th><th>Model</th><th>Fate</th></tr></thead><tbody>${rows}</tbody></table></div>`
+  );
+}
+
+function initBlind(doc, data) {
+  const start = doc.getElementById("blind-start");
+  if (!start) return;
+  const $ = (id) => doc.getElementById(id);
+  const steps = blindSteps(data.frames, data.turns);
+  const picks = {};
+  let at = 0;
+
+  function draw() {
+    const step = steps[at];
+    const end = step.kind === "end";
+    const chosen = (picks[step.day] ??= new Set());
+    if (step.kind !== "vote" && !chosen.size) delete picks[step.day];
+    $("blind-view").innerHTML = end
+      ? renderBlindEnd(data.frames, data.turns, picks, data.seats)
+      : renderBlind(step, chosen);
+    const next = $("blind-next");
+    next.hidden = end;
+    next.disabled = step.kind === "vote" && chosen.size !== wolvesLeft(step);
+    next.textContent = step.kind === "vote" ? "Lock in" : "Next";
+    $("blind-skip").hidden = step.kind !== "talk";
+    const scroll = end ? 0 : doc.documentElement.scrollHeight; // the newest message, instantly
+    doc.defaultView?.scrollTo(0, scroll);
+  }
+  function enter() {
+    doc.documentElement.classList.add("blind");
+    at = 0;
+    for (const day of Object.keys(picks)) delete picks[day];
+    draw();
+  }
+  function advance(i) {
+    at = Math.min(i, steps.length - 1);
+    draw();
+  }
+  start.onclick = enter;
+  $("blind-exit").onclick = () => doc.documentElement.classList.remove("blind");
+  $("blind-next").onclick = () => advance(at + 1);
+  $("blind-skip").onclick = () => advance(steps.findIndex((s, i) => i > at && s.kind !== "talk"));
+  $("blind-view").onclick = (e) => {
+    const seat = e.target.closest?.("[data-pick]")?.dataset.pick;
+    if (seat === undefined) return;
+    const step = steps[at];
+    const chosen = picks[step.day];
+    const n = Number(seat);
+    if (chosen.has(n)) chosen.delete(n);
+    else if (chosen.size < wolvesLeft(step)) chosen.add(n);
+    draw();
+  };
+  if (doc.documentElement.classList.contains("blind")) enter();
+}
+
+RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+if (typeof document !== "undefined") {
+  initReplay(document);
+  initBlind(document, JSON.parse(document.getElementById("replay-data").textContent));
+}
+
+if (typeof module !== "undefined") module.exports = {
+  RENDERERS, renderFrame, describeTurn, esc, initReplay,
+  blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind,
+};
 
 </script>
 
@@ -611,6 +855,7 @@ if (typeof module !== "undefined") module.exports = { RENDERERS, renderFrame, de
     </tr>
   </tbody>
 </table></div>
+</div>
 </main>
 </body>
 </html>

@@ -1,6 +1,7 @@
 """The replay page's JS (arena/templates/replay.js), run in Node against real engine
 frames. Skipped when Node isn't installed; it isn't a project dependency."""
 
+import copy
 import json
 import os
 import random
@@ -193,6 +194,201 @@ def test_day_first_frames_open_on_day_one_with_the_werewolf_renderer():
     assert "Day 1" in out["frames"][0] and "discussion round" in out["frames"][0]
     assert "Night 1" not in "".join(out["frames"]) and "Night 2" in "".join(out["frames"])
     assert " win" in out["frames"][-1]
+
+
+ON_LOAD = """
+// A browser runs the file top to bottom, so build the page first and require it after.
+const els = {};
+const el = (id) => (els[id] ??= { innerHTML: "", textContent: "", value: "0", max: "0" });
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  els["replay-data"] = { textContent: input };
+  globalThis.document = {
+    getElementById: (id) => (id === "blind-start" ? null : el(id)),
+    querySelectorAll: () => [],
+    addEventListener: () => {},
+  };
+  require(process.env.REPLAY_JS);
+  console.log(JSON.stringify({ html: el("replay-frame").innerHTML }));
+});
+"""
+
+
+@pytest.mark.parametrize("game", [Werewolf(), WerewolfDayFirst()], ids=lambda g: g.name)
+def test_the_first_paint_uses_the_game_renderer_not_the_raw_json_fallback(game):
+    frames = werewolf_frames(4, game)
+    seats = [f"p{i}" for i in range(7)]
+    out = node(ON_LOAD, {"game": game.name, "seats": seats, "frames": frames, "turns": []})
+    assert "<pre>" not in out["html"] and "<table" in out["html"]
+
+
+BLIND = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const p = JSON.parse(input);
+  const steps = R.blindSteps(p.frames, p.turns);
+  console.log(JSON.stringify({
+    kinds: steps.map((s) => s.kind),
+    html: steps.filter((s) => s.kind !== "end").map((s) => R.renderBlind(s)),
+    steps,
+  }));
+});
+"""
+
+SEATS = [f"model-{i}" for i in range(7)]
+
+
+def played(game, seed):
+    rng = random.Random(seed)
+    s = game.initial_state(7, seed)
+    frames, turns = [game.spectator_view(s)], []
+    while not game.is_terminal(s):
+        seat = game.current_player(s)
+        hint = game.legal_actions_hint(s, seat)
+        action = rng.choice(hint) if hint else {"action": "say", "message": f"seat {seat} speaks"}
+        turns.append({"turn_no": len(turns), "seat": seat, "action": action})
+        s = game.apply(s, seat, action)
+        frames.append(game.spectator_view(s))
+    return frames, turns
+
+
+def scrubbed(frames, turns):
+    """Everything a villager can't know, destroyed. Dead seats' roles are public."""
+    gone = copy.deepcopy(frames)
+    for f in gone:
+        f["roles"] = ["SECRET"] * 7
+        f["wolf_votes"], f["inspections"], f["votes"] = [], [], []
+        if f["phase"] == "night":
+            f["to_move"] = None
+    hidden = copy.deepcopy(turns)
+    for t in hidden:
+        if t["action"]["action"] in ("kill", "inspect"):
+            t["action"] = {"action": "night"}
+    return gone, hidden
+
+
+@pytest.mark.parametrize("game", [Werewolf(), WerewolfDayFirst()], ids=lambda g: g.name)
+@pytest.mark.parametrize("seed", range(8))
+def test_blind_steps_depend_on_nothing_a_villager_cannot_know(game, seed):
+    frames, turns = played(game, seed)
+    seen = node(BLIND, {"frames": frames, "turns": turns})
+    gone, hidden = scrubbed(frames, turns)
+    assert seen == node(BLIND, {"frames": gone, "turns": hidden})
+    assert seen["kinds"][-1] == "end" and "talk" in seen["kinds"]
+
+
+@pytest.mark.parametrize("seed", range(4))
+def test_day_votes_stay_hidden_until_the_pick_is_locked(seed):
+    frames, turns = played(WerewolfDayFirst(), seed)
+    steps = node(BLIND, {"frames": frames, "turns": turns})["steps"]
+    for i, step in enumerate(steps):
+        if step["kind"] == "vote":
+            assert "votes" not in step and steps[i + 1]["kind"] == "result"
+            assert all(d["day"] < step["day"] or d["cause"] == "night" for d in step["dead"])
+
+
+def test_a_night_kill_is_announced_when_the_day_opens():
+    frames, turns = played(Werewolf(), 1)
+    seen = node(BLIND, {"frames": frames, "turns": turns})
+    victim = seen["steps"][0]["dead"][0]
+    expected = f"Player {victim['seat']} was killed in the night: a {victim['role']}."
+    assert expected in seen["html"][0]
+    assert expected not in seen["html"][1 + seen["kinds"].index("vote")]
+
+
+def test_day_first_opens_with_everyone_alive_and_the_original_with_a_death():
+    frames, turns = played(WerewolfDayFirst(), 1)
+    first = node(BLIND, {"frames": frames, "turns": turns})["steps"][0]
+    assert first["alive"] == list(range(7)) and first["dead"] == []
+    frames, turns = played(Werewolf(), 1)
+    night = node(BLIND, {"frames": frames, "turns": turns})["steps"][0]
+    assert len(night["alive"]) == 6 and night["dead"][0]["cause"] == "night"
+
+
+SCORE = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const p = JSON.parse(input);
+  const picks = Object.fromEntries(Object.entries(p.picks).map(([d, s]) => [d, new Set(s)]));
+  console.log(JSON.stringify(R.blindScore(p.frames, p.turns, picks)));
+});
+"""
+
+
+def test_the_score_counts_your_picks_and_the_villages_votes_not_the_wolves():
+    frames = [
+        {"day": 1, "phase": "vote", "roles": ["wolf", "wolf", "seer", "villager"]},
+        {"day": 1, "phase": "vote", "roles": ["wolf", "wolf", "seer", "villager"]},
+        {"day": 1, "phase": "vote", "roles": ["wolf", "wolf", "seer", "villager"]},
+        {"day": 2, "phase": "night", "roles": ["wolf", "wolf", "seer", "villager"]},
+    ]
+    turns = [
+        {"turn_no": 0, "seat": 0, "action": {"action": "vote", "target": 3}},
+        {"turn_no": 1, "seat": 2, "action": {"action": "vote", "target": 1}},
+        {"turn_no": 2, "seat": 3, "action": {"action": "vote", "target": 2}},
+    ]
+    out = node(SCORE, {"frames": frames, "turns": turns, "picks": {"1": [0, 3]}})
+    assert out == [{"day": 1, "hits": 1, "picked": 2, "villageHits": 1, "villageVotes": 2}]
+
+
+PLAY = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const data = JSON.parse(input);
+  const els = {};
+  const el = (id) => (els[id] ??= { innerHTML: "", hidden: false, disabled: false });
+  const classes = new Set();
+  const classList = {
+    add: (c) => classes.add(c),
+    remove: (c) => classes.delete(c),
+    contains: (c) => classes.has(c),
+  };
+  const doc = { getElementById: el, documentElement: { classList } };
+  R.initBlind(doc, data);
+  el("blind-start").onclick();
+  const pick = (seat) => {
+    const dataset = { pick: String(seat) };
+    el("blind-view").onclick({ target: { closest: () => ({ dataset }) } });
+  };
+  const early = [];
+  let refusedOverPick = true, lockedOut = 0;
+  for (let n = 0; n < 500 && !el("blind-next").hidden; n++) {
+    early.push(el("blind-view").innerHTML);
+    const found = el("blind-view").innerHTML.matchAll(/data-pick="(\\d+)"/g);
+    const buttons = [...found].map((m) => Number(m[1]));
+    if (buttons.length) {
+      if (el("blind-next").disabled) lockedOut++;
+      for (const s of buttons) pick(s); // only as many as there are wolves left should count
+      refusedOverPick &&= (el("blind-view").innerHTML.match(/seat on/g) || []).length <= 2;
+    }
+    el("blind-next").onclick();
+  }
+  const end = el("blind-view").innerHTML;
+  el("blind-exit").onclick();
+  const stillBlind = classes.has("blind");
+  const report = { early: early.join(""), end, lockedOut, refusedOverPick, stillBlind };
+  console.log(JSON.stringify(report));
+});
+"""
+
+
+def test_playing_blind_from_start_to_reveal():
+    frames, turns = played(WerewolfDayFirst(), 3)
+    out = node(
+        PLAY, {"game": "werewolf_dayfirst", "seats": SEATS, "frames": frames, "turns": turns}
+    )
+    assert "model-" not in out["early"]  # names only come with the reveal
+    assert out["lockedOut"] >= 1 and out["refusedOverPick"]  # no lock-in without a full pick
+    assert " win" in out["end"] and all(name in out["end"] for name in SEATS)
+    assert "picks were wolves" in out["end"] and "votes on a wolf" in out["end"]
+    assert out["stillBlind"] is False
 
 
 LIVE = """
