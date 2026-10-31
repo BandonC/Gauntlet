@@ -5,6 +5,7 @@ arena play werewolf --players werewolf-bot:1,...,werewolf-bot:7
 arena migrate                                            apply SQL migrations
 arena tournament --game connect4 --players a,b,c --games-per-pair 10 --budget 5
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
+arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena worker --concurrency 4 --record recordings         run matches from the queue
 arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
@@ -102,6 +103,18 @@ async def _migrate(args: argparse.Namespace) -> None:
     print("applied:", ", ".join(names) if names else "nothing (up to date)")
 
 
+def _table_size(game: str, requested: int | None) -> int:
+    """--table-size, which a game that seats only one number of players doesn't need."""
+    from arena.games.registry import get_game
+
+    g = get_game(game)
+    if requested:
+        return requested
+    if g.min_players == g.max_players:
+        return g.min_players
+    sys.exit("arena tournament: --tables needs --table-size for this game")
+
+
 async def _tournament(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
     from arena.store.tournaments import (
@@ -132,21 +145,23 @@ async def _tournament(args: argparse.Namespace) -> None:
     cfgs = [factory.roster.players[i] for i in ids]
     pool = await create_pool(settings().database_url)
     try:
-        if args.format == "swiss":
+        fmt = args.format or ("tables" if args.tables else "round_robin")
+        if fmt == "swiss":
             tid, n = await create_swiss(
                 pool, args.game, cfgs, args.budget, rounds=args.rounds, seed=args.seed
             )
             print(f"tournament {tid}: swiss, round 1 queued ({n} matches)")
-        elif args.format == "tables":
-            if not args.table_size or not args.tables:
-                sys.exit("arena tournament: --format tables needs --table-size and --tables")
+        elif fmt == "tables":
+            if not args.tables:
+                sys.exit("arena tournament: --format tables needs --tables")
+            size = _table_size(args.game, args.table_size)
             try:
                 tid, n = await create_tables(
-                    pool, args.game, cfgs, args.table_size, args.tables, args.budget, args.seed
+                    pool, args.game, cfgs, size, args.tables, args.budget, args.seed
                 )
             except ValueError as e:
                 sys.exit(f"arena tournament: {e}")
-            print(f"tournament {tid}: {n} tables of {args.table_size} queued")
+            print(f"tournament {tid}: {n} tables of {size} queued")
         else:
             tid, n = await create_round_robin(
                 pool, args.game, cfgs, args.games_per_pair, args.budget, seed=args.seed
@@ -261,10 +276,19 @@ def main(argv: list[str] | None = None) -> None:
     t = sub.add_parser("tournament", help="queue a tournament, or resume a paused one")
     t.add_argument("--game")
     t.add_argument("--players", help="comma-separated roster ids")
-    t.add_argument("--format", choices=["round_robin", "swiss", "tables"], default="round_robin")
+    t.add_argument(
+        "--format",
+        choices=["round_robin", "swiss", "tables"],
+        help="default: tables if --tables is given, otherwise round_robin",
+    )
     t.add_argument("--games-per-pair", type=int, default=10, help="round robin only")
     t.add_argument("--rounds", type=int, default=None, help="swiss only (default ceil(log2 N))")
-    t.add_argument("--table-size", type=int, default=None, help="tables only: seats per match")
+    t.add_argument(
+        "--table-size",
+        type=int,
+        default=None,
+        help="tables only: seats per match, optional if the game seats one number",
+    )
     t.add_argument("--tables", type=int, default=None, help="tables only: number of matches")
     t.add_argument("--budget", type=float, default=None, help="USD cap (strongly advised)")
     t.add_argument("--seed", type=int, default=None)
