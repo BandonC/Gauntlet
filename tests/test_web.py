@@ -537,6 +537,10 @@ def test_the_rule_change_story_needs_both_rulesets():
     )
 
 
+def test_a_jump_to_a_section_lands_clear_of_the_top_edge():
+    assert "[id] { scroll-margin-top:" in SITE_CSS.read_text("utf-8")
+
+
 def test_every_game_has_its_own_wallpaper_and_the_home_page_a_mix():
     css = SITE_CSS.read_text("utf-8")
     assert "--tile-mix:" in css
