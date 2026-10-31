@@ -93,10 +93,15 @@ class Game(Protocol):
 
     def placements(self, state: State) -> list[int]:
         """Per-seat finishing rank for a terminal state: 1 is best, ties share a rank
-        (team games give all winners rank 1). MatchRunner moves forfeited seats to the
-        bottom afterwards, so engines don't handle forfeits here. Requires an explicit
-        `class MyGame(Game)` to inherit this default."""
+        (team games give all winners rank 1). final_placements applies forfeits, so
+        engines don't handle them here. Requires an explicit `class MyGame(Game)` to
+        inherit this default."""
         return placements_from_scores(self.scores(state))
+
+    def final_placements(self, state: State, forfeits: Sequence[int]) -> list[int]:
+        """What's stored on the match. Forfeited seats rank last, unless a game's forfeit
+        doesn't remove the seat (Werewolf). forfeits: seats in the order they forfeited."""
+        return rank_forfeits_last(self.placements(state), forfeits)
 
 
 def placements_from_scores(scores: Sequence[float]) -> list[int]:

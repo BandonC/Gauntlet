@@ -112,7 +112,8 @@ migrations/             forward-only SQL, applied in filename order
 5. **Infrastructure errors never forfeit a player.** `ProviderError` (429/5xx/timeouts)
    is retried by `RetryingProvider`, then propagates and the worker re-queues the match
    with backoff. Only *model behaviour* (no tool call, illegal or malformed action) uses
-   up attempts; `max_attempts` (default 3) invalid attempts = forfeit.
+   up attempts; `max_attempts` (default 3) invalid attempts = forfeit: a loss in Connect 4,
+   out of the game in Liar's Dice, a skipped action in Werewolf.
 6. **Players are stateless between turns.** Everything a player needs must come from
    `TurnContext` (built from `player_view`). This is what makes resumption on a new
    worker correct. Werewolf-style memory must be derived from the game state's
@@ -292,8 +293,9 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   maths is unchanged, and multi-player teams aren't modelled in `rate`.
 - Placements: per-seat ranks on `matches.placements`, 1 is best, ties allowed.
   `Game.placements()` defaults to competition ranking of `scores()` (1, 2, 2, 4); only
-  their order matters to ratings. `MatchRunner` then moves forfeits below everyone with
-  `rank_forfeits_last`, so engines ignore forfeits there. Tournament points still come
+  their order matters to ratings. `Game.final_placements` then moves forfeits below
+  everyone with `rank_forfeits_last`, so engines ignore forfeits in `placements`; Werewolf
+  overrides it, because a Werewolf forfeit removes nobody. Tournament points still come
   from `scores`, never placements. Liar's Dice records `eliminated` in state for this.
 - `--format tables`: `table_schedule` is pure. Players' game counts and each player's
   seat counts always differ by at most 1 (seats are an edge colouring, so that's exact,
@@ -327,6 +329,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   stateless (decide from the view). Bots reach Postgres tournaments through the roster:
   `provider = "bot"`, `model = "liars_dice"` or `"werewolf"`, each with its own `seed`
   (identity is `bot-<model>-<seed>`, and the players table keeps those unique).
+- Werewolf forfeits skip the action and don't eliminate (changed after match 67, where
+  the first design removed a seer for three illegal targets): a night action is lost, a
+  vote abstains, a discussion turn is silent, and the seat stays alive, so it can forfeit
+  again. If both wolves forfeit, the kill is drawn from the seed, which keeps the game
+  finite. Placements ignore forfeits; `werewolf_metrics` counts them. Replaying match 67
+  now shows its seer killed by the wolves, not forfeited, with the same winner; its stored
+  placements still rank the seer last.
 - Werewolf: exactly 7 seats (2 wolves, seer, 4 villagers); the engine docstring has the
   rules. `player_view` has no `to_move`: at night it would expose the wolves and seer.
   Only the night kill draws ties (`Random(f"{seed}:night:{n}")`); a tied day vote
@@ -342,7 +351,9 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   Any new read of `initial_state` for a stored match must pass the options.
 - Werewolf style prompts: `werewolf/v1-plain`, `-cautious`, `-aggressive`, `-analytical` are
   `werewolf/v1` plus one play-style paragraph, so both Haikus give 8 distinct players
-  (`haiku-5.5/ww-v1-plain`, ...). A table needs 7 distinct ids: `table_schedule` refuses
+  (`haiku-5.5/ww-v1-plain`, ...). `werewolf/v2-*` add one line asking for short messages.
+  The `maxLength` in the tool schema is only a hint: truncation still enforces the limit.
+  Prompts are read as UTF-8, whatever the platform's default. A table needs 7 distinct ids: `table_schedule` refuses
   duplicates and identical configs can't share the players table. `--tables` alone means
   `--format tables`, and `--table-size` is optional when a game seats one number. With more
   ids than seats, a single table seats a seeded 7 and the rest sit out.
@@ -353,7 +364,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   longer games or an explicit low limit.
 - Role claims (`werewolf.classify_claims`, reported by `store/metrics.werewolf_metrics`,
   `/api/werewolf/roles` and the index page) are literal matches only: "I am a/the X",
-  "I'm X", "player/seat N is X". Paraphrases, negations and hedged wording are missed, and
+  "I'm just a X", "as the X, I", "player/seat N is X", "Player N here, X". Paraphrases, negations and hedged wording are missed, and
   quoted or hypothetical phrasing is counted as if it were a claim.
 - Pages: `web.py` page builders take `(pool, Urls)` and return HTML; FastAPI wraps them
   and `arena export` should call the same builders with file-path `Urls`. Never hard-code
