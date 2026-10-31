@@ -51,6 +51,6 @@ def load_prompt(key: str) -> PromptTemplate:
         raise ValueError(f"no prompt directory {d}")
     return PromptTemplate(
         key=key,
-        system=(d / "system.txt").read_text(),
-        turn=(d / "turn.txt").read_text(),
+        system=(d / "system.txt").read_text(encoding="utf-8"),
+        turn=(d / "turn.txt").read_text(encoding="utf-8"),
     )

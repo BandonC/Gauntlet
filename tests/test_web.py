@@ -156,6 +156,7 @@ def test_werewolf_role_stats_show_win_rates_by_role_and_claims():
         "false_claims": 2,
         "leaks": 1,
         "truncated_messages": 6,
+        "forfeits": 2,
     }
     html = render("index.html", URLS, boards={}, role_stats=[row])
     assert "Werewolf roles" in html and "paraphrases are missed" in html

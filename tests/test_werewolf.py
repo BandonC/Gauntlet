@@ -22,7 +22,7 @@ from arena.games.werewolf import (
     classify_claims,
 )
 from arena.players.base import Decision
-from arena.players.bots import ScriptedPlayer, WerewolfBot, build_bot
+from arena.players.bots import WerewolfBot, build_bot
 from arena.players.prompting import load_prompt
 
 G = Werewolf()
@@ -119,12 +119,14 @@ def test_tied_night_kill_is_drawn_from_the_seed_and_always_resolves():
     assert victims == {3, 4}
 
 
-def test_kill_target_gone_by_resolution_still_kills_someone():
-    # Both wolves pick the seer, who then forfeits before the night resolves.
-    s = play(start(), kill(2), kill(2))
-    s = G.forfeit(s, 2)
-    assert [d.cause for d in s.deaths] == ["forfeit", "night"]
-    assert s.deaths[1].role == VILLAGER and s.phase == "discussion"
+def test_if_no_wolf_votes_the_kill_is_drawn_from_the_seed():
+    victims = set()
+    for seed in range(40):
+        s = G.forfeit(G.forfeit(start(seed=seed), 0), 1)
+        s = play(s, inspect(3))
+        assert s.deaths[0].cause == "night" and s.deaths[0].role != WOLF
+        victims.add(s.deaths[0].seat)
+    assert len(victims) > 1
 
 
 def test_speaking_order_rotates_each_round_and_skips_the_dead():
@@ -189,15 +191,84 @@ def test_dead_players_neither_speak_nor_vote():
     assert G.validate_action(s, 0, vote(3)) is not None
 
 
-def test_a_forfeit_eliminates_with_role_revealed_and_the_game_goes_on():
+def test_a_wolf_forfeit_loses_its_vote_and_the_other_wolf_decides():
     s = G.forfeit(start(), 0)
-    assert s.deaths[0].cause == "forfeit" and s.deaths[0].role == WOLF
-    assert not G.is_terminal(s) and s.queue == (1, 2)
-    assert G.forfeit(s, 1).winner == "village"
+    assert s.forfeited == (0,) and s.deaths == () and 0 in s.alive and s.queue == (1, 2)
+    s = play(s, kill(5), inspect(3))
+    assert [d.seat for d in s.deaths] == [5]
+    assert 0 in s.alive
 
 
-async def test_a_forfeit_on_the_winning_team_ranks_last_but_keeps_the_score():
-    # Seat 6 quits on day 1; the village then votes out both wolves.
+def test_a_seer_forfeit_inspects_nobody_and_stays_alive():
+    s = G.forfeit(play(start(), kill(3), kill(3)), 2)
+    assert s.inspections == () and 2 in s.alive and s.phase == "discussion"
+
+
+def test_a_forfeit_on_the_seat_the_wolves_chose_changes_nothing_about_the_kill():
+    # Match 67: both wolves picked the seer, who then used up its attempts.
+    s = G.forfeit(play(start(), kill(2), kill(2)), 2)
+    assert [(d.seat, d.cause) for d in s.deaths] == [(2, "night")]
+
+
+def test_a_discussion_forfeit_is_silence():
+    s = night_one(victim=3)
+    speaker = G.current_player(s)
+    after = G.forfeit(s, speaker)
+    assert after.messages == () and speaker in after.alive
+    assert G.current_player(after) != speaker
+
+
+def test_a_vote_forfeit_abstains():
+    s = to_vote(night_one(victim=3))
+    s = play(s, vote(1))  # seat 0 votes 1
+    s = G.forfeit(s, 1)  # seat 1 abstains
+    s = play(s, vote(0), vote(1), vote(1), vote(0))
+    assert [v.seat for v in s.day_votes] == [0, 2, 4, 5, 6]
+    assert 1 not in s.alive  # 3-2 among the votes cast
+
+
+def test_an_abstention_can_decide_what_would_otherwise_be_a_tie():
+    s = to_vote(night_one(victim=3))
+    s = play(s, vote(1), vote(0), vote(0), vote(1), vote(1))
+    s = G.forfeit(s, 6)  # a vote for 0 would have made it 3-3 and spared everyone
+    assert 1 not in s.alive
+
+
+def test_if_everyone_abstains_nobody_is_voted_out():
+    s = to_vote(night_one(victim=3))
+    alive = s.alive
+    for seat in alive:
+        s = G.forfeit(s, seat)
+    assert s.alive == alive and s.phase == "night" and s.day == 2
+
+
+def test_a_seat_can_forfeit_again_on_a_later_turn():
+    s = G.forfeit(start(), 0)
+    s = play(s, kill(3), inspect(0))
+    assert G.current_player(s) == 0
+    s = G.forfeit(s, 0)
+    assert s.forfeited == (0, 0) and 0 in s.alive
+
+
+class NeverLegal:
+    def __init__(self, seat):
+        self.player_id = f"b{seat}"
+
+    async def act(self, ctx):
+        return Decision(action=None)
+
+
+async def test_a_game_where_nobody_ever_plays_still_ends():
+    runner = MatchRunner(G, [NeverLegal(s) for s in range(SEATS)], InMemoryTurnStore())
+    out = await runner.run(spec(4, OPTIONS))
+    assert sum(out.scores) == 2.0  # the wolves reach parity on drawn kills alone
+    assert all(t.forfeited for t in out.turns) and len(out.forfeits) == len(out.turns)
+    *_, final = iter_states(G, spec(4, OPTIONS), out.turns)
+    assert all(d.cause == "night" for d in final.deaths)
+
+
+async def test_a_forfeit_does_not_change_placement():
+    # Seat 6 never gets a message out; the village still votes out both wolves.
     class Plan:
         def __init__(self, seat):
             self.player_id = f"b{seat}"
@@ -215,9 +286,10 @@ async def test_a_forfeit_on_the_winning_team_ranks_last_but_keeps_the_score():
 
     runner = MatchRunner(G, [Plan(s) for s in range(SEATS)], InMemoryTurnStore())
     out = await runner.run(spec(1, OPTIONS))
-    assert out.forfeits == [6] and out.scores == [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-    assert out.placements[6] == SEATS  # its team won, but a forfeit ranks last
-    assert out.placements[:6] == [5, 5, 1, 1, 1, 1]
+    assert out.forfeits == [6] * 4 and out.scores == [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    assert out.placements == [6, 6, 1, 1, 1, 1, 1]
+    *_, final = iter_states(G, spec(1, OPTIONS), out.turns)  # replays cleanly
+    assert 6 in final.alive and final.forfeited == (6,) * 4
 
 
 # --- actions --------------------------------------------------------------------------
@@ -243,7 +315,8 @@ def test_action_specs_follow_the_phase_and_forbid_extra_fields():
     assert schema["properties"]["target"]["enum"] == [2, 3, 4, 5, 6]
     assert schema["additionalProperties"] is False
     assert G.action_spec(s, 2).input_schema["properties"]["action"]["enum"] == ["inspect"]
-    assert "message" in G.action_spec(night_one(), 0).input_schema["properties"]
+    message = G.action_spec(night_one(), 0).input_schema["properties"]["message"]
+    assert message["maxLength"] == MAX_MESSAGE_CHARS
 
 
 async def test_long_messages_are_truncated_flagged_and_not_invalid():
@@ -277,12 +350,24 @@ async def test_exactly_the_limit_is_not_truncated():
 
 
 async def test_invalid_attempts_get_feedback_then_forfeit():
-    p = ScriptedPlayer([{"action": "say", "message": "wrong phase"}, kill(1), None])
+    class BadStart(WerewolfBot):
+        def __init__(self):
+            super().__init__("b0", 0)
+            self.script = [{"action": "say", "message": "wrong phase"}, kill(1), None]
+            self.errors = []
+
+        async def act(self, ctx):
+            if self.script:
+                self.errors.append(ctx.previous_error)
+                return Decision(action=self.script.pop(0))
+            return await super().act(ctx)
+
+    p = BadStart()
     players = [p, *bots()[1:]]
     out = await MatchRunner(G, players, InMemoryTurnStore()).run(spec(1, OPTIONS))
     first = out.turns[0]
     assert first.forfeited and first.attempts == 3 and out.forfeits == [0]
-    assert p.seen[1].previous_error == "action must be 'kill' now"
+    assert p.errors[1] == "action must be 'kill' now"
 
 
 # --- hidden information ---------------------------------------------------------------
@@ -492,6 +577,19 @@ def test_bot_factory_and_prompt():
         ("I'm a werewolf", 1, [(1, WOLF, "leak")]),
         ("Player 1 is a wolf", 0, [(1, WOLF, "leak")]),  # naming its partner
         ("seat 1 is the wolf", 0, [(1, WOLF, "leak")]),
+        ("Player 4 here, villager. Listen up.", 4, [(4, VILLAGER, "true")]),
+        ("Player 2 here, seer.", 2, [(2, SEER, "true")]),
+        ("player 2 here: the seer", 2, [(2, SEER, "true")]),
+        ("Player 0 here as a villager", 0, [(0, VILLAGER, "false")]),
+        ("Player 0 here, wolf", 0, [(0, WOLF, "leak")]),
+        ("Player 4 here, villager. I am a villager.", 4, [(4, VILLAGER, "true")]),
+        ("I'm just a villager", 5, [(5, VILLAGER, "true")]),
+        ("As the seer, I checked 3", 2, [(2, SEER, "true")]),
+        ("as a villager I think 3 is lying", 0, [(0, VILLAGER, "false")]),
+        ("Player 3 claims seer", 4, []),
+        ("Player 4 here, not a villager", 4, []),
+        ("As the seer, you should speak", 4, []),
+        ("Player 4 here. Villager or not, vote", 4, []),
         ("Player 5 is a wolf", 0, [(5, WOLF, "false")]),  # a wolf framing a villager
         ("Player 0 is a wolf.", 2, [(0, WOLF, "true")]),  # a seer's true accusation
         ("Player 3 is a wolf", 2, [(3, WOLF, "false")]),

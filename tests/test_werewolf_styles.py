@@ -9,7 +9,7 @@ import pytest
 from arena import cli
 from arena.games.werewolf import Werewolf
 from arena.players.base import TurnContext
-from arena.players.prompting import load_prompt
+from arena.players.prompting import PROMPTS_DIR, load_prompt
 from arena.roster import config_hash, load_roster
 
 STYLES = ("plain", "cautious", "aggressive", "analytical")
@@ -33,6 +33,22 @@ def rendered(key):
 
 
 @pytest.mark.parametrize("style", STYLES)
+def test_v2_only_adds_the_length_line_to_its_v1_style(style):
+    _, v1_system, v1_turn = rendered(f"werewolf/v1-{style}")
+    _, system, turn = rendered(f"werewolf/v2-{style}")
+    line = "Keep each message to 2\u20133 sentences, under 300 characters.\n\n"
+    assert system.count(line) == 1  # an en dash, so this fails if prompts aren't read as UTF-8
+    assert system.replace(line, "") == v1_system
+    assert turn == v1_turn
+
+
+def test_every_earlier_prompt_is_ascii_so_reading_utf8_kept_its_identity():
+    for path in PROMPTS_DIR.rglob("*.txt"):
+        if "v2-" not in str(path):
+            assert path.read_bytes().isascii(), path
+
+
+@pytest.mark.parametrize("style", STYLES)
 def test_a_style_only_adds_one_paragraph_to_v1(style):
     base, base_system, base_turn = rendered("werewolf/v1")
     prompt, system, turn = rendered(f"werewolf/v1-{style}")
@@ -46,12 +62,18 @@ def test_styles_are_all_different():
     assert len({load_prompt(f"werewolf/v1-{s}").content_hash for s in STYLES}) == 4
 
 
-def test_the_example_roster_has_eight_distinct_werewolf_players():
-    players = [p for p in load_roster(EXAMPLE).players.values() if p.prompt.startswith("werewolf/")]
+@pytest.mark.parametrize("version", ["v1", "v2"])
+def test_the_example_roster_has_eight_distinct_werewolf_players(version):
+    players = [
+        p
+        for p in load_roster(EXAMPLE).players.values()
+        if p.prompt.startswith(f"werewolf/{version}-")
+    ]
     assert len(players) == 8
     assert len({config_hash(p) for p in players}) == 8
     assert {p.model for p in players} == {"claude-haiku-5-5", "claude-haiku-4-5-20251001"}
-    assert {p.prompt for p in players} == {f"werewolf/v1-{s}" for s in STYLES}
+    assert {p.prompt for p in players} == {f"werewolf/{version}-{s}" for s in STYLES}
+    assert all(f"/ww-{version}-" in p.id for p in players)
 
 
 @pytest.fixture

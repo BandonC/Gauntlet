@@ -16,6 +16,8 @@ werewolf_metrics (per player, computed in Python from the match seeds and turn l
 - true_claims / false_claims / leaks: explicit role claims in messages, classified by
   werewolf.classify_claims. Literal matching only, so paraphrases are missed.
 - truncated_messages: messages cut at the length limit.
+- forfeits: skipped actions. A seat stays alive after one, so it can forfeit repeatedly,
+  and placements don't show it.
 """
 
 from __future__ import annotations
@@ -71,6 +73,13 @@ WHERE m.game = 'werewolf' AND ($1::bigint IS NULL OR m.tournament_id = $1)
   AND t.action ->> 'action' = 'say'
 """
 
+WEREWOLF_FORFEITS_SQL = """
+SELECT t.match_id, t.seat, count(*) AS forfeits
+FROM turns t JOIN matches m ON m.id = t.match_id
+WHERE m.game = 'werewolf' AND ($1::bigint IS NULL OR m.tournament_id = $1) AND t.forfeited
+GROUP BY t.match_id, t.seat
+"""
+
 
 def _ratio(num: float, den: float, digits: int = 4) -> float | None:
     return round(num / den, digits) if den else None
@@ -121,13 +130,15 @@ async def werewolf_metrics(pool: asyncpg.Pool, tournament_id: int | None = None)
         c["truncated_messages"] += r["truncated"]
         for claim in classify_claims(r["message"], r["seat"], roles_of[r["match_id"]]):
             c[{"true": "true_claims", "false": "false_claims", "leak": "leaks"}[claim.kind]] += 1
+    for r in await pool.fetch(WEREWOLF_FORFEITS_SQL, tournament_id):
+        tally[matches[r["match_id"]]["seats"][r["seat"]]]["forfeits"] += r["forfeits"]
     out = []
     for pid, c in sorted(tally.items()):
         row: dict = {"player_id": pid}
         for role in (WOLF, SEER, VILLAGER):
             row[f"{role}_games"] = c[f"{role}_games"]
             row[f"{role}_win_rate"] = _ratio(c[f"{role}_wins"], c[f"{role}_games"])
-        for key in ("true_claims", "false_claims", "leaks", "truncated_messages"):
+        for key in ("true_claims", "false_claims", "leaks", "truncated_messages", "forfeits"):
             row[key] = c[key]
         out.append(row)
     return out

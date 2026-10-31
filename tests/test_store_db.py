@@ -902,6 +902,20 @@ async def test_truncated_flag_survives_the_turn_log(pool):
     assert (await store.load_turns(str(m.id)))[0].truncated is True
 
 
+async def test_werewolf_metrics_count_every_forfeit(pool):
+    tid, _ = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=2)
+    m = await queue.claim(pool, "w0", 30)
+    store = PostgresTurnStore(pool, "w0")
+    for n in range(2):
+        t = TurnRecord(n, 0, None, True, 3, None, "bad target", Usage(), 0, 0)
+        await store.append_turn(str(m.id), t)
+    seat0 = await pool.fetchval(
+        "SELECT player_id FROM match_seats WHERE match_id = $1 AND seat = 0", m.id
+    )
+    stats = {s["player_id"]: s["forfeits"] for s in await werewolf_metrics(pool, tid)}
+    assert stats.pop(seat0) == 2 and not any(stats.values())
+
+
 async def test_scheduled_roles_are_what_the_match_plays(pool):
     await create_tables(pool, "werewolf", WW[:7], 7, 2, budget_usd=None, seed=5)
     await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)

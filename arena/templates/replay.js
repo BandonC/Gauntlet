@@ -60,7 +60,7 @@ const RENDERERS = {
 
   werewolf(f, seats) {
     const dead = new Map(f.deaths.map((d) => [d.seat, d]));
-    const fate = { night: "killed at night", vote: "voted out", forfeit: "forfeited" };
+    const fate = { night: "killed at night", vote: "voted out" };
     const rows = f.roles
       .map((role, i) => {
         const cls = i === f.to_move ? ' class="turn"' : "";
