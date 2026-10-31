@@ -29,6 +29,7 @@ class Decision:
     usage: Usage = field(default_factory=Usage)
     latency_ms: int = 0
     stop_reason: str | None = None
+    blocks: list[JSON] = field(default_factory=list)
 
 
 class Player(Protocol):

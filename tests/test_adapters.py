@@ -150,6 +150,38 @@ async def test_anthropic_stop_reason_is_kept_as_the_api_said_it(reason):
     assert out.stop_reason == reason
 
 
+async def test_anthropic_reply_blocks_keep_text_and_only_the_size_of_thinking():
+    text = {"type": "text", "text": "Three sixes looks safe."}
+    secret = {"type": "thinking", "thinking": "private reasoning", "signature": "sig-value"}
+    _, out = await send(REQ, [secret, text, TOOL_USE])
+    assert out.blocks == [
+        {"type": "thinking", "chars": 17},
+        {"type": "text", "chars": 23, "text": "Three sixes looks safe."},
+        {"type": "tool_use", "chars": len('{"column": 3}')},
+    ]
+    stored = json.dumps(out.blocks)
+    assert "private reasoning" not in stored and "sig-value" not in stored
+
+
+async def test_anthropic_text_beside_a_tool_call_no_longer_disappears():
+    text = {"type": "text", "text": "Reasoning here."}
+    _, out = await send(REQ, [text, TOOL_USE])
+    assert out.tool_input == {"column": 3} and out.raw_text == '{"column": 3}'
+    assert out.blocks[0]["text"] == "Reasoning here."
+
+
+async def test_anthropic_empty_thinking_block_is_kept_with_size_zero():
+    empty = {"type": "thinking", "thinking": "", "signature": "s"}
+    _, out = await send(REQ, [empty, TOOL_USE])
+    assert out.blocks[0] == {"type": "thinking", "chars": 0}
+
+
+async def test_anthropic_unknown_block_type_is_named_and_does_not_crash():
+    blocks = [{"type": "redacted_thinking", "data": "abc"}, TOOL_USE]
+    _, out = await send(REQ, blocks)
+    assert out.blocks[0] == {"type": "redacted_thinking", "chars": 0}
+
+
 async def test_anthropic_429_is_retryable_with_retry_after():
     def handler(request):
         return httpx.Response(

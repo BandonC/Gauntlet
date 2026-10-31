@@ -299,3 +299,31 @@ async def test_recordings_keep_the_stop_reason_and_old_ones_load_without_it(tmp_
     replay = load_recording(path)
     assert (await replay.complete(REQ)).stop_reason == "max_tokens"
     assert (await replay.complete(REQ)).stop_reason is None
+
+
+TEXT_BLOCK = {"type": "text", "chars": 6, "text": "hmm..."}
+TOOL_BLOCK = {"type": "tool_use", "chars": 13}
+
+
+async def test_every_attempt_keeps_its_own_blocks():
+    skipped = Completion(None, "hmm...", Usage(10, 5), "end_turn", [TEXT_BLOCK])
+    move = Completion({"column": 3}, "", Usage(10, 20), "tool_use", [TEXT_BLOCK, TOOL_BLOCK])
+    turn = await first_turn([skipped, move])
+    assert turn.reply_blocks == [[TEXT_BLOCK], [TEXT_BLOCK, TOOL_BLOCK]]
+
+
+async def test_a_forfeit_keeps_the_blocks_of_every_attempt():
+    cut = Completion(None, "", Usage(10, 1024), "max_tokens", [TEXT_BLOCK])
+    turn = await first_turn([cut, cut, cut])
+    assert turn.forfeited and turn.reply_blocks == [[TEXT_BLOCK]] * 3
+
+
+async def test_recordings_keep_blocks_and_old_ones_load_without_them(tmp_path):
+    path = tmp_path / "r.jsonl"
+    done = Completion({"column": 3}, "", Usage(1, 2), "tool_use", [TEXT_BLOCK])
+    await RecordingProvider(MockProvider([done]), path).complete(REQ)
+    with path.open("a") as f:
+        f.write(json.dumps({"tool_input": None, "raw_text": "", "usage": {}}) + "\n")
+    replay = load_recording(path)
+    assert (await replay.complete(REQ)).blocks == [TEXT_BLOCK]
+    assert (await replay.complete(REQ)).blocks == []
