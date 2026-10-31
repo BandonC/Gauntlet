@@ -1,0 +1,80 @@
+[
+ {
+  "player_id": "haiku-4.5/ld-v1",
+  "turns": 183,
+  "attempts": 183,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 1051.0,
+  "latency_p95_ms": 1465.0,
+  "completed_games": 20,
+  "cost_per_game_usd": 0.013543,
+  "cache_hit_rate": 0.0
+ },
+ {
+  "player_id": "haiku-5.5/ld-v1",
+  "turns": 168,
+  "attempts": 168,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 1155.0,
+  "latency_p95_ms": 2078.3,
+  "completed_games": 20,
+  "cost_per_game_usd": 0.000623,
+  "cache_hit_rate": 0.7064
+ },
+ {
+  "player_id": "liars-dice-bot",
+  "turns": 158,
+  "attempts": 158,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 20,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "random",
+  "turns": 74,
+  "attempts": 74,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 4,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "random2",
+  "turns": 34,
+  "attempts": 34,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 2,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "random3",
+  "turns": 41,
+  "attempts": 41,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 2,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ }
+]

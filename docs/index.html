@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLM Arena</title>
+<style>
+  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; --bad:#f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 16px 16px 64px; }
+  nav { display:flex; gap:16px; align-items:baseline; padding-bottom:12px;
+        border-bottom:1px solid var(--line); margin-bottom:8px; }
+  nav .brand { font-weight:700; margin-right:auto; }
+  a { color: inherit; } nav a { text-decoration:none; } nav a:hover { text-decoration:underline; }
+  h1 { font-size: 20px; margin: 16px 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
+  .muted { color: var(--muted); } .bad { color: var(--bad); }
+  table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { font-weight:600; font-size:13px; color:var(--muted); }
+  td.num, th.num { text-align:right; }
+  code { font: 13px ui-monospace, monospace; }
+  .wrap { overflow-x: auto; }
+  dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 8px 0; }
+  dt { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <nav>
+    <a class="brand" href="index.html">LLM Arena</a>
+    <a href="index.html">Leaderboards</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="matches.html">Matches</a>
+  </nav>
+<h1>Leaderboards</h1>
+<p class="muted">Live ratings update after every match, so they depend on play order. Ranked by live Weng-Lin ordinal μ − 3σ (any table size); Glicko-2 and Elo are heads-up only. Final rating is order-independent: a Bradley-Terry fit to one finished heads-up tournament, with a 95% interval against that field.</p>
+<h2>connect4</h2>
+<p class="muted">Final rating from tournament #3.</p><div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>haiku-4.5/c4-v1</td>
+      <td class="num">1535.2 (1457.5 – 1612.9)</td>
+      <td class="num">11.62</td>
+      <td class="num">26.82 ± 15.21</td>
+      <td class="num">1535.5 ± 188.6</td>
+      <td class="num">1528.5</td>
+      <td class="num">20</td>
+      <td class="num">12.0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>random</td>
+      <td class="num">–</td>
+      <td class="num">11.19</td>
+      <td class="num">31.33 ± 20.13</td>
+      <td class="num">1663.7 ± 338.0</td>
+      <td class="num">1556.0</td>
+      <td class="num">8</td>
+      <td class="num">6.0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>haiku-5.5/c4-v1</td>
+      <td class="num">1464.8 (1387.1 – 1542.5)</td>
+      <td class="num">7.97</td>
+      <td class="num">23.18 ± 15.21</td>
+      <td class="num">1464.5 ± 188.6</td>
+      <td class="num">1471.5</td>
+      <td class="num">20</td>
+      <td class="num">8.0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>random3</td>
+      <td class="num">–</td>
+      <td class="num">6.08</td>
+      <td class="num">25.78 ± 19.71</td>
+      <td class="num">1490.4 ± 304.4</td>
+      <td class="num">1508.8</td>
+      <td class="num">8</td>
+      <td class="num">4.0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>random2</td>
+      <td class="num">–</td>
+      <td class="num">-3.51</td>
+      <td class="num">16.27 ± 19.77</td>
+      <td class="num">1197.8 ± 307.4</td>
+      <td class="num">1435.2</td>
+      <td class="num">8</td>
+      <td class="num">2.0</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2>liars_dice</h2>
+<p class="muted">Final rating from tournament #4.</p><div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>liars-dice-bot</td>
+      <td class="num">1660.5 (1533.7 – 1787.4)</td>
+      <td class="num">18.6</td>
+      <td class="num">33.93 ± 15.33</td>
+      <td class="num">1691.9 ± 192.4</td>
+      <td class="num">1606.1</td>
+      <td class="num">20</td>
+      <td class="num">16.0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>haiku-4.5/ld-v1</td>
+      <td class="num">1419.7 (1306.6 – 1532.9)</td>
+      <td class="num">9.0</td>
+      <td class="num">24.55 ± 15.54</td>
+      <td class="num">1514.0 ± 195.4</td>
+      <td class="num">1471.9</td>
+      <td class="num">20</td>
+      <td class="num">7.0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>random3</td>
+      <td class="num">–</td>
+      <td class="num">7.28</td>
+      <td class="num">30.63 ± 23.34</td>
+      <td class="num">1847.7 ± 494.2</td>
+      <td class="num">1533.2</td>
+      <td class="num">2</td>
+      <td class="num">2.0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>random</td>
+      <td class="num">–</td>
+      <td class="num">2.49</td>
+      <td class="num">24.67 ± 22.17</td>
+      <td class="num">1509.8 ± 430.4</td>
+      <td class="num">1497.3</td>
+      <td class="num">4</td>
+      <td class="num">2.0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>haiku-5.5/ld-v1</td>
+      <td class="num">1419.7 (1306.6 – 1532.9)</td>
+      <td class="num">2.34</td>
+      <td class="num">18.47 ± 16.14</td>
+      <td class="num">1365.5 ± 211.8</td>
+      <td class="num">1422.0</td>
+      <td class="num">20</td>
+      <td class="num">7.0</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>random2</td>
+      <td class="num">–</td>
+      <td class="num">-3.12</td>
+      <td class="num">20.34 ± 23.46</td>
+      <td class="num">1279.7 ± 521.0</td>
+      <td class="num">1469.5</td>
+      <td class="num">2</td>
+      <td class="num">0.0</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2>werewolf</h2>
+<div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>haiku-5.5/ww-v2-cautious</td>
+      <td class="num">–</td>
+      <td class="num">5.2</td>
+      <td class="num">26.96 ± 21.75</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">15.0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>haiku-5.5/ww-v2-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">4.61</td>
+      <td class="num">26.28 ± 21.66</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">15.0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>haiku-5.5/ww-v2-plain</td>
+      <td class="num">–</td>
+      <td class="num">4.2</td>
+      <td class="num">25.81 ± 21.60</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">14.0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>haiku-4.5/ww-v2-cautious</td>
+      <td class="num">–</td>
+      <td class="num">3.72</td>
+      <td class="num">25.34 ± 21.63</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">12.0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>haiku-5.5/ww-v2-analytical</td>
+      <td class="num">–</td>
+      <td class="num">3.64</td>
+      <td class="num">25.16 ± 21.51</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">14.0</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>haiku-4.5/ww-v2-analytical</td>
+      <td class="num">–</td>
+      <td class="num">3.34</td>
+      <td class="num">24.82 ± 21.48</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">14.0</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>haiku-4.5/ww-v2-plain</td>
+      <td class="num">–</td>
+      <td class="num">3.27</td>
+      <td class="num">24.84 ± 21.57</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">11.0</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>haiku-4.5/ww-v1-analytical</td>
+      <td class="num">–</td>
+      <td class="num">1.07</td>
+      <td class="num">26.01 ± 24.93</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">1.0</td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>haiku-4.5/ww-v1-plain</td>
+      <td class="num">–</td>
+      <td class="num">1.07</td>
+      <td class="num">26.01 ± 24.93</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">1.0</td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>haiku-4.5/ww-v1-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">-0.12</td>
+      <td class="num">24.74 ± 24.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">0.0</td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>haiku-5.5/ww-v1-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">-0.12</td>
+      <td class="num">24.74 ± 24.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">0.0</td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>haiku-5.5/ww-v1-analytical</td>
+      <td class="num">–</td>
+      <td class="num">-0.12</td>
+      <td class="num">24.74 ± 24.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">0.0</td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>haiku-5.5/ww-v1-plain</td>
+      <td class="num">–</td>
+      <td class="num">-0.12</td>
+      <td class="num">24.74 ± 24.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">0.0</td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>haiku-4.5/ww-v2-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">-0.41</td>
+      <td class="num">20.78 ± 21.18</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">6.0</td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>haiku-5.5/ww-v1-cautious</td>
+      <td class="num">–</td>
+      <td class="num">-0.83</td>
+      <td class="num">24.03 ± 24.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">1</td>
+      <td class="num">0.0</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2>werewolf_dayfirst</h2>
+<div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>haiku-5.5/wwdf-v1-cautious</td>
+      <td class="num">–</td>
+      <td class="num">6.53</td>
+      <td class="num">28.53 ± 21.99</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">21.0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>haiku-4.5/wwdf-v1-cautious</td>
+      <td class="num">–</td>
+      <td class="num">5.2</td>
+      <td class="num">27.08 ± 21.87</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">20.0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>haiku-5.5/wwdf-v1-analytical</td>
+      <td class="num">–</td>
+      <td class="num">4.25</td>
+      <td class="num">26.01 ± 21.75</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">18.0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>haiku-4.5/wwdf-v1-plain</td>
+      <td class="num">–</td>
+      <td class="num">3.49</td>
+      <td class="num">25.2 ± 21.69</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">17.0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>haiku-5.5/wwdf-v1-plain</td>
+      <td class="num">–</td>
+      <td class="num">3.39</td>
+      <td class="num">25.1 ± 21.72</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">16.0</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>haiku-5.5/wwdf-v1-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">2.81</td>
+      <td class="num">24.48 ± 21.66</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">16.0</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>haiku-4.5/wwdf-v1-analytical</td>
+      <td class="num">–</td>
+      <td class="num">1.89</td>
+      <td class="num">23.46 ± 21.57</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">15.0</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>haiku-4.5/wwdf-v1-aggressive</td>
+      <td class="num">–</td>
+      <td class="num">-1.06</td>
+      <td class="num">20.23 ± 21.30</td>
+      <td class="num">1500.0 ± 700.0</td>
+      <td class="num">1500.0</td>
+      <td class="num">35</td>
+      <td class="num">8.0</td>
+    </tr>
+  </tbody>
+</table></div>
+<h2>Werewolf roles</h2>
+<p class="muted">Roles shape results, so read ratings beside win rate by role. Claims are literal matches only: paraphrases are missed.</p>
+<div class="wrap"><table>
+  <thead><tr><th>Player</th><th class="num">Wolf</th><th class="num">Seer</th><th class="num">Villager</th><th class="num">True claims</th><th class="num">Bluffs</th><th class="num">Leaks</th><th class="num">Truncated</th><th class="num">Forfeits</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>haiku-4.5/ww-v1-aggressive</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0.0 (1)</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v1-analytical</td>
+      <td class="num">1.0 (1)</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v1-plain</td>
+      <td class="num">1.0 (1)</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v2-aggressive</td>
+      <td class="num">0.5 (10)</td>
+      <td class="num">0.0 (5)</td>
+      <td class="num">0.05 (20)</td>
+      <td class="num">7</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v2-analytical</td>
+      <td class="num">0.9 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.2 (20)</td>
+      <td class="num">11</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v2-cautious</td>
+      <td class="num">0.8 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.15 (20)</td>
+      <td class="num">5</td>
+      <td class="num">3</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/ww-v2-plain</td>
+      <td class="num">0.8 (10)</td>
+      <td class="num">0.0 (5)</td>
+      <td class="num">0.15 (20)</td>
+      <td class="num">10</td>
+      <td class="num">4</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/wwdf-v1-aggressive</td>
+      <td class="num">0.2 (10)</td>
+      <td class="num">0.0 (5)</td>
+      <td class="num">0.3 (20)</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/wwdf-v1-analytical</td>
+      <td class="num">0.5 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.45 (20)</td>
+      <td class="num">5</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/wwdf-v1-cautious</td>
+      <td class="num">0.7 (10)</td>
+      <td class="num">0.6 (5)</td>
+      <td class="num">0.5 (20)</td>
+      <td class="num">6</td>
+      <td class="num">4</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-4.5/wwdf-v1-plain</td>
+      <td class="num">0.6 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.5 (20)</td>
+      <td class="num">9</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v1-aggressive</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0.0 (1)</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v1-analytical</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0.0 (1)</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v1-cautious</td>
+      <td class="num">– (0)</td>
+      <td class="num">0.0 (1)</td>
+      <td class="num">– (0)</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v1-plain</td>
+      <td class="num">– (0)</td>
+      <td class="num">– (0)</td>
+      <td class="num">0.0 (1)</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v2-aggressive</td>
+      <td class="num">0.9 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.25 (20)</td>
+      <td class="num">27</td>
+      <td class="num">10</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v2-analytical</td>
+      <td class="num">0.9 (10)</td>
+      <td class="num">0.2 (5)</td>
+      <td class="num">0.2 (20)</td>
+      <td class="num">22</td>
+      <td class="num">9</td>
+      <td class="num">0</td>
+      <td class="num">2</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v2-cautious</td>
+      <td class="num">0.9 (10)</td>
+      <td class="num">0.6 (5)</td>
+      <td class="num">0.15 (20)</td>
+      <td class="num">38</td>
+      <td class="num">9</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/ww-v2-plain</td>
+      <td class="num">0.9 (10)</td>
+      <td class="num">0.0 (5)</td>
+      <td class="num">0.25 (20)</td>
+      <td class="num">47</td>
+      <td class="num">15</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/wwdf-v1-aggressive</td>
+      <td class="num">0.5 (10)</td>
+      <td class="num">0.8 (5)</td>
+      <td class="num">0.35 (20)</td>
+      <td class="num">34</td>
+      <td class="num">18</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/wwdf-v1-analytical</td>
+      <td class="num">0.7 (10)</td>
+      <td class="num">0.4 (5)</td>
+      <td class="num">0.45 (20)</td>
+      <td class="num">28</td>
+      <td class="num">9</td>
+      <td class="num">0</td>
+      <td class="num">10</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/wwdf-v1-cautious</td>
+      <td class="num">0.8 (10)</td>
+      <td class="num">0.8 (5)</td>
+      <td class="num">0.45 (20)</td>
+      <td class="num">59</td>
+      <td class="num">15</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td>haiku-5.5/wwdf-v1-plain</td>
+      <td class="num">0.6 (10)</td>
+      <td class="num">0.4 (5)</td>
+      <td class="num">0.4 (20)</td>
+      <td class="num">43</td>
+      <td class="num">24</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+      <td class="num">0</td>
+    </tr>
+  </tbody>
+</table></div>
+</main>
+</body>
+</html>

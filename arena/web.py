@@ -8,6 +8,7 @@ Data comes from the same functions as the JSON API (store/read.py, the leaderboa
 from __future__ import annotations
 
 import json
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -111,8 +112,15 @@ async def index_page(pool: asyncpg.Pool, urls: Urls) -> str:
     return render("index.html", urls, boards=boards, role_stats=role_stats)
 
 
-async def tournaments_page(pool: asyncpg.Pool, urls: Urls) -> str:
-    return render("tournaments.html", urls, tournaments=await read.list_tournaments(pool))
+async def tournaments_page(
+    pool: asyncpg.Pool, urls: Urls, only: Collection[int] | None = None
+) -> str:
+    listed = await read.list_tournaments(pool)
+    return render(
+        "tournaments.html",
+        urls,
+        tournaments=[t for t in listed if only is None or t["id"] in only],
+    )
 
 
 async def tournament_page(pool: asyncpg.Pool, urls: Urls, tournament_id: int) -> str | None:
@@ -124,8 +132,11 @@ async def tournament_page(pool: asyncpg.Pool, urls: Urls, tournament_id: int) ->
     return render("tournament.html", urls, t=found[0], matches=matches, final=final)
 
 
-async def matches_page(pool: asyncpg.Pool, urls: Urls) -> str:
-    return render("matches.html", urls, matches=await read.list_matches(pool, limit=50))
+async def matches_page(pool: asyncpg.Pool, urls: Urls, only: Collection[int] | None = None) -> str:
+    listed = await read.list_matches(pool, limit=50 if only is None else 500)
+    return render(
+        "matches.html", urls, matches=[m for m in listed if only is None or m["id"] in only]
+    )
 
 
 async def match_page(pool: asyncpg.Pool, urls: Urls, match_id: int) -> str | None:

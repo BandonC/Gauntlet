@@ -10,6 +10,7 @@ arena worker --concurrency 4 --record recordings         run matches from the qu
 arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
 arena export --out site                                  static HTML + JSON (GitHub Pages)
+arena export --out docs --tournaments 6,7 --matches 116  only those pages
 """
 
 from __future__ import annotations
@@ -240,13 +241,19 @@ async def _ratings(args: argparse.Namespace) -> None:
     print(f"replayed {n} completed matches into ratings")
 
 
+def _ids(text: str) -> list[int]:
+    return [int(part) for part in text.split(",")]
+
+
 async def _export(args: argparse.Namespace) -> None:
     from arena.export import export_site
     from arena.store.db import create_pool
 
     pool = await create_pool(settings().database_url)
     try:
-        summary = await export_site(pool, Path(args.out))
+        summary = await export_site(pool, Path(args.out), args.tournaments, args.matches)
+    except ValueError as e:
+        sys.exit(f"arena export: {e}")
     finally:
         await pool.close()
     print(f"wrote {summary.pages} pages and {summary.json_files} JSON files to {args.out}")
@@ -316,6 +323,8 @@ def main(argv: list[str] | None = None) -> None:
 
     e = sub.add_parser("export", help="render the site to static HTML + JSON files")
     e.add_argument("--out", default="site", help="output directory (default: site)")
+    e.add_argument("--tournaments", type=_ids, help="only these tournament pages (comma-separated)")
+    e.add_argument("--matches", type=_ids, help="only these match pages (comma-separated)")
 
     args = ap.parse_args(argv)
     if args.cmd == "serve":
