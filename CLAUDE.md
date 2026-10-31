@@ -35,7 +35,9 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 cp .env.example .env && cp roster.example.toml roster.toml   # then edit both
 docker compose up -d db testdb
+scripts/install-hooks.sh                 # pre-commit hook: runs scripts/check.sh
 
+scripts/check.sh                         # ruff, format check, pytest; db tests too if DATABASE_URL is set
 pytest                                   # unit tests; db tests skip without DATABASE_URL
 pytest -m slow                           # balance simulations, excluded by default
 DATABASE_URL=postgresql://arena:arena@localhost:5433/arena_test pytest -m db
@@ -237,6 +239,10 @@ runs (loops, scheduled tasks) skip them.
 - [x] `[human]` First real Liar's Dice and Werewolf tournaments (2026-10-30): Liar's Dice
       tournament 4, 30 matches, $0.2833; Werewolf tournament 6, 40 tables, 8 players, $1.4761.
 
+**Maintenance**
+- [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
+      (`python -X importtime`) and lazy-load heavy modules.
+
 ## Unattended runs (loops and scheduled tasks)
 
 When working without the user watching (a `/loop`, or a cloud scheduled task):
@@ -245,9 +251,11 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
    If an open `claude/` branch or PR already covers it, continue that instead.
 2. Work on a branch named `claude/<short-item-name>`. Never commit to or merge
    into `main` without the user's explicit approval. Never push from a local loop. 
-3. Before committing: `ruff check arena tests`, `ruff format arena tests`, `pytest`,
-   and `pytest -m db` when Postgres is available. All must pass. If db tests can't
-   run, say so in the PR description.
+3. Before committing: `ruff format arena tests`, then `scripts/check.sh` with
+   `DATABASE_URL` set to the test database when Postgres is available. It must pass;
+   always use it rather than running the steps by hand, and never pipe test output
+   through `tail` or `head` without `set -o pipefail`: the pipe's exit code hides the
+   failure. If db tests can't run, say so in the PR description.
 4. Tick the item's checkbox in this file in the same branch, and add any new gotchas.
 5. Open a PR (cloud) or leave a commit summary (local) describing what changed, how it
    was tested, and anything left undone.
@@ -445,6 +453,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   rules reach them through `$rules`. Bots use `model = "werewolf"` for both. A new game id
   also needs `metrics.WEREWOLF_GAMES` (else its role stats are silently empty),
   `web.MOVE_LABELS` and `RENDERERS` in `replay.js`. Don't compare ordinals across the two.
+- `scripts/check.sh` stops at the first failure, and refuses any `DATABASE_URL` whose
+  database isn't `arena_test`, because `test_store_db.py` drops the schema. The hook comes
+  from `scripts/install-hooks.sh`, per clone, and checks the working tree rather than the
+  staged files, so unstaged edits count. A commit waits for the whole run (over a
+  minute, about two and a half with db tests). Git sets `GIT_DIR` while a hook runs, so a test that runs
+  git must strip `GIT_*` (see `tests/test_check_script.py`) or it hits this repository.
 - `addopts` excludes `slow`; a `-m` on the command line replaces it, so `pytest -m db` and
   `pytest -m slow` both work. Plain `pytest` keeps a few-game smoke test of the simulator.
 - Werewolf balance: a non-wolf voted out on day 1 means the next kill reaches parity, so the
