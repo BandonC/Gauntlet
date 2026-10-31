@@ -12,8 +12,10 @@ Rules:
   seat is eliminated and a tied vote eliminates nobody. Every death reveals the role.
 - Wolves win at parity (wolves >= everyone else alive). The village wins when no wolf is
   alive. A win applies to the whole team, dead members included.
-- Forfeit: the seat is eliminated with its role revealed and the game goes on. Scores
-  still count its team's result; MatchRunner ranks it last in placements.
+- Forfeit: the seat skips this action and stays alive. A night action is lost, a vote is
+  an abstention and a discussion turn is silence. If no wolf votes, the kill is still drawn
+  from the seed, because the night kill is what guarantees the game ends. Placements
+  ignore forfeits; they're counted by store.metrics instead.
 
 Messages over MAX_MESSAGE_CHARS are valid: normalize_action truncates them and the
 runner flags the turn. The log keeps full text unless a seat's prompt would pass
@@ -26,6 +28,7 @@ from __future__ import annotations
 import random
 import re
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from typing import Literal
 
@@ -92,7 +95,7 @@ class Death:
     day: int
     seat: int
     role: str
-    cause: Literal["night", "vote", "forfeit"]
+    cause: Literal["night", "vote"]
 
 
 @dataclass(frozen=True)
@@ -138,15 +141,10 @@ def _winner(alive: tuple[int, ...], roles: tuple[str, ...]) -> str | None:
     return WOLVES_WIN if wolves >= len(alive) - wolves else None
 
 
-def _kill(state: WWState, seat: int, cause: Literal["night", "vote", "forfeit"]) -> WWState:
+def _kill(state: WWState, seat: int, cause: Literal["night", "vote"]) -> WWState:
     alive = tuple(s for s in state.alive if s != seat)
     death = Death(state.day, seat, state.roles[seat], cause)
-    state = replace(
-        state,
-        alive=alive,
-        queue=tuple(s for s in state.queue if s != seat),
-        deaths=state.deaths + (death,),
-    )
+    state = replace(state, alive=alive, deaths=state.deaths + (death,))
     winner = _winner(alive, state.roles)
     return replace(state, winner=winner, phase="over", queue=()) if winner else state
 
@@ -166,9 +164,7 @@ def _start_discussion(state: WWState, round_no: int) -> WWState:
 
 
 def _resolve_night(state: WWState) -> WWState:
-    alive = set(state.alive)
-    # A target can be gone by now: the seer may forfeit after the wolves picked them.
-    votes = [v.target for v in state.night_votes if v.day == state.day and v.target in alive]
+    votes = [v.target for v in state.night_votes if v.day == state.day]
     tied = _top(votes) if votes else [s for s in state.alive if state.roles[s] != WOLF]
     victim = tied[0]
     if len(tied) > 1:
@@ -178,8 +174,7 @@ def _resolve_night(state: WWState) -> WWState:
 
 
 def _resolve_vote(state: WWState) -> WWState:
-    alive = set(state.alive)
-    votes = [v.target for v in state.day_votes if v.day == state.day and v.target in alive]
+    votes = [v.target for v in state.day_votes if v.day == state.day]
     tied = _top(votes) if votes else []
     if len(tied) == 1:
         state = _kill(state, tied[0], "vote")
@@ -338,9 +333,7 @@ class Werewolf(Game):
         for d in view["days"]:
             lines.append(f"\n--- Day {d['day']} ---")
             for death in d["deaths"]:
-                how = {"night": "was killed in the night", "vote": "was voted out"}.get(
-                    death["cause"], "forfeited"
-                )
+                how = {"night": "was killed in the night", "vote": "was voted out"}[death["cause"]]
                 lines.append(f"Player {death['seat']} ({death['role']}) {how}.")
             if d["reduced"]:
                 lines.append("(discussion omitted to save space)")
@@ -378,6 +371,7 @@ class Werewolf(Game):
         if kind == "say":
             props["message"] = {
                 "type": "string",
+                "maxLength": MAX_MESSAGE_CHARS,
                 "description": f"What you say to the table (max {MAX_MESSAGE_CHARS} characters).",
             }
             required = ["action", "message"]
@@ -457,11 +451,13 @@ class Werewolf(Game):
         return _advance(replace(state, queue=rest))
 
     def forfeit(self, state: WWState, seat: int) -> WWState:
-        state = replace(state, forfeited=state.forfeited + (seat,))
-        return _advance(_kill(state, seat, "forfeit"))
+        return _advance(replace(state, queue=state.queue[1:], forfeited=state.forfeited + (seat,)))
 
     def is_terminal(self, state: WWState) -> bool:
         return state.winner is not None
+
+    def final_placements(self, state: WWState, forfeits: Sequence[int]) -> list[int]:
+        return self.placements(state)
 
     def scores(self, state: WWState) -> list[float]:
         if state.winner is None:
@@ -499,9 +495,17 @@ def _instruction(view: JSON) -> str:
 
 # --- role claims ----------------------------------------------------------------------
 # Literal phrases only, so paraphrases ("I can see who's guilty") are missed.
-_ROLE = r"(?:(?:a|an|the)\s+)?(werewolf|wolf|seer|villager)\b"
-_SELF_CLAIM = re.compile(rf"\b(?:i\s+am|i['’]m)\s+{_ROLE}", re.IGNORECASE)
-_OTHER_CLAIM = re.compile(rf"\b(?:player|seat)\s+(\d+)\s+is\s+{_ROLE}", re.IGNORECASE)
+_ROLE = (
+    r"(?:(?:just|only)\s+)?(?:(?:a|an|the)\s+)?(?:(?:simple|plain)\s+)?"
+    r"(werewolf|wolf|seer|villager)\b"
+)
+_SELF_CLAIM = re.compile(
+    rf"\b(?:(?:i\s+am|i['’]m)\s+{_ROLE}|as\s+{_ROLE}\s*,?\s*i\b)", re.IGNORECASE
+)
+_OTHER_CLAIM = re.compile(
+    rf"\b(?:player|seat)\s+(\d+)\s+(?:is\s+|here\s*[,:\-–—]?\s*(?:as\s+)?){_ROLE}",
+    re.IGNORECASE,
+)
 
 ClaimKind = Literal["true", "false", "leak"]
 
@@ -516,14 +520,15 @@ class RoleClaim:
 def classify_claims(message: str, speaker: int, roles: list[str]) -> list[RoleClaim]:
     """Explicit role claims in one message: true claims, false claims (bluffs), or leaks
     (a wolf stating its own role or naming its partner). Other seats' true claims about
-    wolves are accusations that landed, and count as true."""
-    found = [(speaker, m[1]) for m in _SELF_CLAIM.finditer(message)]
+    wolves are accusations that landed, and count as true. "Player 6 here, villager" is
+    a claim about seat 6 whoever says it. The same claim twice in a message counts once."""
+    found = [(speaker, m[1] or m[2]) for m in _SELF_CLAIM.finditer(message)]
     found += [(int(m[1]), m[2]) for m in _OTHER_CLAIM.finditer(message)]
     claims = []
-    for seat, word in found:
+    for seat, word in dict.fromkeys((seat, word.lower()) for seat, word in found):
         if seat >= len(roles):
             continue
-        role = WOLF if word.lower() == "werewolf" else word.lower()
+        role = WOLF if word == "werewolf" else word
         if role == WOLF and roles[speaker] == WOLF and roles[seat] == WOLF:
             kind: ClaimKind = "leak"
         else:
