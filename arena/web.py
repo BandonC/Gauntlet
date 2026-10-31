@@ -55,7 +55,7 @@ def pct(value: float | None, digits: int = 1) -> str:
 
 
 def ms(value: float | None) -> str:
-    """A seat that never got to act has no latency: a wolf's victim can leave a game silent."""
+    """A seat that never got to act has no latency: night 1's victim, on the original rules."""
     return "–" if value is None else f"{value:.0f} ms"
 
 

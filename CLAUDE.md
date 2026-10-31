@@ -430,17 +430,17 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   wallpaper. Each game page swaps in its own set (`--c4-wash-*`, `--dice-`, `--ww-`, `--df-`) from
   its `body.g-<game>` rule, so a new game needs a set in all three palette blocks. Text is tested
   against every wash with the glows and wallpaper composited on top, because the plain wash
-  passed while the real pixels were 4.0:1. `npx impeccable detect` still reports low contrast
-  on these pages: it blends gradient stops without their alpha, so it reads the glow as solid.
+  passed while the real pixels were 4.0:1. `npx impeccable detect` lists low contrast here as
+  advisory, against colours like #cab99d that are darker than the test's composited worst case.
 - Seats: `--seat-0` to `--seat-6` in each palette, set by `data-seat` (`said` in `replay.js`,
   `seatAttr`). The number always goes with the colour, so a seat never depends on colour alone.
   They sit behind a number, so they're held to 4.5:1 on `surface` as well as the dataviz checks.
 - Player pages: ids hold slashes, so URLs and file names use `web.player_slug`, reversible and
   lower case so a case-insensitive disk can't merge two players. Partial exports still write
   every player, since they hold only totals. `read.seat_results` feeds player pages and Compare,
-  so they share one definition of a win. Seats that never acted exist (a game can end first):
-  their latency and illegal rate are None, and a page must render that. Only the real export
-  found this, because test fixtures always have turns.
+  so they share one definition of a win. Seats that never acted exist: on the original rules a
+  villager killed on night 1 takes no turn (34 seats in tournaments 5 and 6). Their latency and
+  illegal rate are None, and a page must render that. Only the real export found this.
 - Compare groups by the id's prefix (`model_of`) and skips providers `bot` and `random`. Its win
   rates aren't head to head, and overall win rate is left off on purpose: it would mix games.
 - `templates/site.js` (Markup global, inlined on every page) sorts any `table.sortable` and
