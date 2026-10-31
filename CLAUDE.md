@@ -256,6 +256,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
    always use it rather than running the steps by hand, and never pipe test output
    through `tail` or `head` without `set -o pipefail`: the pipe's exit code hides the
    failure. If db tests can't run, say so in the PR description.
+   Never use `git commit --no-verify`; if the hook blocks a commit, fix the cause.
 4. Tick the item's checkbox in this file in the same branch, and add any new gotchas.
 5. Open a PR (cloud) or leave a commit summary (local) describing what changed, how it
    was tested, and anything left undone.
