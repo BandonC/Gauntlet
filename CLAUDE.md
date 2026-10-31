@@ -25,7 +25,7 @@ Optimise for correctness and clear failure semantics over features.
 | Live ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, final ratings (Bradley-Terry per tournament), tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
-| Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer. **No real model has played it.** |
+| Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer, proven by a real run (tournament 6, see Gotchas) |
 
 ## Commands
 
@@ -49,6 +49,7 @@ arena worker --record recordings         # also append every model reply for fix
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
+python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 ```
 
 `tests/test_store_db.py` DROPS the public schema. Only ever point it at `testdb` (:5433)
@@ -91,6 +92,7 @@ arena/
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
   tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
+  balance.py            Werewolf what-if rulesets, simulated; not a game, nothing plays them
 migrations/             forward-only SQL, applied in filename order
 ```
 
@@ -228,7 +230,8 @@ runs (loops, scheduled tasks) skip them.
 - [x] Werewolf engine + scripted bots (flagship): 7 seats, multi-phase turns (night →
       discussion → vote), per-seat views, discussion log in state reduced only past a token
       limit, scheduled role balance, role-claim metric, `bot` roster provider.
-- [ ] `[human]` First real Liar's Dice and Werewolf tournaments.
+- [x] `[human]` First real Liar's Dice and Werewolf tournaments (2026-10-30): Liar's Dice
+      tournament 4, 30 matches, $0.2833; Werewolf tournament 6, 40 tables, 8 players, $1.4761.
 
 ## Unattended runs (loops and scheduled tasks)
 
@@ -364,7 +367,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   longer games or an explicit low limit.
 - Role claims (`werewolf.classify_claims`, reported by `store/metrics.werewolf_metrics`,
   `/api/werewolf/roles` and the index page) are literal matches only: "I am a/the X",
-  "I'm just a X", "as the X, I", "player/seat N is X", "Player N here, X". Paraphrases, negations and hedged wording are missed, and
+  "I'm just a X", "as the X, I", "player/seat N is X", "Player N here, X". A role word followed by a hyphen never matches ("I'm wolf-hunting").
+  Paraphrases, negations and hedged wording are missed, and
   quoted or hypothetical phrasing is counted as if it were a claim.
 - Pages: `web.py` page builders take `(pool, Urls)` and return HTML; FastAPI wraps them
   and `arena export` should call the same builders with file-path `Urls`. Never hard-code
@@ -414,6 +418,32 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   1 of 100 / 0 of 102 / 0 of 95; challenges of a bid their own dice already proved true
   15 of 68 (22%) / 12 of 81 (15%) / 0 of 63; challenges won 18% / 14% / 35%. Losing
   challenges, not wild bids, are where the models give up dice.
+- First real Werewolf run (tournament 6, 40 tables of 7 from the 8 `ww-v2-*` players, $1.4761,
+  25 minutes): wolves won 33 of 40, on 2 days (26) or 3 (14). Each player got exactly 10 wolf,
+  5 seer and 20 villager games. Wolves won 90% on Haiku 5.5 and 75% on Haiku 4.5, seers 25% and
+  10%, villagers 21% and 14%; that gap is p = 0.08 overall, and tables share results, so it's
+  not proven. Haiku 4.5 aggressive won 5 of 10 as a wolf, everyone else 8 or 9. Weng-Lin
+  ordinals ran from 5.20 to -0.41 with sigma near 7, so the order means little.
+  No forfeits, and 3 rejected attempts in 1,246 (Haiku 5.5 seers); all 3 were inspecting the
+  seat voted out that day, as in match 67. `render_view` lists a vote-out above that day's
+  discussion. The 300-character line worked: 2 of 676 messages truncated (6 of 12 in match
+  67), mean 194 characters. The API accepts `maxLength` on a non-strict tool. Threshold never
+  reached (largest estimate 1,974 tokens). Haiku 4.5 cost 10x Haiku 5.5 ($1.34 vs $0.14) with
+  no cache hits.
+  Claims: 167 true, 52 false (49 wolves posing as villagers, none claiming seer), 2 leaks, and
+  neither is deliberate: a hypothetical in match 96 and seat 2 accusing "Player 2" in match
+  102. 111 of the 167 are Haiku 5.5 villagers' "Player N here, villager" habit, so true-claim
+  counts say more about style than honesty.
+- Werewolf balance: a non-wolf voted out on day 1 means the next kill reaches parity, so the
+  game is lopsided. Tournament 6 village votes hit a wolf 125 of 229 times (54%), but they
+  bunch: one seat took 5 of 6 votes on 23 of 40 first days. So `arena/balance.py` has `focus`,
+  how much a table votes together, which leaves each voter's p alone. Independent voters
+  (`focus = 0`) tie far too often (41% against a real 12%) and give the village 5%. `focus =
+  0.7` was fitted to first-vote outcomes only (40/49/11 wolf/other/tie, real 40/48/12) and
+  gives 22%, against the real 7 of 40 (Wilson 95% interval 9-32%). The real engine with
+  `AccuracyVoteBot` agrees with the simulator (`tests/test_balance.py`). p is fixed by
+  assumption, so seers and doctors add only their rule effects, never skill. Any adopted
+  ruleset gets a new game id, so its ratings don't mix with tournament 6.
 - Live ratings depend on play order, and that run proved how much: pairings played as blocks
   put Haiku 4.5 148 Glicko points above Haiku 5.5 on identical records. Over 200 random
   orders of the same 30 results the gap averaged -0.2 (sd 64, p5 -100, p95 +98), split
