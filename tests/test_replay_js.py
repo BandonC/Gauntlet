@@ -409,6 +409,8 @@ def test_playing_blind_from_start_to_reveal():
     assert out["lockedOut"] >= 1 and out["refusedOverPick"]  # no lock-in without a full pick
     assert " win" in out["end"] and all(name in out["end"] for name in SEATS)
     assert "picks were wolves" in out["end"] and "votes on a wolf" in out["end"]
+    assert out["end"].count('style="--i:') == 7
+    assert out["end"].count('class="card wolf"') == 2 and 'class="card seer"' in out["end"]
     assert out["stillBlind"] is False
 
 

@@ -414,6 +414,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   Before merging a page change, run `npx impeccable detect <url>` on the rendered page with
   `DO_NOT_TRACK=1`, and check 320px: headless Chrome won't go that narrow, so measure in a
   same-origin iframe. Impeccable is run this way only; it isn't installed in the repo.
+- Themes: light parchment, dark moonlit, following the system until the nav toggle saves a
+  choice. `site.css` has two identical dark blocks (system, toggle) because CSS can't share
+  one; tests fail if they differ, or if any token drops below WCAG AA (4.5:1) on `bg` or
+  `surface`. The theme is set in `<head>` before paint, and switching never animates. The
+  only 3D is the Play blind reveal: plain CSS `rotateY`, no library, a fade under reduced
+  motion. Replay stepping stays instant.
 - Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
   drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
 - Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in

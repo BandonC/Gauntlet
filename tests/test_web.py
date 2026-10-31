@@ -1,4 +1,5 @@
 import json
+import re
 
 import pytest
 from jinja2 import UndefinedError
@@ -397,6 +398,58 @@ def test_the_home_page_invites_you_to_play_blind_only_when_a_game_is_available()
     assert 'class="btn primary"' not in render(
         "index.html", URLS, boards=boards, role_stats=[], blind_url=None
     )
+
+
+def _palettes():
+    css = SITE_CSS.read_text("utf-8")
+    light = css[css.index(":root {") : css.index("@media (prefers-color-scheme: dark)")]
+    system = css[
+        css.index("@media (prefers-color-scheme: dark)") : css.index(':root[data-theme="dark"]')
+    ]
+    toggled = css[css.index(':root[data-theme="dark"]') : css.index("/* Base */")]
+    return light, system, toggled
+
+
+def _tokens(block):
+    return dict(re.findall(r"--([a-z-]+):\s*(#[0-9a-f]{6})", block))
+
+
+def _luminance(colour):
+    channels = [int(colour[i : i + 2], 16) / 255 for i in (1, 3, 5)]
+    r, g, b = (c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast(a, b):
+    high, low = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (high + 0.05) / (low + 0.05)
+
+
+def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
+    _, system, toggled = _palettes()
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 11
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize("text", ["fg", "muted", "accent", "bad", "good", "x", "o"])
+@pytest.mark.parametrize("on", ["bg", "surface"])
+def test_every_palette_stays_readable(index, text, on):
+    t = _tokens(_palettes()[index])
+    assert _contrast(t[text], t[on]) >= 4.5
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+def test_primary_buttons_stay_readable(index):
+    t = _tokens(_palettes()[index])
+    assert _contrast(t["on-accent"], t["accent"]) >= 4.5
+
+
+def test_the_theme_is_applied_before_the_stylesheet_paints():
+    html = render("matches.html", URLS, matches=[])
+    assert html.index('localStorage.getItem("theme")') < html.index("--ease-out")
+    assert 'id="theme-toggle"' in html
+    # Without JavaScript the system setting still works, so the button stays out of the way.
+    assert re.search(r'id="theme-toggle"[^>]*hidden', html)
 
 
 def test_hidden_buttons_stay_hidden_despite_the_button_display_rule():

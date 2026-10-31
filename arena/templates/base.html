@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}LLM Arena{% endblock %}</title>
+<script>
+  // Before first paint, so a saved theme never flashes the other one.
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
 <style>
 {{ site_css }}
 </style>
@@ -16,8 +20,25 @@
     <a href="{{ url('index') }}">Leaderboards</a>
     <a href="{{ url('tournaments') }}">Tournaments</a>
     <a href="{{ url('matches') }}">Matches</a>
+    <button id="theme-toggle" type="button" aria-label="Switch between light and dark" hidden>Dark</button>
   </nav>
   {% block content %}{% endblock %}
 </main>
+<script>
+  // Instant on purpose: a colour change across a page of tables shouldn't animate.
+  (() => {
+    const root = document.documentElement;
+    const button = document.getElementById("theme-toggle");
+    const dark = () => (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    const label = () => { button.textContent = dark() ? "Light" : "Dark"; };
+    button.hidden = false;
+    label();
+    button.onclick = () => {
+      root.dataset.theme = dark() ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+      label();
+    };
+  })();
+</script>
 </body>
 </html>

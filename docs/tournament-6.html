@@ -4,28 +4,49 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tournament #6 · LLM Arena</title>
+<script>
+  // Before first paint, so a saved theme never flashes the other one.
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
 <style>
 /* Every page's styles, inlined by base.html so exported pages stay single files.
    Motion follows .claude/skills/emil-design-eng: stepping through a replay is instant, press
    feedback is short, and only the Play blind reveal is allowed to perform. */
 :root {
-  --bg: #f7f7f5; --surface: #ffffff; --fg: #1c1c1a; --muted: #6b6b66; --line: #deded8;
-  --accent: #1d4ed8; --x: #c2410c; --o: #1d4ed8; --bad: #b91c1c; --good: #15803d;
+  /* Parchment by day, moonlit by night. A test holds both palettes to WCAG AA contrast. */
+  color-scheme: light;
+  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #5a6270; --line: #dcd3c3;
+  --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
+  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(11, 107, 107, 0.1);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
+/* The two dark blocks must match: one follows the system, the other the toggle. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #161615; --surface: #1f1f1d; --fg: #ececea; --muted: #9a9a94; --line: #2e2e2b;
-    --accent: #60a5fa; --x: #fb923c; --o: #60a5fa; --bad: #f87171; --good: #4ade80;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
+    --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
   }
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
+    --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
 }
 
 /* Base */
 * { box-sizing: border-box; }
 [hidden] { display: none !important; } /* or `button { display }` beats it */
 body {
-  margin: 0; background: var(--bg); color: var(--fg);
+  margin: 0; color: var(--fg); min-height: 100vh;
   font: 15px/1.5 ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(52rem 30rem at 88% -6rem, var(--glow-a), transparent 70%),
+    radial-gradient(46rem 28rem at -6% 8rem, var(--glow-b), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
 }
 main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
 a { color: inherit; }
@@ -45,13 +66,16 @@ nav {
 }
 nav a { text-decoration: none; }
 nav .brand { font-weight: 700; margin-right: auto; }
+#theme-toggle { padding: 2px 10px; font-size: 13px; }
 .page-head { margin-bottom: 20px; }
 .page-head p { margin: 4px 0 0; color: var(--muted); }
 .jump { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; }
 .jump a { color: var(--muted); }
 
 /* Tables. Numbers line up; player ids wrap rather than stretching a column. */
-.wrap { overflow-x: auto; }
+.wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.wrap tr:last-child td { border-bottom: 0; }
+.ww .wrap { background: var(--surface); }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-weight: 600; font-size: 13px; color: var(--muted); white-space: nowrap; }
@@ -76,7 +100,7 @@ button, .btn {
 }
 button:active:not(:disabled), .btn:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: default; }
-.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: 600; }
+.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
 .controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
 .controls input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
 summary { cursor: pointer; color: var(--muted); }
@@ -126,9 +150,32 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 .seat.dead { color: var(--muted); text-decoration: line-through; }
 .seat.dead small { display: inline-block; }
 .said { margin: 4px 0; }
-tr.wolf td { color: var(--bad); font-weight: 600; }
-tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms); }
-@keyframes unmask { from { opacity: 0; transform: translateY(4px); } }
+
+/* The reveal: each seat is a card that turns over. It runs once per game, which is what earns
+   the 420ms; nothing waits on it, and the text is real text from the first frame. */
+.cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px;
+  margin: 16px 0; perspective: 900px;
+}
+.card {
+  position: relative; display: grid; min-height: 132px; transform-style: preserve-3d;
+  animation: flip 420ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms);
+}
+.face {
+  grid-area: 1 / 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface); backface-visibility: hidden; min-width: 0;
+}
+.face.front {
+  transform: rotateY(180deg); display: grid; place-items: center; color: var(--muted);
+  font-weight: 600; background: var(--bg);
+}
+.face.back b { display: block; font-size: 17px; text-transform: capitalize; }
+.face.back small { display: block; }
+.card.wolf .face.back { border-color: var(--bad); }
+.card.wolf .face.back b { color: var(--bad); }
+.card.seer .face.back b { color: var(--accent); }
+.card .pid { display: block; margin: 4px 0; font-size: 13px; }
+@keyframes flip { from { transform: rotateY(-180deg); } }
 
 @media (hover: hover) and (pointer: fine) {
   nav a:hover, .jump a:hover { text-decoration: underline; }
@@ -140,7 +187,9 @@ tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(
 }
 @media (prefers-reduced-motion: reduce) {
   button:active:not(:disabled), .btn:active { transform: none; }
-  @keyframes unmask { from { opacity: 0; } }
+  .card { animation-name: appear; animation-duration: 200ms; }
+  .face.front { display: none; }
+  @keyframes appear { from { opacity: 0; } }
 }
 
 </style>
@@ -152,6 +201,7 @@ tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(
     <a href="index.html">Leaderboards</a>
     <a href="tournaments.html">Tournaments</a>
     <a href="matches.html">Matches</a>
+    <button id="theme-toggle" type="button" aria-label="Switch between light and dark" hidden>Dark</button>
   </nav>
 <div class="page-head">
   <h1>Tournament #6</h1>
@@ -370,5 +420,21 @@ tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(
 </table></div>
 
 </main>
+<script>
+  // Instant on purpose: a colour change across a page of tables shouldn't animate.
+  (() => {
+    const root = document.documentElement;
+    const button = document.getElementById("theme-toggle");
+    const dark = () => (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    const label = () => { button.textContent = dark() ? "Light" : "Dark"; };
+    button.hidden = false;
+    label();
+    button.onclick = () => {
+      root.dataset.theme = dark() ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+      label();
+    };
+  })();
+</script>
 </body>
 </html>
