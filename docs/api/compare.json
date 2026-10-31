@@ -1,6 +1,38 @@
 {
  "models": [
   {
+   "model": "sonnet-5.5",
+   "players": [
+    "sonnet-5.5/ld-v1-think"
+   ],
+   "games": 40,
+   "won": 28,
+   "drew": 0,
+   "lost": 12,
+   "win_rate": 0.7,
+   "cost_usd": 1.23539,
+   "cost_per_game": 0.03088475,
+   "illegal_rate": 0.0,
+   "cache_hit": 0.7850676808366903,
+   "latency_ms": 3462.1775956284155
+  },
+  {
+   "model": "sonnet-5",
+   "players": [
+    "sonnet-5/ld-v1"
+   ],
+   "games": 40,
+   "won": 30,
+   "drew": 0,
+   "lost": 10,
+   "win_rate": 0.75,
+   "cost_usd": 1.18142,
+   "cost_per_game": 0.0295355,
+   "illegal_rate": 0.0,
+   "cache_hit": 0.0,
+   "latency_ms": 2296.067605633803
+  },
+  {
    "model": "haiku-5.5",
    "players": [
     "haiku-5.5/c4-v1",
@@ -93,6 +125,32 @@
   {
    "game": "liars_dice",
    "rows": [
+    {
+     "model": "sonnet-5.5",
+     "games": 40,
+     "won": 28,
+     "drew": 0,
+     "lost": 12,
+     "win_rate": 0.7,
+     "cost_usd": 1.23539,
+     "cost_per_game": 0.03088475,
+     "illegal_rate": 0.0,
+     "cache_hit": 0.7850676808366903,
+     "latency_ms": 3462.1775956284155
+    },
+    {
+     "model": "sonnet-5",
+     "games": 40,
+     "won": 30,
+     "drew": 0,
+     "lost": 10,
+     "win_rate": 0.75,
+     "cost_usd": 1.18142,
+     "cost_per_game": 0.0295355,
+     "illegal_rate": 0.0,
+     "cache_hit": 0.0,
+     "latency_ms": 2296.067605633803
+    },
     {
      "model": "haiku-5.5",
      "games": 20,

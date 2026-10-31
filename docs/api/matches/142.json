@@ -45,13 +45,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.001614,
    "latency_ms": 2591,
    "tokens": {
     "input_tokens": 1199,
     "output_tokens": 83,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -67,13 +69,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000105,
    "latency_ms": 2352,
    "tokens": {
     "input_tokens": 337,
     "output_tokens": 125,
     "cache_read_tokens": 919,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -95,13 +99,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.001755,
    "latency_ms": 2565,
    "tokens": {
     "input_tokens": 1305,
     "output_tokens": 90,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -117,13 +123,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000122,
    "latency_ms": 2152,
    "tokens": {
     "input_tokens": 493,
     "output_tokens": 127,
     "cache_read_tokens": 916,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -145,13 +153,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.001916,
    "latency_ms": 2762,
    "tokens": {
     "input_tokens": 1421,
     "output_tokens": 99,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -167,13 +177,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.001915,
    "latency_ms": 2127,
    "tokens": {
     "input_tokens": 1480,
     "output_tokens": 87,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -189,13 +201,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000135,
    "latency_ms": 2062,
    "tokens": {
     "input_tokens": 718,
     "output_tokens": 108,
     "cache_read_tokens": 920,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -217,13 +231,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000157,
    "latency_ms": 2587,
    "tokens": {
     "input_tokens": 785,
     "output_tokens": 138,
     "cache_read_tokens": 919,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -245,13 +261,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002162,
    "latency_ms": 2653,
    "tokens": {
     "input_tokens": 1667,
     "output_tokens": 99,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -267,13 +285,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000177,
    "latency_ms": 3210,
    "tokens": {
     "input_tokens": 963,
     "output_tokens": 144,
     "cache_read_tokens": 916,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -295,13 +315,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002275,
    "latency_ms": 2671,
    "tokens": {
     "input_tokens": 1805,
     "output_tokens": 94,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -317,13 +339,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002299,
    "latency_ms": 2379,
    "tokens": {
     "input_tokens": 1859,
     "output_tokens": 88,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -339,13 +363,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000193,
    "latency_ms": 2026,
    "tokens": {
     "input_tokens": 1207,
     "output_tokens": 127,
     "cache_read_tokens": 920,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -367,13 +393,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002444,
    "latency_ms": 2747,
    "tokens": {
     "input_tokens": 1984,
     "output_tokens": 92,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -389,13 +417,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002304,
    "latency_ms": 1616,
    "tokens": {
     "input_tokens": 2054,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -411,13 +441,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000281,
    "latency_ms": 3104,
    "tokens": {
     "input_tokens": 1374,
     "output_tokens": 54,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 932
+    "cache_write_tokens": 932,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -433,13 +465,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.0023,
    "latency_ms": 1854,
    "tokens": {
     "input_tokens": 2050,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -455,13 +489,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000174,
    "latency_ms": 2529,
    "tokens": {
     "input_tokens": 1374,
     "output_tokens": 54,
     "cache_read_tokens": 929,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -477,13 +513,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002298,
    "latency_ms": 2283,
    "tokens": {
     "input_tokens": 2048,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -499,13 +537,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002296,
    "latency_ms": 2295,
    "tokens": {
     "input_tokens": 2046,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -521,13 +561,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000174,
    "latency_ms": 2385,
    "tokens": {
     "input_tokens": 1374,
     "output_tokens": 54,
     "cache_read_tokens": 933,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -543,13 +585,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002374,
    "latency_ms": 2482,
    "tokens": {
     "input_tokens": 2124,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -565,13 +609,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.00029,
    "latency_ms": 2338,
    "tokens": {
     "input_tokens": 1460,
     "output_tokens": 55,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 932
+    "cache_write_tokens": 932,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -587,13 +633,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000232,
    "latency_ms": 2703,
    "tokens": {
     "input_tokens": 1467,
     "output_tokens": 153,
     "cache_read_tokens": 916,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -615,13 +663,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002674,
    "latency_ms": 2574,
    "tokens": {
     "input_tokens": 2209,
     "output_tokens": 93,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -637,13 +687,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000241,
    "latency_ms": 1959,
    "tokens": {
     "input_tokens": 1678,
     "output_tokens": 129,
     "cache_read_tokens": 920,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": [
     {
@@ -665,13 +717,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.002892,
    "latency_ms": 2912,
    "tokens": {
     "input_tokens": 2357,
     "output_tokens": 107,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -687,13 +741,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000272,
    "latency_ms": 2245,
    "tokens": {
     "input_tokens": 1835,
     "output_tokens": 158,
     "cache_read_tokens": 919,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -709,13 +765,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.00302,
    "latency_ms": 2455,
    "tokens": {
     "input_tokens": 2495,
     "output_tokens": 105,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -731,13 +789,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000282,
    "latency_ms": 2195,
    "tokens": {
     "input_tokens": 2059,
     "output_tokens": 134,
     "cache_read_tokens": 920,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -753,13 +813,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.003237,
    "latency_ms": 2762,
    "tokens": {
     "input_tokens": 2657,
     "output_tokens": 116,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -775,13 +837,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000307,
    "latency_ms": 2095,
    "tokens": {
     "input_tokens": 2232,
     "output_tokens": 149,
     "cache_read_tokens": 919,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -797,13 +861,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000321,
    "latency_ms": 2306,
    "tokens": {
     "input_tokens": 2340,
     "output_tokens": 156,
     "cache_read_tokens": 916,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -819,13 +885,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.003165,
    "latency_ms": 1915,
    "tokens": {
     "input_tokens": 2915,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -841,13 +909,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000389,
    "latency_ms": 2350,
    "tokens": {
     "input_tokens": 2460,
     "output_tokens": 54,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 926
+    "cache_write_tokens": 926,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -863,13 +933,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000388,
    "latency_ms": 2288,
    "tokens": {
     "input_tokens": 2460,
     "output_tokens": 54,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 923
+    "cache_write_tokens": 923,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -885,13 +957,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.003142,
    "latency_ms": 2319,
    "tokens": {
     "input_tokens": 2892,
     "output_tokens": 50,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 0
+    "cache_write_tokens": 0,
+    "thinking_tokens": 0
    },
    "claims": []
   },
@@ -907,13 +981,15 @@
    "attempts": 1,
    "error": null,
    "rejections": [],
+   "stop_reasons": [],
    "cost_usd": 0.000391,
    "latency_ms": 2494,
    "tokens": {
     "input_tokens": 2480,
     "output_tokens": 54,
     "cache_read_tokens": 0,
-    "cache_write_tokens": 927
+    "cache_write_tokens": 927,
+    "thinking_tokens": 0
    },
    "claims": []
   }

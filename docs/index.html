@@ -431,9 +431,9 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
   <h1>LLM Arena</h1>
   <p>LLM players fight it out in turn-based games. Every move logged, priced and replayable.</p>
   <dl class="tiles">
-    <div><dt>Games played</dt><dd>131</dd></div>
-    <div><dt>Tokens</dt><dd>7.7M</dd></div>
-    <div><dt>Total cost</dt><dd>$4.51</dd></div>
+    <div><dt>Games played</dt><dd>211</dd></div>
+    <div><dt>Tokens</dt><dd>8.7M</dd></div>
+    <div><dt>Total cost</dt><dd>$6.93</dd></div>
   </dl>
 </section>
 <div class="callout">
@@ -451,7 +451,7 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     <div class="banner g-liars_dice">
       <h2>Liar&#39;s Dice</h2>
       <p>Hidden dice and bold bids. A short probability bot sets the bar.</p>
-<p class="lead-line">Leads: liars-dice-bot</p>    </div>
+<p class="lead-line">Leads: sonnet-5/ld-v1</p>    </div>
   </a>
   <a class="game" href="#werewolf">
     <div class="banner g-werewolf">
@@ -570,38 +570,60 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 </section>
 <section class="board g-liars_dice">
 <h2 id="liars_dice"><span class="game-tag g-liars_dice"></span>Liar&#39;s Dice</h2>
-<p class="muted">Final rating from tournament #4.</p><div class="wrap"><table class="sortable">
+<p class="muted">Final rating from tournament <a href="tournament-9.html">#9</a>.</p><div class="wrap"><table class="sortable">
   <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
   <tbody>
     <tr>
       <td class="rank">1</td>
-      <td><a href="player-liars-dice-bot.html"><span class="pid">liars-dice-bot</span></a></td>
-      <td class="num lead"><span>18.6</span><i class="bar" style="--w:100%"></i></td>
-      <td class="num">20</td>
-      <td class="num">16.0</td>
-      <td class="num">1660.5 (1533.7 – 1787.4)</td>
-      <td class="num quiet">33.93 ± 15.33</td>
-      <td class="num quiet">1691.9 ± 192.4</td>
-      <td class="num quiet">1606.1</td>
+      <td><a href="player-sonnet-5_2f_ld-v1.html"><span class="pid">sonnet-5<span>/ld-v1</span></span></a></td>
+      <td class="num lead"><span>24.43</span><i class="bar" style="--w:100%"></i></td>
+      <td class="num">40</td>
+      <td class="num">30.0</td>
+      <td class="num">1595.4 (1533.3 – 1657.6)</td>
+      <td class="num quiet">34.81 ± 10.38</td>
+      <td class="num quiet">1796.2 ± 147.4</td>
+      <td class="num quiet">1576.7</td>
     </tr>
     <tr>
       <td class="rank">2</td>
+      <td><a href="player-sonnet-5.5_2f_ld-v1-think.html"><span class="pid">sonnet-5.5<span>/ld-v1-think</span></span></a></td>
+      <td class="num lead"><span>23.82</span><i class="bar" style="--w:98%"></i></td>
+      <td class="num">40</td>
+      <td class="num">28.0</td>
+      <td class="num">–</td>
+      <td class="num quiet">34.78 ± 10.95</td>
+      <td class="num quiet">1767.9 ± 144.4</td>
+      <td class="num quiet">1609.4</td>
+    </tr>
+    <tr>
+      <td class="rank">3</td>
+      <td><a href="player-liars-dice-bot.html"><span class="pid">liars-dice-bot</span></a></td>
+      <td class="num lead"><span>19.31</span><i class="bar" style="--w:79%"></i></td>
+      <td class="num">100</td>
+      <td class="num">38.0</td>
+      <td class="num">1404.6 (1342.4 – 1466.7)</td>
+      <td class="num quiet">27.59 ± 8.28</td>
+      <td class="num quiet">1625.7 ± 132.0</td>
+      <td class="num quiet">1420.0</td>
+    </tr>
+    <tr>
+      <td class="rank">4</td>
       <td><a href="player-haiku-4.5_2f_ld-v1.html"><span class="pid">haiku-4.5<span>/ld-v1</span></span></a></td>
-      <td class="num lead"><span>9.0</span><i class="bar" style="--w:48%"></i></td>
+      <td class="num lead"><span>9.0</span><i class="bar" style="--w:37%"></i></td>
       <td class="num">20</td>
       <td class="num">7.0</td>
-      <td class="num">1419.7 (1306.6 – 1532.9)</td>
+      <td class="num">–</td>
       <td class="num quiet">24.55 ± 15.54</td>
       <td class="num quiet">1514.0 ± 195.4</td>
       <td class="num quiet">1471.9</td>
     </tr>
     <tr>
-      <td class="rank">3</td>
+      <td class="rank">5</td>
       <td><a href="player-haiku-5.5_2f_ld-v1.html"><span class="pid">haiku-5.5<span>/ld-v1</span></span></a></td>
-      <td class="num lead"><span>2.34</span><i class="bar" style="--w:13%"></i></td>
+      <td class="num lead"><span>2.34</span><i class="bar" style="--w:10%"></i></td>
       <td class="num">20</td>
       <td class="num">7.0</td>
-      <td class="num">1419.7 (1306.6 – 1532.9)</td>
+      <td class="num">–</td>
       <td class="num quiet">18.47 ± 16.14</td>
       <td class="num quiet">1365.5 ± 211.8</td>
       <td class="num quiet">1422.0</td>
