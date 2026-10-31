@@ -22,7 +22,7 @@ Optimise for correctness and clear failure semantics over features.
 | OpenAI adapter | Done, tested against canned HTTP responses. **Never called for real**: no key yet, so OpenAI players are optional. |
 | Postgres schema, queue + leases, fenced turn writes, worker, budget cap | Done, integration-tested on Postgres 16 (`tests/test_store_db.py`) |
 | JSON API + Jinja2 pages (leaderboards, tournaments, matches, replay stepping, live view over SSE), static export | Done |
-| Ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
+| Live ratings (Weng-Lin on every match, Elo + Glicko-2 heads-up) in the completion transaction, final ratings (Bradley-Terry per tournament), tournament completion, graceful shutdown, metrics endpoint, cross-process rate limit | Done, db-tested |
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer. **No real model has played it.** |
@@ -88,7 +88,7 @@ arena/
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
-  costs.py, ratings/{elo,glicko2,weng_lin}.py, cli.py, config.py
+  costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
   tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
 migrations/             forward-only SQL, applied in filename order
 ```
@@ -389,6 +389,25 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   Haiku 5.5 hit 64%, so with its 10x prices it cost 19x as much. All 56 rejected attempts
   were "column 3 is full", though the prompt lists legal columns. `max_tokens = 256` was
   enough: every recorded reply had a tool call.
+- First real Liar's Dice run (tournament 4, 30 matches, $0.2833): the probability bot went
+  16-4, and the Haikus finished level at 7-13 (5-5 head to head, 2-8 each against the bot).
+  No illegal moves in 351 attempts. Haiku 5.5 hit 71% cache, Haiku 4.5 0%, 22x the cost.
+  From the turn log, Haiku 5.5 / Haiku 4.5 / the bot: bids impossible given their own dice
+  1 of 100 / 0 of 102 / 0 of 95; challenges of a bid their own dice already proved true
+  15 of 68 (22%) / 12 of 81 (15%) / 0 of 63; challenges won 18% / 14% / 35%. Losing
+  challenges, not wild bids, are where the models give up dice.
+- Live ratings depend on play order, and that run proved how much: pairings played as blocks
+  put Haiku 4.5 148 Glicko points above Haiku 5.5 on identical records. Over 200 random
+  orders of the same 30 results the gap averaged -0.2 (sd 64, p5 -100, p95 +98), split
+  104/96, and the real order beat 99% of them. Weng-Lin ordinal: +6.66 against mean 0 (sd
+  2.9). So `create_round_robin` now shuffles matches (seeded), and final ratings exist.
+- Final ratings (`ratings/bradley_terry.py`, `store.ratings.final_ratings`): a maximum-
+  likelihood fit to one finished tournament, computed on read, no table. The leaderboard
+  shows the game's latest heads-up tournament and still ranks by live ordinal, because not
+  every player has a final rating. Heads-up only; a table of N isn't N-1 independent
+  games. No finite MLE exists if the win graph isn't strongly connected (anyone unbeaten
+  or winless), and then there's no final rating rather than one invented by a prior.
+  Finals average 1500 within their tournament, so never compare them across tournaments.
 - `turns.rejections` holds every rejected attempt of a turn; `error` stays as the last
   reason, including when a retry succeeds. Rows from before migration 0007 are empty,
   except tournament 3, restored once from its recording.

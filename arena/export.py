@@ -19,7 +19,7 @@ import asyncpg
 
 from arena import web
 from arena.games.registry import list_games
-from arena.store import metrics, read
+from arena.store import metrics, ratings, read
 from arena.store.ratings import leaderboard
 
 # Flat on purpose: a page in a subdirectory would need "../" in front of every link.
@@ -71,6 +71,7 @@ async def export_site(pool: asyncpg.Pool, out: Path) -> ExportSummary:
     for t in tournaments:
         html = await web.tournament_page(pool, FILE_URLS, t["id"])
         page(FILE_URLS("tournament", id=t["id"]), html)
+        data(f"tournaments/{t['id']}/final.json", await ratings.final_ratings(pool, t["id"]))
     for match_id in await read.match_ids(pool):
         detail = await read.match_detail(pool, match_id)
         page(FILE_URLS("match", id=match_id), web.match_html(FILE_URLS, detail))

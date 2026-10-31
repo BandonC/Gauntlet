@@ -25,6 +25,7 @@ from arena.tournaments import (
     pair_counts,
     role_counts,
     round_robin,
+    shuffle_matches,
     swiss_pairings,
     swiss_seatings,
     table_schedule,
@@ -171,7 +172,8 @@ async def create_round_robin(
     seed: int | None = None,
 ) -> tuple[int, int]:
     """Returns (tournament_id, number_of_matches)."""
-    seatings = round_robin([p.id for p in players], games_per_pair)
+    seed = random.randrange(2**31) if seed is None else seed
+    seatings = shuffle_matches(round_robin([p.id for p in players], games_per_pair), seed)
     async with pool.acquire() as conn, conn.transaction():
         tid = await _insert_tournament(conn, game, "round_robin", players, budget_usd)
         await _insert_matches(conn, tid, game, seatings, random.Random(seed))
