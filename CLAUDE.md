@@ -425,6 +425,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   a colour and a pure-CSS pattern (`.banner.g-<game>::before`), so a new game needs one, plus
   `web.GAME_BLURBS`; tests check both. Text in `GAME_BLURBS` and the home page's rule-change
   section is hand-written, while its numbers are live.
+- Page wash: `--wash-1` to `--wash-3` colour the whole page in each theme, under the glows and
+  wallpaper; text is tested against all three, so a new wash must keep AA.
 - Page wallpaper: `body::before` masks a game's motif tile (`--tile-<game>`, SVG data URIs in
   `site.css`) over its colour; home mixes all four. A new game needs a tile and a body rule.
 - `read.match_detail` puts `claims` on each Werewolf turn for the reveal's truth overlay.

@@ -433,7 +433,7 @@ def _contrast(a, b):
 
 def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
     _, system, toggled = _palettes()
-    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 18
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 21
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
@@ -442,6 +442,14 @@ def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
 def test_every_palette_stays_readable(index, text, on):
     t = _tokens(_palettes()[index])
     assert _contrast(t[text], t[on]) >= 4.5
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize("wash", ["wash-1", "wash-2", "wash-3"])
+@pytest.mark.parametrize("text", ["fg", "muted", "link"])
+def test_text_stays_readable_on_every_colour_of_the_page_wash(index, wash, text):
+    t = _tokens(_palettes()[index])
+    assert _contrast(t[text], t[wash]) >= 4.5
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])

@@ -15,12 +15,14 @@
 :root {
   /* Parchment by day, moonlit by night. A test holds both palettes to WCAG AA contrast. */
   color-scheme: light;
-  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #5a6270; --line: #dcd3c3;
+  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #4d5563; --line: #dcd3c3;
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
   --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.28); --glow-b: rgba(0, 143, 134, 0.2);
   /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
   --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
-  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #1a5fb4;
+  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #1450a0;
+  /* The page wash, top left to bottom right. A test checks text against all three. */
+  --wash-1: #fbe3d0; --wash-2: #f6d4dc; --wash-3: #cfe0f2;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
   --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
@@ -38,6 +40,7 @@
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
+    --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
   }
 }
 :root[data-theme="dark"] {
@@ -47,6 +50,7 @@
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
+    --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
 }
 
 /* Base */
@@ -58,7 +62,7 @@ body {
   background:
     radial-gradient(52rem 30rem at 88% -6rem, var(--glow-a), transparent 70%),
     radial-gradient(46rem 28rem at -6% 8rem, var(--glow-b), transparent 70%),
-    var(--bg);
+    linear-gradient(150deg, var(--wash-1), var(--wash-2) 50%, var(--wash-3));
   background-attachment: fixed;
 }
 main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
