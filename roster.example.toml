@@ -167,3 +167,101 @@ price_input_per_mtok = 1.00
 price_output_per_mtok = 5.00
 price_cache_read_per_mtok = 0.1
 price_cache_write_per_mtok = 1.25
+
+# The same eight with the v2 prompts: v1 plus a limit on message length.
+
+[[players]]
+id = "haiku-5.5/ww-v2-plain"
+provider = "anthropic"
+model = "claude-haiku-5-5"
+prompt = "werewolf/v2-plain"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 0.10
+price_output_per_mtok = 0.50
+price_cache_read_per_mtok = 0.01
+price_cache_write_per_mtok = 0.125
+
+[[players]]
+id = "haiku-5.5/ww-v2-cautious"
+provider = "anthropic"
+model = "claude-haiku-5-5"
+prompt = "werewolf/v2-cautious"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 0.10
+price_output_per_mtok = 0.50
+price_cache_read_per_mtok = 0.01
+price_cache_write_per_mtok = 0.125
+
+[[players]]
+id = "haiku-5.5/ww-v2-aggressive"
+provider = "anthropic"
+model = "claude-haiku-5-5"
+prompt = "werewolf/v2-aggressive"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 0.10
+price_output_per_mtok = 0.50
+price_cache_read_per_mtok = 0.01
+price_cache_write_per_mtok = 0.125
+
+[[players]]
+id = "haiku-5.5/ww-v2-analytical"
+provider = "anthropic"
+model = "claude-haiku-5-5"
+prompt = "werewolf/v2-analytical"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 0.10
+price_output_per_mtok = 0.50
+price_cache_read_per_mtok = 0.01
+price_cache_write_per_mtok = 0.125
+
+[[players]]
+id = "haiku-4.5/ww-v2-plain"
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+prompt = "werewolf/v2-plain"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 1.00
+price_output_per_mtok = 5.00
+price_cache_read_per_mtok = 0.1
+price_cache_write_per_mtok = 1.25
+
+[[players]]
+id = "haiku-4.5/ww-v2-cautious"
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+prompt = "werewolf/v2-cautious"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 1.00
+price_output_per_mtok = 5.00
+price_cache_read_per_mtok = 0.1
+price_cache_write_per_mtok = 1.25
+
+[[players]]
+id = "haiku-4.5/ww-v2-aggressive"
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+prompt = "werewolf/v2-aggressive"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 1.00
+price_output_per_mtok = 5.00
+price_cache_read_per_mtok = 0.1
+price_cache_write_per_mtok = 1.25
+
+[[players]]
+id = "haiku-4.5/ww-v2-analytical"
+provider = "anthropic"
+model = "claude-haiku-4-5-20251001"
+prompt = "werewolf/v2-analytical"
+temperature = "omit"
+max_tokens = 512
+price_input_per_mtok = 1.00
+price_output_per_mtok = 5.00
+price_cache_read_per_mtok = 0.1
+price_cache_write_per_mtok = 1.25

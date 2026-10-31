@@ -32,7 +32,7 @@
 <h2>Werewolf roles</h2>
 <p class="muted">Roles shape results, so read ratings beside win rate by role. Claims are literal matches only: paraphrases are missed.</p>
 <div class="wrap"><table>
-  <thead><tr><th>Player</th><th class="num">Wolf</th><th class="num">Seer</th><th class="num">Villager</th><th class="num">True claims</th><th class="num">Bluffs</th><th class="num">Leaks</th><th class="num">Truncated</th></tr></thead>
+  <thead><tr><th>Player</th><th class="num">Wolf</th><th class="num">Seer</th><th class="num">Villager</th><th class="num">True claims</th><th class="num">Bluffs</th><th class="num">Leaks</th><th class="num">Truncated</th><th class="num">Forfeits</th></tr></thead>
   <tbody>
   {% for r in role_stats %}
     <tr>
@@ -44,6 +44,7 @@
       <td class="num">{{ r.false_claims }}</td>
       <td class="num">{{ r.leaks }}</td>
       <td class="num">{{ r.truncated_messages }}</td>
+      <td class="num">{{ r.forfeits }}</td>
     </tr>
   {% endfor %}
   </tbody>
