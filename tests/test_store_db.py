@@ -9,7 +9,6 @@ import json
 import math
 import os
 import re
-import time
 from collections import Counter
 from itertools import pairwise
 
@@ -430,13 +429,17 @@ async def test_postgres_bucket_never_grants_more_than_capacity_plus_refill(pool)
         rate,
     )
     grants: list[float] = []
-    t0 = time.monotonic()
+
+    async def server_clock() -> float:  # the bucket's own clock: Docker's can differ from ours
+        return await pool.fetchval("SELECT extract(epoch FROM now())::float8")
+
+    t0 = await server_clock()
 
     async def hammer():
         bucket = PostgresTokenBucket(pool, "v")  # one per task, like separate workers
-        while time.monotonic() - t0 < window:
+        while await server_clock() - t0 < window:
             await bucket.take()
-            grants.append(time.monotonic())
+            grants.append(await server_clock())
 
     await asyncio.gather(*(hammer() for _ in range(8)))
 

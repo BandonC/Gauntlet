@@ -54,7 +54,7 @@ arena worker --record recordings         # also append every model reply for fix
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # only those pages
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 ```
 
@@ -177,6 +177,8 @@ migrations/             forward-only SQL, applied in filename order
 - `thinking_mode = "between_tools"` is the lowest thinking setting on Sonnet 5.5 and a 400 on
   other current models, and at effort `xhigh` or `max`. Roster `effort` exists so that rule can
   be enforced; effort is a signal, not a limit, and no player set it when it was added.
+  It isn't an off switch: `disabled` is a 400, and in the real test games thinking tokens were 0
+  while reasoning came back as visible text beside the tool call, still billed as output.
 - `turns.stop_reasons` has one entry per attempt, in the provider's own words, so `max_tokens`
   (cut off) can be told from `end_turn` (skipped the tool). Turns from before it are empty.
 - `turns.reply_blocks` and recordings keep each attempt's content blocks: type, characters, and
@@ -526,6 +528,26 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   1 of 100 / 0 of 102 / 0 of 95; challenges of a bid their own dice already proved true
   15 of 68 (22%) / 12 of 81 (15%) / 0 of 63; challenges won 18% / 14% / 35%. Losing
   challenges, not wild bids, are where the models give up dice.
+- Sonnet Liar's Dice runs (2026-10-31, 40 games each against the bot, 0 rejected attempts, 0
+  forfeits, every `stop_reason` `tool_use`, spend reconciled with recordings): tournament 8,
+  `sonnet-5.5/ld-v1-think`, 28-12, 70% (interval 54.6-81.9%), $1.2354, 200.6 thinking tokens a
+  turn (p95 468, max 832, output max 924 of 1,024); tournament 9, `sonnet-5/ld-v1`, 30-10, 75%
+  (59.8-85.8%), $1.1814. Haikus in tournament 4: 4-16, 20% (8.1-41.6%), p = 0.0003 and 0.0001.
+  Sonnet 5.5 against Sonnet 5 is inconclusive (p = 0.80) and confounded: model and reasoning
+  changed together, on different seeds. Label it "Sonnet 5.5 with reasoning vs Sonnet 5 without
+  (different models)". Beating the bot partly reflects its policy: it challenged on 40-51% of its
+  turns and lost 145 of 166 and 176 of 262, so don't read these as general skill. Sonnet 5.5's
+  bids were true 92% of the time, Sonnet 5's 75%; Sonnet 5 challenged on 11 of 355 turns.
+  Challenges of a bid their own dice proved true: Sonnet 5.5 14 of 118 (12%), each with a legal
+  raise available, Sonnet 5 0 of 11; Haikus 15-22%. So reasoning didn't remove the blunder, and
+  the lower rate is unproven (p = 0.18 against both Haikus) as well as a different model.
+  Challenges won 22% / 27%, the bot 13% / 33%. Bids impossible 0 of 248 / 2 of 344.
+- `between_tools` game, 12 calls, recorded with reply blocks: every reply was text then tool
+  call, 49 to 1,015 characters, and text length explained output above the no-text baseline (r =
+  0.995), 117-487 tokens against about 95 with no text. So it can't give a no-reasoning Sonnet 5.5.
+- The challenge analysis isn't in the repo. Rebuild it by replaying each match with `iter_states`:
+  a challenge counts as proved true if the challenger's own dice meet the bid. Check any rebuild
+  against tournament 4's figures above.
 - First real Werewolf run (tournament 6, 40 tables of 7 from the 8 `ww-v2-*` players, $1.4761,
   25 minutes): wolves won 33 of 40, on 2 days (26) or 3 (14). Each player got exactly 10 wolf,
   5 seer and 20 villager games. Wolves won 90% on Haiku 5.5 and 75% on Haiku 4.5, seers 25% and
@@ -633,3 +655,5 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   Re-seeding keeps the current fill (clamped), so restarts don't grant a fresh burst.
   `max_concurrency` and retry-after pauses stay per process; `arena play` stays fully
   in-process. A vendor with no row raises rather than waiting forever.
+  `test_postgres_bucket_never_grants_more_than_capacity_plus_refill` times grants on Postgres's
+  `now()`, the bucket's own clock. On the local clock it failed once by 2 ms in a full run.

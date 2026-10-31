@@ -1,0 +1,12 @@
+{
+ "sonnet-5/ld-v1": {
+  "rating": 1595.4,
+  "low": 1533.3,
+  "high": 1657.6
+ },
+ "liars-dice-bot": {
+  "rating": 1404.6,
+  "low": 1342.4,
+  "high": 1466.7
+ }
+}
