@@ -677,6 +677,19 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     assert await web.tournament_page(pool, urls, 10**9) is None
 
 
+async def test_stop_reasons_survive_the_turn_log_one_per_attempt(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    store = PostgresTurnStore(pool, "w0")
+    reasons = ["max_tokens", None, "tool_use"]
+    turn = TurnRecord(
+        0, 0, {"column": 3}, False, 3, None, None, Usage(), 0.0, 5, stop_reasons=reasons
+    )
+    await store.append_turn(str(m.id), turn)
+    assert (await store.load_turns(str(m.id)))[0].stop_reasons == reasons
+    assert (await read.match_detail(pool, m.id))["turns"][0]["stop_reasons"] == reasons
+
+
 async def test_thinking_tokens_survive_the_turn_log_and_cost_is_stored_unchanged(pool):
     await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
     (m,) = await _claim_all(pool, 1)

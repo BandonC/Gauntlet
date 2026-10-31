@@ -1,6 +1,7 @@
 """Roster options for models that reject forced tool use, and thinking accounting."""
 
 import asyncio
+import contextlib
 import hashlib
 import json
 
@@ -160,3 +161,141 @@ async def test_recordings_keep_thinking_tokens_and_old_ones_still_load(tmp_path)
     replay = load_recording(path)
     assert (await replay.complete(REQ)).usage.thinking_tokens == 1
     assert (await replay.complete(REQ)).usage.thinking_tokens == 0
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"thinking_mode": "between_tools", "tool_choice": "auto"},
+        {"effort": "low"},
+        {"effort": "high", "tool_choice": "auto"},
+    ],
+)
+def test_a_new_setting_is_a_new_player_and_the_default_changes_nothing(extra):
+    plain = {k: v for k, v in extra.items() if k == "tool_choice"}
+    assert config_hash(PlayerConfig(**BASE, **extra)) != config_hash(PlayerConfig(**BASE, **plain))
+    assert config_hash(PlayerConfig(**BASE, thinking_mode="default")) == old_hash()
+
+
+def test_the_built_player_and_the_roster_agree_on_the_thinking_mode():
+    cfg = PlayerConfig(**BASE, tool_choice="auto", thinking_mode="between_tools", effort="low")
+    player = LLMPlayer(
+        "p",
+        MockProvider([], name="anthropic"),
+        "m",
+        PROMPT,
+        tool_choice="auto",
+        thinking_mode="between_tools",
+        effort="low",
+    )
+    assert player.config_hash == config_hash(cfg)
+
+
+@pytest.mark.parametrize("effort", ["xhigh", "max"])
+def test_between_tools_is_refused_at_the_top_effort_levels(effort):
+    with pytest.raises(ValueError, match="high or below"):
+        PlayerConfig(**BASE, tool_choice="auto", thinking_mode="between_tools", effort=effort)
+
+
+@pytest.mark.parametrize("effort", [None, "low", "medium", "high"])
+def test_between_tools_is_allowed_at_high_effort_or_below(effort):
+    PlayerConfig(**BASE, tool_choice="auto", thinking_mode="between_tools", effort=effort)
+
+
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        ({"thinking_mode": "between_tools"}, "needs tool_choice"),
+        (
+            {
+                "thinking_mode": "between_tools",
+                "tool_choice": "auto",
+                "thinking_budget": 1024,
+                "max_tokens": 2048,
+            },
+            "thinking_budget",
+        ),
+        ({"thinking_mode": "off"}, "thinking_mode must be"),
+        ({"effort": "extreme"}, "effort must be"),
+    ],
+)
+def test_the_roster_refuses_thinking_settings_that_cannot_work(extra, message):
+    with pytest.raises(ValueError, match=message):
+        PlayerConfig(**BASE, **extra)
+
+
+@pytest.mark.parametrize(
+    "extra", [{"thinking_mode": "between_tools", "tool_choice": "auto"}, {"effort": "low"}]
+)
+def test_the_new_settings_are_anthropic_only(extra):
+    with pytest.raises(ValueError, match="Anthropic only"):
+        PlayerConfig(id="p", provider="openai", model="m", prompt="liars_dice/v1", **extra)
+
+
+async def test_a_player_sends_its_thinking_mode_and_effort():
+    provider = MockProvider([Completion({"column": 3}, "", Usage())], name="anthropic")
+    player = LLMPlayer(
+        "p",
+        provider,
+        "m",
+        PROMPT,
+        tool_choice="auto",
+        thinking_mode="between_tools",
+        effort="low",
+    )
+    spec = ActionSpec("t", "d", {"type": "object"})
+    await player.act(TurnContext("Liar's Dice", 0, "rules", {}, "view", spec, None, 1, None))
+    sent = provider.requests[0]
+    assert (sent.thinking_mode, sent.effort) == ("between_tools", "low")
+
+
+async def first_turn(script, max_attempts=3):
+    """Plays one turn of Connect 4 from a scripted LLM, and returns its record."""
+    player = LLMPlayer("p", MockProvider(script, name="anthropic"), "m", load_prompt("connect4/v1"))
+    store = InMemoryTurnStore()
+    stop = asyncio.Event()
+
+    async def after_first_turn(*_):
+        stop.set()
+
+    runner = MatchRunner(
+        Connect4(),
+        [player, RandomPlayer("r", 1)],
+        store,
+        on_turn=after_first_turn,
+        max_attempts=max_attempts,
+    )
+    with contextlib.suppress(MatchInterrupted):  # a forfeit ends the game before the stop
+        await runner.run(MatchSpec("1", "connect4", 1, ["llm", "r"]), stop)
+    return store.turns["1"][0]
+
+
+async def test_a_reply_cut_off_can_be_told_from_one_that_skipped_the_tool():
+    cut = Completion(None, "", Usage(10, 1024, 0, 0, 1000), "max_tokens")
+    skipped = Completion(None, "column 3", Usage(10, 5), "end_turn")
+    move = Completion({"column": 3}, "", Usage(10, 20), "tool_use")
+    turn = await first_turn([cut, skipped, move])
+    assert turn.stop_reasons == ["max_tokens", "end_turn", "tool_use"]
+    assert turn.attempts == 3 and not turn.forfeited
+
+
+async def test_a_forfeit_keeps_the_stop_reason_of_every_attempt():
+    cut = Completion(None, "", Usage(10, 1024), "max_tokens")
+    turn = await first_turn([cut, cut, cut])
+    assert turn.forfeited and turn.stop_reasons == ["max_tokens"] * 3
+
+
+async def test_a_provider_that_reports_no_stop_reason_records_a_null():
+    turn = await first_turn([Completion({"column": 3}, "", Usage())])
+    assert turn.stop_reasons == [None]
+
+
+async def test_recordings_keep_the_stop_reason_and_old_ones_load_without_it(tmp_path):
+    path = tmp_path / "r.jsonl"
+    done = Completion({"column": 3}, "", Usage(1, 2), "max_tokens")
+    await RecordingProvider(MockProvider([done]), path).complete(REQ)
+    with path.open("a") as f:
+        f.write(json.dumps({"tool_input": None, "raw_text": "", "usage": {}}) + "\n")
+    replay = load_recording(path)
+    assert (await replay.complete(REQ)).stop_reason == "max_tokens"
+    assert (await replay.complete(REQ)).stop_reason is None

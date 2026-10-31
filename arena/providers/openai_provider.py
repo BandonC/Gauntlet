@@ -80,7 +80,12 @@ class OpenAIProvider:
             output_tokens=u.completion_tokens if u else 0,
             cache_read_tokens=cached,
         )
-        return Completion(tool_input=tool_input, raw_text=raw, usage=usage)
+        return Completion(
+            tool_input=tool_input,
+            raw_text=raw,
+            usage=usage,
+            stop_reason=resp.choices[0].finish_reason,
+        )
 
 
 def _retry_after(e: openai.APIStatusError) -> float | None:

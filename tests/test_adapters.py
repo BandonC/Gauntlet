@@ -124,6 +124,32 @@ async def test_anthropic_reply_of_only_thinking_is_no_action():
     assert out.tool_input is None and out.raw_text == ""
 
 
+async def test_anthropic_between_tools_is_sent_and_nothing_else_about_thinking():
+    seen, _ = await send(
+        replace(REQ, tool_choice="auto", thinking_mode="between_tools"), [TOOL_USE]
+    )
+    assert seen["thinking"] == {"type": "between_tools"} and "output_config" not in seen
+
+
+async def test_anthropic_effort_is_sent_in_output_config():
+    seen, _ = await send(replace(REQ, effort="low"), [TOOL_USE])
+    assert seen["output_config"] == {"effort": "low"} and "thinking" not in seen
+
+
+@pytest.mark.parametrize("reason", ["tool_use", "max_tokens", "end_turn", "refusal"])
+async def test_anthropic_stop_reason_is_kept_as_the_api_said_it(reason):
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        reply = anthropic_reply([{"type": "text", "text": "x"}])
+        body = json.loads(reply.content) | {"stop_reason": reason}
+        seen["sent"] = request
+        return httpx.Response(200, json=body)
+
+    out = await AnthropicProvider(api_key="k", http_client=client(handler)).complete(REQ)
+    assert out.stop_reason == reason
+
+
 async def test_anthropic_429_is_retryable_with_retry_after():
     def handler(request):
         return httpx.Response(
