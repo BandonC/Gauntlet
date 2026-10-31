@@ -180,4 +180,6 @@ function initReplay(doc) {
 }
 
 if (typeof document !== "undefined") initReplay(document);
+RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+
 if (typeof module !== "undefined") module.exports = { RENDERERS, renderFrame, describeTurn, esc, initReplay };

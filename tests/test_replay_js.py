@@ -11,7 +11,7 @@ import pytest
 
 from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
-from arena.games.werewolf import Werewolf
+from arena.games.werewolf import Werewolf, WerewolfDayFirst
 from arena.web import REPLAY_JS
 
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
@@ -158,8 +158,8 @@ def test_stepping_controls_move_through_frames_and_highlight_turn_rows():
     assert out["info"] == "Start of the match"  # play restarted from frame 0, then paused
 
 
-def werewolf_frames(seed: int):
-    game = Werewolf()
+def werewolf_frames(seed: int, game=None):
+    game = game or Werewolf()
     rng = random.Random(seed)
     s = game.initial_state(7, seed)
     frames = [game.spectator_view(s)]
@@ -184,6 +184,15 @@ def test_werewolf_frames_render_roles_talk_and_the_result_escaped():
     assert "killed at night" in html
     assert " win" in out["frames"][-1]
     assert "(truncated)" in out["turns"][0]
+
+
+def test_day_first_frames_open_on_day_one_with_the_werewolf_renderer():
+    frames = werewolf_frames(4, WerewolfDayFirst())
+    seats = [f"p{i}" for i in range(7)]
+    out = node(RENDER, {"game": "werewolf_dayfirst", "frames": frames, "seats": seats, "turns": []})
+    assert "Day 1" in out["frames"][0] and "discussion round" in out["frames"][0]
+    assert "Night 1" not in "".join(out["frames"]) and "Night 2" in "".join(out["frames"])
+    assert " win" in out["frames"][-1]
 
 
 LIVE = """

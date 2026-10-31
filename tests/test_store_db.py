@@ -880,6 +880,27 @@ def detail_roles(rows, detail):
     return next(r["options"]["roles"] for r in rows if list(r["seats"]) == detail["seats"])
 
 
+async def test_a_day_first_tournament_runs_rates_apart_and_keeps_its_role_metrics(pool):
+    tid, n = await create_tables(pool, "werewolf_dayfirst", WW[:8], 7, 8, budget_usd=None, seed=2)
+    assert n == 8
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    assert await tournament_status(pool, tid) == "completed"
+
+    games = await pool.fetch("SELECT DISTINCT game FROM ratings")
+    assert [r["game"] for r in games] == ["werewolf_dayfirst"]
+    assert len(await leaderboard(pool, "werewolf_dayfirst")) == 8
+    assert await leaderboard(pool, "werewolf") == []
+
+    stats = await werewolf_metrics(pool, tid)  # silently empty if the game id isn't included
+    assert sum(s["wolf_games"] + s["seer_games"] + s["villager_games"] for s in stats) == 8 * 7
+    assert sum(s["true_claims"] + s["false_claims"] for s in stats) > 0
+
+    mid = await pool.fetchval("SELECT min(id) FROM matches WHERE tournament_id = $1", tid)
+    detail = await read.match_detail(pool, mid)
+    assert detail["frames"][0]["phase"] == "discussion" and len(detail["frames"][0]["alive"]) == 7
+    assert "says:" in await web.match_page(pool, web.Urls(), mid)
+
+
 async def test_a_single_werewolf_table_seats_all_seven_and_finishes_the_tournament(pool):
     tid, n = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=3)
     assert n == 1

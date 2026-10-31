@@ -18,11 +18,11 @@ from arena.balance import (
 from arena.engine import InMemoryTurnStore, MatchRunner, MatchSpec
 from arena.engine.match_runner import iter_states
 from arena.games.registry import get_game
-from arena.games.werewolf import ROLES, SEATS, SEER, VILLAGER, WOLF, Werewolf
+from arena.games.werewolf import ROLES, SEATS, SEER, VILLAGER, WOLF
 from arena.players.bots import AccuracyVoteBot, build_bot
 
-G = Werewolf()
 GAMES = 400
+DAY_FIRST = VARIANTS[1]
 
 
 def test_the_current_ruleset_is_the_engines():
@@ -52,6 +52,7 @@ def test_a_vote_is_legal_for_every_seat():
             assert target != seat
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("focus", [0.0, 0.5, 1.0])
 def test_focus_leaves_a_voters_accuracy_at_p(focus):
     roles, alive = list(ROLES), list(range(SEATS))
@@ -75,7 +76,8 @@ def test_focus_lines_votes_up():
     assert matching(1.0) > matching(0.0) * 2
 
 
-def test_a_certain_village_always_wins_and_a_blind_one_mostly_loses():
+@pytest.mark.slow
+def test_a_certain_village_always_wins_and_a_blind_one_always_loses():
     assert simulate(CURRENT, 300, p=1.0, focus=1.0).village_rate == 1.0
     assert simulate(CURRENT, 300, p=0.0, focus=1.0).village_rate == 0.0
 
@@ -90,27 +92,59 @@ def test_a_doctor_never_protects_itself_twice_running():
     assert protect(rng, [2, 4], 2, 2) == 4
 
 
+@pytest.mark.slow
 def test_a_doctor_adds_a_night_turn():
     assert simulate(Ruleset("d", doctor=True), 300).mean_turns > simulate(CURRENT, 300).mean_turns
 
 
-async def engine_game(seed, p, focus):
-    roles = list(G.initial_state(SEATS, seed).roles)
+async def engine_game(game, seed, p, focus):
+    roles = list(game.initial_state(SEATS, seed).roles)
     players = [AccuracyVoteBot(f"b{s}", seed, roles, p, focus) for s in range(SEATS)]
-    spec = MatchSpec(f"sim{seed}", "werewolf", seed, [q.player_id for q in players])
-    out = await MatchRunner(get_game("werewolf"), players, InMemoryTurnStore()).run(spec)
-    *_, final = iter_states(G, spec, out.turns)
+    spec = MatchSpec(f"sim{seed}", game.name, seed, [q.player_id for q in players])
+    out = await MatchRunner(game, players, InMemoryTurnStore()).run(spec)
+    *_, final = iter_states(game, spec, out.turns)
     return final.winner == "village", len(out.turns)
 
 
-@pytest.mark.parametrize("focus", [0.0, 0.7])
-async def test_the_simulator_matches_the_real_engine(focus):
-    played = [await engine_game(seed, DEFAULT_P, focus) for seed in range(GAMES)]
+def test_smoke_a_few_games_of_every_variant():
+    for rules in VARIANTS:
+        r = simulate(rules, 20, focus=0.7)
+        assert r.games == sum(r.first_vote.values()) == 20 and r.mean_turns > 15
+
+
+async def test_smoke_the_bot_finishes_a_real_game():
+    for name in ("werewolf", "werewolf_dayfirst"):
+        _, turns = await engine_game(get_game(name), 1, DEFAULT_P, 0.7)
+        assert turns > 15
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("name", "rules", "focus"),
+    [
+        ("werewolf", CURRENT, 0.0),
+        ("werewolf", CURRENT, 0.7),
+        ("werewolf_dayfirst", DAY_FIRST, 0.0),
+        ("werewolf_dayfirst", DAY_FIRST, 0.7),
+    ],
+)
+async def test_the_simulator_matches_the_real_engine(name, rules, focus):
+    game = get_game(name)
+    played = [await engine_game(game, seed, DEFAULT_P, focus) for seed in range(GAMES)]
     wins = sum(won for won, _ in played) / GAMES
     turns = sum(t for _, t in played) / GAMES
-    sim = simulate(CURRENT, GAMES * 5, DEFAULT_P, focus)
+    sim = simulate(rules, 2000, DEFAULT_P, focus)
     assert wins == pytest.approx(sim.village_rate, abs=0.06)
     assert turns == pytest.approx(sim.mean_turns, abs=1.0)
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("rules", "rate"), [(CURRENT, 0.224), (DAY_FIRST, 0.414)], ids=["current", "day-first"]
+)
+def test_the_published_predictions_still_hold(rules, rate):
+    # Seeded, so these are exact: the numbers quoted when day-first was chosen.
+    assert simulate(rules, 2000, DEFAULT_P, 0.7).village_rate == pytest.approx(rate, abs=0.0006)
 
 
 @pytest.mark.parametrize("kind", ["accuracy", "accuracy_vote"])
