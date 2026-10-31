@@ -1,8 +1,9 @@
 {% extends "base.html" %}
-{% from "_macros.html" import match_table, player %}
+{% from "_macros.html" import match_table, player, waffle %}
+{% set active = "tournaments" %}
 {% block title %}Tournament #{{ t.id }} · LLM Arena{% endblock %}
 {% block content %}
-<div class="page-head">
+<div class="page-head banner g-{{ t.game }}">
   <h1>Tournament #{{ t.id }}</h1>
   <p>{{ t.game | game_name }} · {{ t.format }}{% if t.rounds %}, round {{ t.current_round }} of {{ t.rounds }}{% endif %}</p>
 </div>
@@ -14,6 +15,7 @@
   {% if tally %}<div><dt>Results</dt><dd>{{ tally }}</dd></div>{% endif %}
   {% if t.last_error %}<div><dt>Paused because</dt><dd class="bad">{{ t.last_error }}</dd></div>{% endif %}
 </dl>
+{{ waffle(matches, url) }}
 {% if final %}
 <h2>Final ratings</h2>
 <p class="muted">Bradley-Terry fit to this tournament's results: order-independent, and comparable only within this tournament. Intervals are 95%, against the field.</p>

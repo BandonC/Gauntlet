@@ -18,6 +18,9 @@
   --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #5a6270; --line: #dcd3c3;
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
   --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(11, 107, 107, 0.1);
+  /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
+  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
+  --mark-wolf: #a8201a; --mark-village: #008f86;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 /* The two dark blocks must match: one follows the system, the other the toggle. */
@@ -27,6 +30,8 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397;
   }
 }
 :root[data-theme="dark"] {
@@ -34,6 +39,8 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397;
 }
 
 /* Base */
@@ -66,11 +73,115 @@ nav {
 }
 nav a { text-decoration: none; }
 nav .brand { font-weight: 700; margin-right: auto; }
-#theme-toggle { padding: 2px 10px; font-size: 13px; }
+nav .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; }
+nav .brand i { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset -6px 2px 0 0 var(--accent); }
+nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; text-decoration-color: var(--accent); }
+#theme-toggle {
+  width: 38px; height: 38px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center;
+  border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface);
+}
+#theme-toggle svg { width: 20px; height: 20px; }
+#theme-toggle[data-mode="dark"] .moon, #theme-toggle[data-mode="light"] .sun { display: none; }
 .page-head { margin-bottom: 20px; }
 .page-head p { margin: 4px 0 0; color: var(--muted); }
 .jump { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; }
 .jump a { color: var(--muted); }
+
+/* Game identity: one colour and one pattern per game, drawn from what the game is made of. */
+.g-connect4 { --g: var(--g-c4); }
+.g-liars_dice { --g: var(--g-dice); }
+.g-werewolf { --g: var(--g-ww); }
+.g-werewolf_dayfirst { --g: var(--g-df); }
+.banner {
+  position: relative; overflow: hidden; padding: 18px 20px; border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--g, var(--accent)) 45%, var(--line));
+  background: color-mix(in srgb, var(--g, var(--accent)) 12%, var(--surface));
+}
+/* Patterns stay out from behind words: faded away from the text, or in a band above it. */
+.banner::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.7;
+  mask-image: linear-gradient(100deg, transparent 38%, #000 78%);
+}
+.game .banner::before { mask-image: linear-gradient(to bottom, #000 30px, transparent 58px); }
+.banner > * { position: relative; }
+.banner.g-connect4::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--g) 42%, transparent) 36%, transparent 38%) 0 0 / 24px 24px;
+}
+.banner.g-liars_dice::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--g) 45%, transparent) 12%, transparent 14%) 0 0 / 30px 30px,
+    radial-gradient(circle, color-mix(in srgb, var(--g) 45%, transparent) 12%, transparent 14%) 15px 15px / 30px 30px,
+    radial-gradient(circle, color-mix(in srgb, var(--g) 22%, transparent) 12%, transparent 14%) 15px 0 / 30px 30px;
+}
+.banner.g-werewolf::before {
+  background:
+    radial-gradient(circle at 12% 30%, var(--g) 2px, transparent 2.6px),
+    radial-gradient(circle at 28% 70%, var(--g) 1.4px, transparent 2px),
+    radial-gradient(circle at 46% 22%, var(--g) 2.4px, transparent 3px),
+    radial-gradient(circle at 63% 62%, var(--g) 1.4px, transparent 2px),
+    radial-gradient(circle at 81% 38%, var(--g) 2px, transparent 2.6px),
+    radial-gradient(circle at 92% 78%, var(--g) 1.4px, transparent 2px);
+  background-size: 120px 58px;
+}
+.banner.g-werewolf::after {
+  content: ""; position: absolute; top: 14px; right: 18px; width: 46px; height: 46px; border-radius: 50%;
+  box-shadow: inset -13px 5px 0 0 color-mix(in srgb, var(--g) 70%, transparent); pointer-events: none;
+}
+.banner.g-werewolf_dayfirst::before {
+  background: repeating-conic-gradient(from 0deg at 100% 0%, color-mix(in srgb, var(--g) 26%, transparent) 0 5deg, transparent 5deg 13deg);
+}
+.banner.g-werewolf_dayfirst::after {
+  content: ""; position: absolute; top: -26px; right: -26px; width: 84px; height: 84px; border-radius: 50%;
+  background: color-mix(in srgb, var(--g) 65%, transparent); pointer-events: none;
+}
+.page-head.banner { padding-right: 84px; }
+.banner p { color: var(--fg); }
+
+/* The front door */
+.hero {
+  position: relative; overflow: hidden; padding: 30px 24px 24px; margin-bottom: 18px; border-radius: 12px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(115deg,
+      color-mix(in srgb, var(--g-c4) 24%, var(--surface)),
+      color-mix(in srgb, var(--g-dice) 22%, var(--surface)) 38%,
+      color-mix(in srgb, var(--g-ww) 24%, var(--surface)) 68%,
+      color-mix(in srgb, var(--g-df) 26%, var(--surface)));
+}
+.hero h1 { font-size: 40px; }
+.hero p { margin: 8px 0 0; font-size: 17px; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 20px 0 0; }
+.tiles dt { font-size: 13px; color: var(--muted); }
+.tiles dd { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.2; }
+.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 18px 0; }
+.game { display: block; text-decoration: none; padding: 0; transition: transform 160ms var(--ease-out); }
+.game .banner { height: 100%; min-height: 150px; padding: 58px 16px 14px; }
+.game .banner::after { top: 8px; right: 12px; }
+.game .banner.g-werewolf_dayfirst::after { top: -26px; right: -26px; }
+.game h2 { margin: 0 0 4px; }
+.game p { margin: 4px 0 0; font-size: 14px; }
+.game .lead-line { font-size: 13px; font-weight: 600; }
+.story { margin: 26px 0; }
+.story h2 { margin: 0; font-size: 21px; }
+.story > p { margin: 4px 0 14px; color: var(--muted); }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.panel { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.panel h3 { margin: 0 0 8px; color: var(--fg); font-size: 15px; }
+
+/* One square per game, grouped so the split reads at a glance. */
+.waffle { display: flex; flex-wrap: wrap; gap: 3px; margin: 8px 0; }
+.cell { width: 20px; height: 20px; border-radius: 4px; display: block; }
+.cell.wolves, .key.wolves::before, .chip.wolves::before { background: var(--mark-wolf); }
+.cell.village, .key.village::before, .chip.village::before { background: var(--mark-village); }
+.keys { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; }
+.key, .chip { display: inline-flex; align-items: center; gap: 6px; }
+.key::before, .chip::before { content: ""; width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.chip { font-weight: 600; }
+.game-tag { white-space: nowrap; }
+.game-tag::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; background: var(--g, var(--accent)); }
+
+/* A value with a thin bar beneath it, so a column reads as a shape. */
+.bar { display: block; height: 4px; margin-top: 4px; border-radius: 2px; width: var(--w); min-width: 2px; background: var(--g, var(--accent)); margin-left: auto; }
 
 /* Tables. Numbers line up; player ids wrap rather than stretching a column. */
 .wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
@@ -151,45 +262,34 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 .seat.dead small { display: inline-block; }
 .said { margin: 4px 0; }
 
-/* The reveal: each seat is a card that turns over. It runs once per game, which is what earns
-   the 420ms; nothing waits on it, and the text is real text from the first frame. */
-.cards {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px;
-  margin: 16px 0; perspective: 900px;
-}
+/* The reveal: one rare moment, so the cards may arrive in turn. Nothing waits on it. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 16px 0; }
 .card {
-  position: relative; display: grid; min-height: 132px; transform-style: preserve-3d;
-  animation: flip 420ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms);
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); min-width: 0;
+  animation: reveal 260ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms);
 }
-.face {
-  grid-area: 1 / 1; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px;
-  background: var(--surface); backface-visibility: hidden; min-width: 0;
-}
-.face.front {
-  transform: rotateY(180deg); display: grid; place-items: center; color: var(--muted);
-  font-weight: 600; background: var(--bg);
-}
-.face.back b { display: block; font-size: 17px; text-transform: capitalize; }
-.face.back small { display: block; }
-.card.wolf .face.back { border-color: var(--bad); }
-.card.wolf .face.back b { color: var(--bad); }
-.card.seer .face.back b { color: var(--accent); }
+.card b { display: block; font-size: 17px; text-transform: capitalize; }
+.card small { display: block; }
+.card.wolf { border-color: var(--bad); background: color-mix(in srgb, var(--mark-wolf) 12%, var(--surface)); }
+.card.seer { border-color: var(--accent); }
 .card .pid { display: block; margin: 4px 0; font-size: 13px; }
-@keyframes flip { from { transform: rotateY(-180deg); } }
+@keyframes reveal { from { opacity: 0; transform: translateY(6px); } }
 
 @media (hover: hover) and (pointer: fine) {
   nav a:hover, .jump a:hover { text-decoration: underline; }
   tbody tr:hover td { background: color-mix(in srgb, var(--line) 30%, transparent); }
+  .game:hover { transform: translateY(-2px); }
 }
 @media (max-width: 760px) {
   .ww { grid-template-columns: minmax(0, 1fr); }
   td.quiet, th.quiet { display: none; }
+  .hero h1 { font-size: 30px; }
+  .tiles dd { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) {
   button:active:not(:disabled), .btn:active { transform: none; }
-  .card { animation-name: appear; animation-duration: 200ms; }
-  .face.front { display: none; }
-  @keyframes appear { from { opacity: 0; } }
+  .game { transition: none; }
+  @keyframes reveal { from { opacity: 0; } }
 }
 
 </style>
@@ -197,11 +297,14 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 <body>
 <main>
   <nav>
-    <a class="brand" href="index.html">LLM Arena</a>
+    <a class="brand" href="index.html"><i aria-hidden="true"></i>LLM Arena</a>
     <a href="index.html">Leaderboards</a>
     <a href="tournaments.html">Tournaments</a>
-    <a href="matches.html">Matches</a>
-    <button id="theme-toggle" type="button" aria-label="Switch between light and dark" hidden>Dark</button>
+    <a href="matches.html" aria-current="page">Matches</a>
+    <button id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a.6.6 0 0 0-.8-.7 9.7 9.7 0 1 0 12.2 12.2.6.6 0 0 0-.7-.8z"/></svg>
+    </button>
   </nav>
 <div class="page-head"><h1>Recent matches</h1></div>
 <div class="wrap"><table>
@@ -209,12 +312,12 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
   <tbody>
     <tr>
       <td><a href="match-142.html">#142</a></td>
-<td>Werewolf (day-first)</td><td><span title="haiku-4.5/wwdf-v1-plain, haiku-5.5/wwdf-v1-aggressive, haiku-4.5/wwdf-v1-aggressive, haiku-5.5/wwdf-v1-plain, haiku-4.5/wwdf-v1-analytical, haiku-4.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-cautious">7 players</span></td>      <td>Village</td>
+<td><span class="game-tag g-werewolf_dayfirst">Werewolf (day-first)</span></td><td><span title="haiku-4.5/wwdf-v1-plain, haiku-5.5/wwdf-v1-aggressive, haiku-4.5/wwdf-v1-aggressive, haiku-5.5/wwdf-v1-plain, haiku-4.5/wwdf-v1-analytical, haiku-4.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-cautious">7 players</span></td>      <td><span class="chip village">Village</span></td>
 <td><a href="tournament-7.html">#7</a></td>      <td class="num">$0.0507</td>
     </tr>
     <tr>
       <td><a href="match-116.html">#116</a></td>
-<td>Werewolf (day-first)</td><td><span title="haiku-4.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-plain, haiku-5.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-aggressive, haiku-4.5/wwdf-v1-aggressive, haiku-5.5/wwdf-v1-analytical, haiku-4.5/wwdf-v1-plain">7 players</span></td>      <td>Wolves</td>
+<td><span class="game-tag g-werewolf_dayfirst">Werewolf (day-first)</span></td><td><span title="haiku-4.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-plain, haiku-5.5/wwdf-v1-cautious, haiku-5.5/wwdf-v1-aggressive, haiku-4.5/wwdf-v1-aggressive, haiku-5.5/wwdf-v1-analytical, haiku-4.5/wwdf-v1-plain">7 players</span></td>      <td><span class="chip wolves">Wolves</span></td>
 <td><a href="tournament-7.html">#7</a></td>      <td class="num">$0.0467</td>
     </tr>
   </tbody>
@@ -227,7 +330,10 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     const root = document.documentElement;
     const button = document.getElementById("theme-toggle");
     const dark = () => (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
-    const label = () => { button.textContent = dark() ? "Light" : "Dark"; };
+    const label = () => {
+      button.dataset.mode = dark() ? "dark" : "light";
+      button.setAttribute("aria-label", dark() ? "Switch to light mode" : "Switch to dark mode");
+    };
     button.hidden = false;
     label();
     button.onclick = () => {

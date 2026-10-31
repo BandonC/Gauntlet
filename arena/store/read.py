@@ -38,6 +38,21 @@ FROM matches m WHERE id = $1
 """
 
 
+TOTALS_SQL = """
+SELECT count(DISTINCT match_id) AS games,
+       coalesce(sum(input_tokens + output_tokens + cache_read_tokens + cache_write_tokens), 0)
+           AS tokens,
+       coalesce(sum(cost_usd), 0)::float AS cost_usd
+FROM turns WHERE cost_usd > 0
+"""
+
+
+async def totals(pool: asyncpg.Pool) -> dict:
+    """Games, tokens and spend with real models: free bot and random games don't count."""
+    row = await pool.fetchrow(TOTALS_SQL)
+    return {"games": row["games"], "tokens": int(row["tokens"]), "cost_usd": row["cost_usd"]}
+
+
 async def list_tournaments(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
     """Progress and spend per tournament, newest first (or just one)."""
     return [dict(r) for r in await pool.fetch(TOURNAMENTS_SQL, tournament_id)]
