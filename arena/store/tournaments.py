@@ -107,7 +107,13 @@ async def upsert_players(conn: asyncpg.Connection, players: list[PlayerConfig]) 
             p.provider,
             p.model,
             p.prompt,
-            {"temperature": p.temperature, "max_tokens": p.max_tokens, "seed": p.seed},
+            {
+                "temperature": p.temperature,
+                "max_tokens": p.max_tokens,
+                "seed": p.seed,
+                "tool_choice": p.tool_choice,
+                "thinking_budget": p.thinking_budget,
+            },
             h,
         )
         if inserted is None:

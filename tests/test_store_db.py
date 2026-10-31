@@ -677,6 +677,19 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     assert await web.tournament_page(pool, urls, 10**9) is None
 
 
+async def test_thinking_tokens_survive_the_turn_log_and_cost_is_stored_unchanged(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    store = PostgresTurnStore(pool, "w0")
+    usage = Usage(100, 300, 0, 0, 280)
+    turn = TurnRecord(0, 0, {"column": 3}, False, 1, None, None, usage, 0.0031, 5)
+    await store.append_turn(str(m.id), turn)
+    saved = (await store.load_turns(str(m.id)))[0]
+    assert saved.usage == usage and saved.cost_usd == pytest.approx(0.0031)
+    detail = await read.match_detail(pool, m.id)
+    assert detail["turns"][0]["tokens"]["thinking_tokens"] == 280
+
+
 async def test_a_player_page_totals_real_games_and_unknown_players_have_none(pool):
     await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
     await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
