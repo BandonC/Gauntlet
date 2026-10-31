@@ -48,6 +48,7 @@ class RecordingProvider:
                         "tool_input": out.tool_input,
                         "raw_text": out.raw_text,
                         "usage": out.usage.__dict__,
+                        "stop_reason": out.stop_reason,
                     }
                 )
                 + "\n"
@@ -62,5 +63,9 @@ def load_recording(path: Path, model: str | None = None) -> MockProvider:
     for line in path.read_text().splitlines():
         d = json.loads(line)
         if model is None or d.get("model") == model:
-            script.append(Completion(d["tool_input"], d["raw_text"], Usage(**d["usage"])))
+            script.append(
+                Completion(
+                    d["tool_input"], d["raw_text"], Usage(**d["usage"]), d.get("stop_reason")
+                )
+            )
     return MockProvider(script, name="recording")

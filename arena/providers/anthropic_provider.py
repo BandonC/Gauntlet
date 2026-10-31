@@ -48,6 +48,10 @@ class AnthropicProvider:
         )
         if req.thinking_budget is not None:
             kwargs["thinking"] = {"type": "enabled", "budget_tokens": req.thinking_budget}
+        if req.thinking_mode == "between_tools":
+            kwargs["thinking"] = {"type": "between_tools"}
+        if req.effort is not None:
+            kwargs["output_config"] = {"effort": req.effort}
         # req.temperature is intentionally not sent: the current Anthropic SDK's
         # messages.create() has no sampling parameters. Keep temperature in player
         # config anyway (it's part of identity for providers that accept it).
@@ -76,7 +80,9 @@ class AnthropicProvider:
             cache_write_tokens=getattr(u, "cache_creation_input_tokens", 0) or 0,
             thinking_tokens=_thinking_tokens(u),
         )
-        return Completion(tool_input=tool_input, raw_text=raw, usage=usage)
+        return Completion(
+            tool_input=tool_input, raw_text=raw, usage=usage, stop_reason=resp.stop_reason
+        )
 
 
 def _tool_choice(req: CompletionRequest) -> dict:

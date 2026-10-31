@@ -131,7 +131,7 @@ migrations/             forward-only SQL, applied in filename order
    per-seat view (e.g. a discussion log in state), never from Python object state.
 7. **Prompts are immutable once used.** New wording = new version directory
    (`connect4/v2`). Player identity = `identity_hash(provider, model, prompt + content
-   hash, temperature, max_tokens, plus tool_choice and thinking_budget when set)`. Any change
+   hash, temperature, max_tokens, plus tool_choice and thinking settings when set)`. Any change
    = new roster id;
    `upsert_players` refuses to reuse an id with a different config.
 8. **Prices come only from `roster.toml`.** Never hard-code prices. Missing cache
@@ -174,6 +174,11 @@ migrations/             forward-only SQL, applied in filename order
   Fable, Sonnet 5, Opus 5, Haiku 5.5 and Opus 4.7-4.8. `count_tokens` doesn't check this: it
   answered 200 for Sonnet 5.5, so it can't prove a thinking setting. Those models think by
   default when `thinking` is omitted, and `max_tokens` is the only hard limit, including thinking.
+- `thinking_mode = "between_tools"` is the lowest thinking setting on Sonnet 5.5 and a 400 on
+  other current models, and at effort `xhigh` or `max`. Roster `effort` exists so that rule can
+  be enforced; effort is a signal, not a limit, and no player set it when it was added.
+- `turns.stop_reasons` has one entry per attempt, in the provider's own words, so `max_tokens`
+  (cut off) can be told from `end_turn` (skipped the tool). Turns from before it are empty.
 - `usage.output_tokens_details.thinking_tokens` is a breakdown of `output_tokens`, which stays
   the billed total. It lands in `Usage.thinking_tokens` and `turns.thinking_tokens`; 0 means none
   reported. `costs.py` never reads it, and a test holds that.
