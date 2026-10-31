@@ -6,6 +6,7 @@ import json
 import math
 import random
 
+from arena.balance import DEFAULT_P, vote_target
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
@@ -113,6 +114,34 @@ class WerewolfBot:
         seen = {r["seat"] for r in v["seer_results"]}
         fresh = [t for t in targets if t not in seen]
         return Decision(action={"action": "inspect", "target": rng.choice(fresh or targets)})
+
+
+class AccuracyVoteBot(WerewolfBot):
+    """WerewolfBot whose day vote hits a wolf with probability p (`balance.vote_target`).
+    For balance simulations only: it is told every role, so it is left out of `build_bot`
+    and can't reach a tournament. A table shares one `seed` so `focus` can line votes up."""
+
+    def __init__(
+        self,
+        player_id: str,
+        seed: int,
+        roles: list[str],
+        p: float = DEFAULT_P,
+        focus: float = 0.0,
+    ):
+        super().__init__(player_id, seed)
+        self.roles = roles
+        self.p = p
+        self.focus = focus
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        if v["phase"] != "vote":
+            return await super().act(ctx)
+        target = vote_target(
+            self.roles, v["alive"], v["you"], v["day"], self.seed, self.p, self.focus
+        )
+        return Decision(action={"action": "vote", "target": target})
 
 
 def build_bot(kind: str, player_id: str, seed: int) -> Player:
