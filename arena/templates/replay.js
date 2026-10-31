@@ -317,11 +317,13 @@ function renderBlindEnd(frames, turns, picks, seats) {
   const final = frames[frames.length - 1];
   const fates = new Map(final.deaths.map((d) => [d.seat, d]));
   const how = { night: "killed at night", vote: "voted out" };
-  const rows = final.roles
+  const cards = final.roles
     .map((role, i) => {
       const d = fates.get(i);
       const fate = d ? `${how[d.cause]}, day ${Number(d.day)}` : "survived";
-      return `<tr class="unmask${role === "wolf" ? " wolf" : ""}" style="--i:${i}"><td>${player(i)}</td><td>${esc(role)}</td><td>${name(seats, i)}</td><td>${fate}</td></tr>`;
+      const front = `<div class="face front" aria-hidden="true">${player(i)}</div>`;
+      const back = `<div class="face back"><small>${player(i)}</small><b>${esc(role)}</b><span class="pid">${name(seats, i)}</span><small>${fate}</small></div>`;
+      return `<div class="card${role === "wolf" || role === "seer" ? ` ${esc(role)}` : ""}" style="--i:${i}">${front}${back}</div>`;
     })
     .join("");
   const score = blindScore(frames, turns, picks)
@@ -334,7 +336,7 @@ function renderBlindEnd(frames, turns, picks, seats) {
   return (
     `<p class="status">The ${esc(final.winner)} win${final.winner === "wolves" ? "" : "s"}.</p>` +
     (score ? `<ul>${score}</ul>` : "") +
-    `<div class="wrap"><table class="ld"><thead><tr><th>Seat</th><th>Role</th><th>Model</th><th>Fate</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    `<div class="cards">${cards}</div>`
   );
 }
 
