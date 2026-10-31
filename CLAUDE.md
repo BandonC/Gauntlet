@@ -26,7 +26,7 @@ Optimise for correctness and clear failure semantics over features.
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer, proven by a real run (tournament 6, see Gotchas) |
-| `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots. **No real model has played it.** |
+| `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots, replay renderer, proven by a real run (tournament 7, see Gotchas) |
 
 ## Commands
 
@@ -54,6 +54,7 @@ arena worker --record recordings         # also append every model reply for fix
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
+arena export --out docs --tournaments 6,7 --matches 116,142   # only those pages
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 ```
 
@@ -242,6 +243,7 @@ runs (loops, scheduled tasks) skip them.
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
       (`python -X importtime`) and lazy-load heavy modules.
+- [ ] Simulator: replace fixed p with per-day accuracy fitted from tournaments 6–7.
 
 ## Unattended runs (loops and scheduled tasks)
 
@@ -447,6 +449,39 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   neither is deliberate: a hypothetical in match 96 and seat 2 accusing "Player 2" in match
   102. 111 of the 167 are Haiku 5.5 villagers' "Player N here, villager" habit, so true-claim
   counts say more about style than honesty.
+- First real day-first run (tournament 7, 40 tables, the 8 `wwdf-v1-*` players, $2.4901): the
+  village won 17 of 40, 42.5% (Wilson 95% interval 28.5-57.8%), against 41.4% from the simulator
+  and 7 of 40 on the current rules (p = 0.027). Turns matched too: 43.3 per game, predicted
+  43.3. No forfeits, 4 rejected attempts in 1,735 (3 Haiku 4.5 self-votes on day 1, 1 seer
+  inspecting the seat just voted out), 12 of 1,068 messages truncated (10 from Haiku 5.5
+  analytical). 186 true claims, 73 false (65 wolves posing as villagers, 8 seers hiding), 0 leaks.
+  Threshold never reached (largest estimate 2,325 tokens). Haiku 4.5 cost $2.26, Haiku 5.5 $0.23.
+- Village votes on a wolf, by day, tournament 6 / tournament 7: day 1 86/160 (54%) / 73/200
+  (36.5%); day 2 34/63 (54%) / 66/133 (49.6%); day 3 5/6 (83%) / 28/36 (77.8%). Chance on day 1
+  is 40% / 33%, so a day-first first vote is close to chance, with nobody dead and nothing
+  inspected. The first vote removed a wolf 40% / 30% of the time.
+- Haiku 4.5 aggressive replicated: flagged after the fact in tournament 6 (5 of 10 as a wolf,
+  everyone else 8 or 9), then fresh games in tournament 7 gave 2 of 10 as a wolf (p = 0.015) and
+  8 of 35 overall (p = 0.003), last on ordinal both times (-0.41, -1.06). Cautious led
+  aggressive 59% to 34% in tournament 7 but didn't stand out in tournament 6 (39%). Haiku 5.5
+  against Haiku 4.5 is unproven: 51% to 43% (p = 0.23), teammates sharing results.
+- Simulator caveat: its 41.4% matched for partly the wrong reason. It assumed p = 0.54 every
+  day and a wolf out on 46% of first votes; tournament 7 had 36.5% and 30%, with later days
+  making up the difference. Fixed p got the total and missed the path, so don't trust it for
+  rulesets that change when information arrives. Moving p by 0.10 also moves day-first by about
+  15 points either way. The roadmap has the fix: per-day accuracy.
+- Crash recovery in practice (tournament 7, 2026-10-30). Two real interruptions, no failed
+  match. 23:17 to 23:49: everything on the machine stopped for 32 minutes, most likely sleep
+  (not confirmed by Windows' power log), so leases expired; when it woke, 2 stale writes were
+  fenced (matches 112 turn 24, 113 turn 9), and the same process reclaimed both and re-asked those
+  turns. 23:50:15: the worker was killed for low memory with 113 and 114 mid-game; a new
+  process at 23:58:52 resumed them at turns 34 and 12. Afterwards all 40 matches had
+  continuous turn numbers with no duplicates, and all three replayed cleanly. Recordings hold
+  1,737 replies against 1,735 persisted attempts; matched line by line, the 2 extra are exactly
+  the fenced turns, $0.0006 of $2.49 (0.02%), and the model wrote different text when asked again.
+  `turns` never sees that money, so reported spend is short by it. The kill lost no recorded
+  reply, though a request in flight at the kill can't be seen in recordings (at most 2, under a
+  cent). Match 113 used 3 of its 5 run attempts.
 - `werewolf_dayfirst` is `Werewolf` opening on discussion, so the first kill and inspection
   come on night 2 (night n still precedes day n, and there is no night 1). It exists so
   tournament 6 stays valid: `werewolf` keeps its rules, and ratings are per game. Its
@@ -471,7 +506,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   gives 22%, against the real 7 of 40 (Wilson 95% interval 9-32%). The real engine with
   `AccuracyVoteBot` agrees with the simulator (`tests/test_balance.py`). p is fixed by
   assumption, so seers and doctors add only their rule effects, never skill. Any adopted
-  ruleset gets a new game id, so its ratings don't mix with tournament 6.
+  ruleset gets a new game id, so its ratings don't mix with tournament 6. See the simulator
+  caveat above before trusting a prediction.
 - Live ratings depend on play order, and that run proved how much: pairings played as blocks
   put Haiku 4.5 148 Glicko points above Haiku 5.5 on identical records. Over 200 random
   orders of the same 30 results the gap averaged -0.2 (sd 64, p5 -100, p95 +98), split
