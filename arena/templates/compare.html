@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import game_tag, player_link %}
+{% set active = "compare" %}
+{% block title %}Models compared · LLM Arena{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Models compared</h1>
+  <p>Every player built on each model, added up.</p>
+</div>
+{% if models %}
+<div class="pair">
+  {% for m in models %}
+  <div class="panel">
+    <h2>{{ m.model }}</h2>
+    <dl class="stats">
+      <div><dt>Games</dt><dd>{{ m.games }}</dd></div>
+      <div><dt>Total cost</dt><dd>{{ m.cost_usd | usd(2) }}</dd></div>
+      <div><dt>Cost per game</dt><dd>{{ m.cost_per_game | usd }}</dd></div>
+      <div><dt>Illegal moves</dt><dd>{{ m.illegal_rate | pct }}</dd></div>
+      <div><dt>Cache hits</dt><dd>{{ m.cache_hit | pct }}</dd></div>
+    </dl>
+    <details class="note">
+      <summary>Players ({{ m.players | length }})</summary>
+      <ul class="plain">{% for p in m.players %}<li>{{ player_link(p, url) }}</li>{% endfor %}</ul>
+    </details>
+  </div>
+  {% endfor %}
+</div>
+{% for g in games %}
+<h2>{{ game_tag(g.game) }}</h2>
+<div class="wrap"><table class="sortable">
+  <thead><tr><th>Model</th><th class="num">Games</th><th class="num">Won</th><th class="num">Cost per game</th><th class="num">Illegal moves</th><th class="num">Cache hits</th><th class="num">Mean latency</th></tr></thead>
+  <tbody>
+  {% for r in g.rows %}
+    <tr class="g-{{ g.game }}">
+      <td>{{ r.model }}</td>
+      <td class="num">{{ r.games }}</td>
+      <td class="num">{{ r.win_rate | pct }}<i class="bar" style="--w:{{ '%.0f' | format(100 * r.win_rate) }}%"></i></td>
+      <td class="num">{{ r.cost_per_game | usd }}</td>
+      <td class="num">{{ r.illegal_rate | pct }}</td>
+      <td class="num">{{ r.cache_hit | pct }}</td>
+      <td class="num">{{ r.latency_ms | ms }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endfor %}
+<p class="muted">Win rates count every game against whoever was at the table. In Werewolf they also lean on the side a seat drew and on its teammates, so a small gap proves little.</p>
+{% else %}
+<p class="muted">No games with real models yet.</p>
+{% endif %}
+{% endblock %}

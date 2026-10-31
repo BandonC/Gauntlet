@@ -20,6 +20,7 @@
     <a href="{{ url('index') }}"{% if active == 'index' %} aria-current="page"{% endif %}>Leaderboards</a>
     <a href="{{ url('tournaments') }}"{% if active == 'tournaments' %} aria-current="page"{% endif %}>Tournaments</a>
     <a href="{{ url('matches') }}"{% if active == 'matches' %} aria-current="page"{% endif %}>Matches</a>
+    <a href="{{ url('compare') }}"{% if active == 'compare' %} aria-current="page"{% endif %}>Compare</a>
     <button id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
       <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a.6.6 0 0 0-.8-.7 9.7 9.7 0 1 0 12.2 12.2.6.6 0 0 0-.7-.8z"/></svg>
@@ -27,6 +28,9 @@
   </nav>
   {% block content %}{% endblock %}
 </main>
+<script>
+{{ site_js }}
+</script>
 <script>
   // Instant on purpose: a colour change across a page of tables shouldn't animate.
   (() => {

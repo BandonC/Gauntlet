@@ -10,6 +10,7 @@ import math
 import os
 import re
 import time
+from collections import Counter
 from itertools import pairwise
 
 import asyncpg
@@ -676,6 +677,36 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     assert await web.tournament_page(pool, urls, 10**9) is None
 
 
+async def test_a_player_page_totals_real_games_and_unknown_players_have_none(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+
+    r1, r2 = [await web.player_data(pool, p) for p in ("r1", "r2")]
+    assert r1["overall"]["games"] == r2["overall"]["games"] == 2
+    assert r1["overall"]["won"] + r2["overall"]["won"] + r1["overall"]["drew"] == 2
+    assert [g["game"] for g in r1["games"]] == ["connect4"] and r1["roles"] is None
+    assert len(r1["recent"]) == 2 and r1["recent"][0]["id"] > r1["recent"][1]["id"]
+    assert {g["place"] for g in r1["games"] + r2["games"]} == {1, 2}
+
+    html = await web.player_page(pool, web.Urls(), web.player_slug("r1"))
+    assert "<h2>By game</h2>" in html
+    assert await web.player_page(pool, web.Urls(), "nobody") is None
+    assert await web.player_json(pool, "nobody") is None
+
+
+async def test_the_comparison_leaves_out_bots_and_random_players(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    assert await web.compare_data(pool) == {"models": [], "games": []}
+    rows = await read.seat_results(pool)
+    await pool.execute("UPDATE players SET provider = 'anthropic' WHERE id = 'r1'")
+    found = await web.compare_data(pool)
+    assert [m["model"] for m in found["models"]] == ["r1"]
+    assert found["models"][0]["games"] == sum(r["player_id"] == "r1" for r in rows)
+    assert [g["game"] for g in found["games"]] == ["connect4"]
+    assert "<h2>r1</h2>" in await web.compare_page(pool, web.Urls())
+
+
 async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_path):
     tid, n = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
     await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
@@ -683,7 +714,8 @@ async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_
     assert len(ids) == n
 
     summary = await export_site(pool, tmp_path)
-    assert summary.pages == 3 + 1 + n  # index, tournaments, matches, one tournament, n matches
+    # index, tournaments, matches, compare, one tournament, n matches, two players
+    assert summary.pages == 4 + 1 + n + 2
     assert (tmp_path / ".nojekyll").exists()
 
     pages = sorted(tmp_path.glob("*.html"))
@@ -722,12 +754,15 @@ async def test_a_partial_export_writes_only_what_was_chosen_and_has_no_dead_link
     ids = await read.match_ids(pool)
 
     summary = await export_site(pool, tmp_path, tournaments=[kept], matches=ids[:1])
-    assert summary.pages == 3 + 1 + 1
+    assert summary.pages == 4 + 1 + 1 + 2
     names = {p.name for p in tmp_path.glob("*.html")}
     assert names == {
         "index.html",
         "tournaments.html",
         "matches.html",
+        "compare.html",
+        "player-r1.html",
+        "player-r2.html",
         f"tournament-{kept}.html",
         f"match-{ids[0]}.html",
     }
@@ -947,6 +982,22 @@ async def test_a_day_first_tournament_runs_rates_apart_and_keeps_its_role_metric
     assert f'href="/matches/{mid + 7}#blind"' in home  # newest
     assert "One rule change" not in home  # only one ruleset has been played
     assert (await read.totals(pool))["games"] == 0  # bots cost nothing, so no real games yet
+
+
+async def test_a_werewolf_player_page_gives_each_games_role_and_the_stats_by_role(pool):
+    await create_tables(pool, "werewolf_dayfirst", WW[:7], 7, 2, budget_usd=None, seed=3)
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)
+    records = [await web.player_data(pool, p.id) for p in WW[:7]]
+    # Played roles come from the same deal as the stats by role, and both from the match.
+    for record in records:
+        seen = Counter(r["role"] for r in record["recent"])
+        assert {role: record["roles"][f"{role}_games"] for role in seen} == dict(seen)
+        assert record["overall"]["games"] == len(record["recent"])
+    wolves = sum(r["role"] == "wolf" for record in records for r in record["recent"])
+    assert wolves == 2 * records[0]["games"][0]["games"]
+    assert 'data-game="Werewolf (day-first)"' in await web.player_page(
+        pool, web.Urls(), web.player_slug(WW[0].id)
+    )
 
 
 async def test_a_single_werewolf_table_seats_all_seven_and_finishes_the_tournament(pool):

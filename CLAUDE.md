@@ -92,7 +92,8 @@ arena/
                         PostgresTurnStore (fenced), tournament creation, leaderboard
   worker.py             claim → run with heartbeat → complete / release for retry
   api.py                FastAPI: JSON API + HTML routes
-  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export; all
+  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export; table
+                        sorting and filtering live in templates/site.js; all
                         styles live in templates/site.css, inlined into every page
   live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
@@ -426,7 +427,30 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   `web.GAME_BLURBS`; tests check both. Text in `GAME_BLURBS` and the home page's rule-change
   section is hand-written, while its numbers are live.
 - Page wash: `--wash-1` to `--wash-3` colour the whole page in each theme, under the glows and
-  wallpaper; text is tested against all three, so a new wash must keep AA.
+  wallpaper. Each game page swaps in its own set (`--c4-wash-*`, `--dice-`, `--ww-`, `--df-`) from
+  its `body.g-<game>` rule, so a new game needs a set in all three palette blocks. Text is tested
+  against every wash with the glows and wallpaper composited on top, because the plain wash
+  passed while the real pixels were 4.0:1. `npx impeccable detect` still reports low contrast
+  on these pages: it blends gradient stops without their alpha, so it reads the glow as solid.
+- Seats: `--seat-0` to `--seat-6` in each palette, set by `data-seat` (`said` in `replay.js`,
+  `seatAttr`). The number always goes with the colour, so a seat never depends on colour alone.
+  They sit behind a number, so they're held to 4.5:1 on `surface` as well as the dataviz checks.
+- Player pages: ids hold slashes, so URLs and file names use `web.player_slug`, reversible and
+  lower case so a case-insensitive disk can't merge two players. Partial exports still write
+  every player, since they hold only totals. `read.seat_results` feeds player pages and Compare,
+  so they share one definition of a win. Seats that never acted exist (a game can end first):
+  their latency and illegal rate are None, and a page must render that. Only the real export
+  found this, because test fixtures always have turns.
+- Compare groups by the id's prefix (`model_of`) and skips providers `bot` and `random`. Its win
+  rates aren't head to head, and overall win rate is left off on purpose: it would mix games.
+- `templates/site.js` (Markup global, inlined on every page) sorts any `table.sortable` and
+  filters any `table.filterable` by the `data-game` and `data-result` on its rows. A sort value
+  is a cell's leading number, so keep annotations after the number. No value (blank or `–`)
+  stays last both ways. A facet shows only with 2 to 8 values.
+- Replay timeline: `timeline()` works out bands and ticks from spectator frames, so it's spoiler
+  data and lives inside `.spoiler`. The strip is inset 8px, half the slider's thumb, so a mark
+  sits under its frame; Chrome measured 0px off. A new game gets an empty strip until it adds a
+  case there.
 - Page wallpaper: `body::before` masks a game's motif tile (`--tile-<game>`, SVG data URIs in
   `site.css`) over its colour; home mixes all four. A new game needs a tile and a body rule.
 - `read.match_detail` puts `claims` on each Werewolf turn for the reveal's truth overlay.

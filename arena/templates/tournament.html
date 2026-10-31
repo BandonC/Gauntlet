@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import match_table, player, waffle %}
+{% from "_macros.html" import match_table, player_link, waffle %}
 {% set active = "tournaments" %}
 {% block title %}Tournament #{{ t.id }} · LLM Arena{% endblock %}
 {% block body_attrs %} class="g-{{ t.game }}"{% endblock %}
@@ -20,13 +20,13 @@
 {% if final %}
 <h2>Final ratings</h2>
 <p class="muted">Bradley-Terry fit to this tournament's results: order-independent, and comparable only within this tournament. Intervals are 95%, against the field.</p>
-<div class="wrap"><table>
+<div class="wrap"><table class="sortable">
   <thead><tr><th>#</th><th>Player</th><th class="num">Final rating</th><th class="num">95% interval</th></tr></thead>
   <tbody>
   {% for pid, r in final.items() %}
     <tr>
       <td>{{ loop.index }}</td>
-      <td>{{ player(pid) }}</td>
+      <td>{{ player_link(pid, url) }}</td>
       <td class="num">{{ r.rating }}</td>
       <td class="num">{{ r.low }} – {{ r.high }}</td>
     </tr>

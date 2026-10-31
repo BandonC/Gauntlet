@@ -4,6 +4,9 @@
 {# Player ids are model/prompt: the model carries the name, the prompt stays quiet. #}
 {% macro player(id) %}{% set model, slash, rest = id.partition('/') %}<span class="pid">{{ model }}{% if slash %}<span>/{{ rest }}</span>{% endif %}</span>{% endmacro %}
 
+{# A player, linked to their page. #}
+{% macro player_link(id, url) %}{% set href = url('player', id=id | player_slug) %}{% if href %}<a href="{{ href }}">{{ player(id) }}</a>{% else %}{{ player(id) }}{% endif %}{% endmacro %}
+
 {# A coloured mark beside plain text: identity is never carried by the words' colour. #}
 {% macro result(m) %}{% set word = m | match_result %}{% if word and m | result_class %}<span class="chip {{ m | result_class }}">{{ word }}</span>{% else %}{{ word or m.status }}{% endif %}{% endmacro %}
 
@@ -27,11 +30,11 @@
 {% macro match_table(matches, url, within_tournament=False) %}
 {% if matches %}
 {% set show_players = not within_tournament or matches[0].seats | length == 2 %}
-<div class="wrap"><table>
+<div class="wrap"><table class="sortable filterable">
   <thead><tr><th>ID</th>{% if not within_tournament %}<th>Game</th>{% endif %}{% if show_players %}<th>Players</th>{% endif %}<th>Result</th>{% if not within_tournament %}<th>Tournament</th>{% endif %}<th class="num">Cost</th></tr></thead>
   <tbody>
   {% for m in matches %}
-    <tr>
+    <tr data-game="{{ m.game | game_name }}" data-result="{{ m | match_result or m.status }}">
       <td>{{ link(url('match', id=m.id), '#' ~ m.id) }}</td>
       {% if not within_tournament %}<td>{{ game_tag(m.game) }}</td>{% endif %}
       {% if show_players %}<td>{{ seated(m) }}</td>{% endif %}
