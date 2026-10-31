@@ -713,6 +713,45 @@ async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_
     assert (await export_site(pool, tmp_path)).pages == summary.pages
 
 
+async def test_a_partial_export_writes_only_what_was_chosen_and_has_no_dead_links(pool, tmp_path):
+    kept, n = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=1)
+    gone, _ = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    ids = await read.match_ids(pool)
+
+    summary = await export_site(pool, tmp_path, tournaments=[kept], matches=ids[:1])
+    assert summary.pages == 3 + 1 + 1
+    names = {p.name for p in tmp_path.glob("*.html")}
+    assert names == {
+        "index.html",
+        "tournaments.html",
+        "matches.html",
+        f"tournament-{kept}.html",
+        f"match-{ids[0]}.html",
+    }
+    for html_file in tmp_path.glob("*.html"):
+        for href in re.findall(r'href="([^"]*)"', html_file.read_text(encoding="utf-8")):
+            assert href and (tmp_path / href).is_file(), (html_file.name, href)
+
+    t_html = (tmp_path / f"tournament-{kept}.html").read_text(encoding="utf-8")
+    assert f'href="match-{ids[0]}.html"' in t_html
+    assert f"<td>#{ids[1]}</td>" in t_html  # still listed, just not a link
+    assert f"tournament-{gone}" not in (tmp_path / "tournaments.html").read_text(encoding="utf-8")
+
+    api = tmp_path / "api"
+    assert [t["id"] for t in json.loads((api / "tournaments.json").read_text("utf-8"))] == [kept]
+    assert [m["id"] for m in json.loads((api / "matches.json").read_text("utf-8"))] == ids[:1]
+    assert [p.stem for p in (api / "matches").glob("*.json")] == [str(ids[0])]
+    board = json.loads((api / "leaderboard" / "connect4.json").read_text(encoding="utf-8"))
+    assert {r["player_id"] for r in board} == {"r1", "r2"}  # leaderboards stay whole
+
+
+async def test_a_partial_export_refuses_ids_that_do_not_exist(pool, tmp_path):
+    with pytest.raises(ValueError, match="999"):
+        await export_site(pool, tmp_path, matches=[999])
+    assert not list(tmp_path.iterdir())
+
+
 async def test_tables_tournament_runs_rates_every_seat_and_rebuilds(pool):
     tid, n = await create_tables(pool, "liars_dice", FIVE, 3, 10, budget_usd=None, seed=4)
     assert n == 10

@@ -1,0 +1,104 @@
+[
+ {
+  "player_id": "liars-dice-bot",
+  "rating": 1691.9,
+  "rd": 96.2,
+  "low": 1499.6,
+  "high": 1884.2,
+  "ordinal": 18.6,
+  "mu": 33.93,
+  "sigma": 5.11,
+  "elo": 1606.1,
+  "games": 20,
+  "points": 16.0,
+  "final": {
+   "rating": 1660.5,
+   "low": 1533.7,
+   "high": 1787.4
+  },
+  "final_tournament_id": 4
+ },
+ {
+  "player_id": "haiku-4.5/ld-v1",
+  "rating": 1514.0,
+  "rd": 97.7,
+  "low": 1318.6,
+  "high": 1709.4,
+  "ordinal": 9.0,
+  "mu": 24.55,
+  "sigma": 5.18,
+  "elo": 1471.9,
+  "games": 20,
+  "points": 7.0,
+  "final": {
+   "rating": 1419.7,
+   "low": 1306.6,
+   "high": 1532.9
+  },
+  "final_tournament_id": 4
+ },
+ {
+  "player_id": "random3",
+  "rating": 1847.7,
+  "rd": 247.1,
+  "low": 1353.5,
+  "high": 2341.9,
+  "ordinal": 7.28,
+  "mu": 30.63,
+  "sigma": 7.78,
+  "elo": 1533.2,
+  "games": 2,
+  "points": 2.0,
+  "final": null,
+  "final_tournament_id": 4
+ },
+ {
+  "player_id": "random",
+  "rating": 1509.8,
+  "rd": 215.2,
+  "low": 1079.4,
+  "high": 1940.2,
+  "ordinal": 2.49,
+  "mu": 24.67,
+  "sigma": 7.39,
+  "elo": 1497.3,
+  "games": 4,
+  "points": 2.0,
+  "final": null,
+  "final_tournament_id": 4
+ },
+ {
+  "player_id": "haiku-5.5/ld-v1",
+  "rating": 1365.5,
+  "rd": 105.9,
+  "low": 1153.6,
+  "high": 1577.3,
+  "ordinal": 2.34,
+  "mu": 18.47,
+  "sigma": 5.38,
+  "elo": 1422.0,
+  "games": 20,
+  "points": 7.0,
+  "final": {
+   "rating": 1419.7,
+   "low": 1306.6,
+   "high": 1532.9
+  },
+  "final_tournament_id": 4
+ },
+ {
+  "player_id": "random2",
+  "rating": 1279.7,
+  "rd": 260.5,
+  "low": 758.7,
+  "high": 1800.7,
+  "ordinal": -3.12,
+  "mu": 20.34,
+  "sigma": 7.82,
+  "elo": 1469.5,
+  "games": 2,
+  "points": 0.0,
+  "final": null,
+  "final_tournament_id": 4
+ }
+]
