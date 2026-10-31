@@ -508,6 +508,69 @@ def test_playing_blind_from_start_to_reveal():
     assert out["stillBlind"] is False
 
 
+TIMELINE = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const p = JSON.parse(input);
+  const shape = R.timeline(p.game, p.frames, p.seats);
+  console.log(JSON.stringify({ ...shape, html: R.renderTimeline(shape, p.frames.length - 1) }));
+});
+"""
+
+
+def test_the_timeline_marks_every_phase_and_every_death():
+    frames = werewolf_frames(4, WerewolfDayFirst())
+    out = node(TIMELINE, {"game": "werewolf_dayfirst", "seats": SEATS, "frames": frames})
+    assert out["bands"][0] == {"from": 0, "phase": "discussion", "text": "Day 1"}
+    assert {b["phase"] for b in out["bands"]} == {"discussion", "vote", "night"}
+    assert len(out["ticks"]) == len(frames[-1]["deaths"])
+    for tick in out["ticks"]:
+        assert frames[tick["at"]]["deaths"] != frames[tick["at"] - 1]["deaths"]
+    assert out["html"].count("data-jump=") == len(out["bands"]) + len(out["ticks"])
+
+
+def test_a_timeline_mark_lands_on_its_own_frame():
+    frames = werewolf_frames(4, Werewolf())
+    out = node(TIMELINE, {"game": "werewolf", "seats": SEATS, "frames": frames})
+    assert out["bands"][0]["phase"] == "night"  # the original rules open at night
+    last = len(frames) - 1
+    at = out["ticks"][-1]["at"]
+    assert f"left:{100 * at / last:.2f}%" in out["html"]
+    assert f'data-jump="{at}"' in out["html"]
+
+
+def test_liars_dice_ticks_each_challenge_and_escapes_names():
+    frames = random_game(LiarsDice(), 3, 2)
+    seats = [EVIL, "b", "c"]
+    out = node(TIMELINE, {"game": "liars_dice", "seats": seats, "frames": frames})
+    rounds = {f["last_reveal"]["round"] for f in frames if f["last_reveal"]}
+    assert len(out["ticks"]) == len(rounds) > 0 and out["bands"] == []
+    assert " lost a die" in out["html"] and EVIL not in out["html"]
+
+
+def test_a_game_with_no_moments_has_an_empty_strip():
+    frames = random_game(Connect4(), 2, 1)
+    out = node(TIMELINE, {"game": "connect4", "seats": ["a", "b"], "frames": frames})
+    assert out["html"] == ""
+
+
+def test_messages_read_as_chat_with_each_seat_in_its_colour():
+    frames, turns = played(WerewolfDayFirst(), 3)
+    out = node(BLIND, {"frames": frames, "turns": turns})
+    talk = next(h for h in reversed(out["html"]) if 'class="said"' in h)
+    assert 'class="said" data-seat="' in talk and '<span class="avatar">' in talk
+    assert '<span class="seat" data-seat="' in talk or 'class="seat dead" data-seat="' in talk
+
+
+def test_replay_frames_put_talk_in_the_same_chat_lines():
+    frames = werewolf_frames(4, WerewolfDayFirst())
+    out = node(RENDER, {"game": "werewolf_dayfirst", "seats": SEATS, "frames": frames, "turns": []})
+    talk = next(h for h in out["frames"] if 'class="said"' in h)
+    assert "<small>round 1</small>" in talk and "<li>" not in talk
+
+
 LIVE = """
 const R = require(process.env.REPLAY_JS);
 let input = "";

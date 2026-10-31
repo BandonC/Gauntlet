@@ -15,14 +15,22 @@
 :root {
   /* Parchment by day, moonlit by night. A test holds both palettes to WCAG AA contrast. */
   color-scheme: light;
-  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #4d5563; --line: #dcd3c3;
+  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #434a57; --line: #dcd3c3;
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
-  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.28); --glow-b: rgba(0, 143, 134, 0.2);
+  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(0, 143, 134, 0.12);
   /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
   --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
-  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #1450a0;
+  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #124690;
   /* The page wash, top left to bottom right. A test checks text against all three. */
   --wash-1: #fbe3d0; --wash-2: #f6d4dc; --wash-3: #cfe0f2;
+  /* Each game's page takes its own wash, chosen to sit under that game's colour. */
+  --c4-wash-1: #d6f0e6; --c4-wash-2: #cde6f2; --c4-wash-3: #dcdcf5;
+  --dice-wash-1: #fdeccb; --dice-wash-2: #fbd9b8; --dice-wash-3: #f9cfc6;
+  --ww-wash-1: #fdeccb; --ww-wash-2: #ecdff2; --ww-wash-3: #d8dcf4;
+  --df-wash-1: #e6f0c8; --df-wash-2: #d3ecd6; --df-wash-3: #c7e6e4;
+  /* Seats. Marks that also sit behind a number, so held to text contrast. */
+  --seat-0: #1f63c4; --seat-1: #c2501c; --seat-2: #0e7f5c; --seat-3: #946400;
+  --seat-4: #b83a78; --seat-5: #2f7d1e; --seat-6: #6250d6;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
   --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
@@ -35,22 +43,34 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
-    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
+    --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
+    --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
+    --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
+    --seat-0: #4a8de0; --seat-1: #d86f3e; --seat-2: #24a67c; --seat-3: #b98d14;
+    --seat-4: #d06f9c; --seat-5: #60a540; --seat-6: #8a7ce6;
   }
 }
 :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
-    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
+    --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
+    --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
+    --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
+    --seat-0: #4a8de0; --seat-1: #d86f3e; --seat-2: #24a67c; --seat-3: #b98d14;
+    --seat-4: #d06f9c; --seat-5: #60a540; --seat-6: #8a7ce6;
 }
 
 /* Base */
@@ -75,10 +95,22 @@ body::before {
     linear-gradient(90deg, #000 6%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.28) 80%, #000 94%);
   mask-composite: intersect;
 }
-body.g-connect4 { --tile: var(--tile-connect4); }
-body.g-liars_dice { --tile: var(--tile-liars_dice); }
-body.g-werewolf { --tile: var(--tile-werewolf); }
-body.g-werewolf_dayfirst { --tile: var(--tile-werewolf_dayfirst); }
+body.g-connect4 {
+  --tile: var(--tile-connect4);
+  --wash-1: var(--c4-wash-1); --wash-2: var(--c4-wash-2); --wash-3: var(--c4-wash-3);
+}
+body.g-liars_dice {
+  --tile: var(--tile-liars_dice);
+  --wash-1: var(--dice-wash-1); --wash-2: var(--dice-wash-2); --wash-3: var(--dice-wash-3);
+}
+body.g-werewolf {
+  --tile: var(--tile-werewolf);
+  --wash-1: var(--ww-wash-1); --wash-2: var(--ww-wash-2); --wash-3: var(--ww-wash-3);
+}
+body.g-werewolf_dayfirst {
+  --tile: var(--tile-werewolf_dayfirst);
+  --wash-1: var(--df-wash-1); --wash-2: var(--df-wash-2); --wash-3: var(--df-wash-3);
+}
 body[class*="g-"]::before { background: var(--g); opacity: 0.16; }
 a { color: inherit; }
 main > :not(nav) a:not(.btn, .game, .cell) { color: var(--link); text-underline-offset: 2px; }
@@ -168,15 +200,15 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
   border: 1px solid var(--line);
   background:
     linear-gradient(115deg,
-      color-mix(in srgb, var(--g-c4) 24%, var(--surface)),
-      color-mix(in srgb, var(--g-dice) 22%, var(--surface)) 38%,
-      color-mix(in srgb, var(--g-ww) 24%, var(--surface)) 68%,
-      color-mix(in srgb, var(--g-df) 26%, var(--surface)));
+      color-mix(in srgb, var(--g-c4) 34%, var(--surface)),
+      color-mix(in srgb, var(--g-dice) 34%, var(--surface)) 38%,
+      color-mix(in srgb, var(--g-ww) 34%, var(--surface)) 68%,
+      color-mix(in srgb, var(--g-df) 34%, var(--surface)));
 }
 .hero h1 { font-size: 40px; }
 .hero p { margin: 8px 0 0; font-size: 17px; max-width: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 20px 0 0; }
-.tiles dt { font-size: 13px; color: var(--muted); }
+.tiles dt { font-size: 13px; }
 .tiles dd { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.2; }
 .games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 18px 0; }
 .game { display: block; text-decoration: none; padding: 0; transition: transform 160ms var(--ease-out); }
@@ -191,7 +223,11 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 .story > p { margin: 4px 0 14px; color: var(--muted); }
 .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
 .panel { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
-.panel h3 { margin: 0 0 8px; color: var(--fg); font-size: 15px; }
+.panel h2, .panel h3 { margin: 0 0 8px; color: var(--fg); font-size: 15px; }
+.panel > .muted { margin: 0; }
+.panel .stats { margin: 8px 0 0; gap: 8px 24px; }
+.headline { margin: 0; font-size: 36px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.plain { list-style: none; margin: 6px 0 0; padding: 0; }
 
 /* One square per game, grouped so the split reads at a glance. */
 .waffle { display: flex; flex-wrap: wrap; gap: 3px; margin: 8px 0; }
@@ -215,6 +251,14 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
 th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-weight: 600; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.sort { padding: 0; border: 0; background: none; font-weight: inherit; color: inherit; white-space: nowrap; }
+th[aria-sort] .sort { color: var(--fg); }
+th[aria-sort="ascending"] .sort::after { content: " ▲"; }
+th[aria-sort="descending"] .sort::after { content: " ▼"; }
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.filters button { font-size: 13px; padding: 2px 10px; border-radius: 999px; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.filter-count { margin-left: 6px; font-size: 13px; }
 td.num, th.num { text-align: right; white-space: nowrap; }
 td.rank { color: var(--muted); }
 td.quiet, th.quiet { color: var(--muted); }
@@ -256,6 +300,22 @@ details.note p { max-width: none; }
 
 /* Replay */
 #replay-info { min-height: 1.5em; }
+/* The scrubber, with the game's shape under it. The strip is inset by half the slider's thumb
+   so a mark sits under the frame it jumps to. Everything on it is a button. */
+.scrub input { display: block; width: 100%; margin: 0; accent-color: var(--accent); }
+#replay-marks { position: relative; height: 18px; margin: 2px 8px 0; }
+#replay-marks:empty { display: none; }
+.band, .tick { position: absolute; top: 0; bottom: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.band::before { content: ""; position: absolute; inset: 6px 1px; border-radius: 2px; background: var(--band); }
+.tick { width: 14px; margin-left: -7px; }
+.tick::before { content: ""; position: absolute; top: 1px; bottom: 1px; left: 5px; width: 4px; border-radius: 2px; background: var(--bad); }
+.band.night, .key.night { --band: color-mix(in srgb, var(--fg) 72%, transparent); }
+.band.discussion, .key.discussion { --band: color-mix(in srgb, var(--fg) 24%, transparent); }
+.band.vote, .key.vote { --band: var(--accent); }
+.key.tick-key { --band: var(--bad); }
+.key.night::before, .key.discussion::before, .key.vote::before, .key.tick-key::before { background: var(--band); }
+.scrub + #replay-frame { margin-top: 10px; }
+.scrub .keys { margin: 2px 8px 0; }
 .status { font-weight: 600; }
 .ww { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px 24px; }
 .ww ul { list-style: none; margin: 0; padding: 0; }
@@ -278,21 +338,36 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 #blind { display: none; }
 .blind #blind { display: block; }
 .blind .spoiler { display: none; }
-.blind-head { position: sticky; top: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(6px); padding: 4px 0; border-bottom: 1px solid var(--line); }
+.blind-head { position: sticky; top: 0; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); padding: 6px 12px; border: 1px solid var(--line); border-radius: 10px; }
 .blind-head p { margin: 6px 0; }
-.blind-foot { position: sticky; bottom: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(6px); padding: 8px 0; margin: 0; border-top: 1px solid var(--line); }
+.blind-foot { position: sticky; bottom: 0; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); padding: 8px 12px; margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px; }
 .seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .seat { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; }
 .seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
 .seat.dead { color: var(--muted); text-decoration: line-through; }
 .seat.dead small { display: inline-block; }
-.said { margin: 4px 0; }
+/* A message is a seat talking: its number in its colour, then its words in text colours.
+   Each seat keeps its colour everywhere it appears, and the number always says it too. */
+[data-seat="0"] { --seat: var(--seat-0); } [data-seat="1"] { --seat: var(--seat-1); }
+[data-seat="2"] { --seat: var(--seat-2); } [data-seat="3"] { --seat: var(--seat-3); }
+[data-seat="4"] { --seat: var(--seat-4); } [data-seat="5"] { --seat: var(--seat-5); }
+[data-seat="6"] { --seat: var(--seat-6); }
+.avatar {
+  display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--seat, var(--muted)); color: var(--surface); font-size: 13px; font-weight: 700; line-height: 1;
+}
+.said {
+  display: flex; gap: 8px; align-items: flex-start; max-width: 70ch; margin: 6px 0; padding: 7px 10px;
+  border-radius: 8px; background: color-mix(in srgb, var(--seat, var(--line)) 10%, var(--surface));
+}
+.said .line { min-width: 0; overflow-wrap: anywhere; }
+.seat[data-seat] { box-shadow: inset 3px 0 0 var(--seat); }
 
 /* The round table: seats in a ring, a vote is an arrow. Flat on purpose. */
 .round { display: block; width: min(280px, 100%); margin: 8px auto; }
 .round line { stroke: var(--accent); stroke-width: 2; }
 .round marker path { fill: var(--accent); }
-.round circle { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.round circle { fill: var(--surface); stroke: var(--seat, var(--line)); stroke-width: 2; }
 .round text { fill: var(--fg); font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
 .round .dead circle { fill: none; stroke-dasharray: none; opacity: 0.5; }
 .round .dead text { fill: var(--muted); }
@@ -301,10 +376,10 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 
 /* The truth overlay: the same transcript, roles shown and bluffs marked. */
 .truth { margin-top: 28px; }
-.truth .said { max-width: none; padding: 6px 10px; border-left: 3px solid transparent; }
+.truth .said { max-width: none; border-left: 3px solid transparent; }
 .truth .said small { margin-right: 4px; }
 .truth .said.bluff { border-left-color: var(--mark-wolf); background: color-mix(in srgb, var(--mark-wolf) 10%, var(--surface)); }
-.truth .said.wrong { border-left-color: var(--muted); background: var(--surface); }
+.truth .said.wrong { border-left-color: var(--muted); }
 .tell { display: block; font-size: 13px; font-weight: 600; }
 
 /* The reveal: one rare moment, so the cards may arrive in turn. Nothing waits on it. */
@@ -347,6 +422,7 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     <a href="index.html">Leaderboards</a>
     <a href="tournaments.html">Tournaments</a>
     <a href="matches.html" aria-current="page">Matches</a>
+    <a href="compare.html">Compare</a>
     <button id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
       <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
       <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a.6.6 0 0 0-.8-.7 9.7 9.7 0 1 0 12.2 12.2.6.6 0 0 0-.7-.8z"/></svg>
@@ -375,33 +451,33 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 <div class="wrap"><table>
   <thead><tr><th>Seat</th><th>Player</th><th class="num">Score</th><th class="num">Place</th></tr></thead>
   <tbody>
-    <tr>
-      <td>0</td>
-      <td><span class="pid">haiku-4.5<span>/wwdf-v1-cautious</span></span></td>
+    <tr data-seat="0">
+      <td><span class="avatar">0</span></td>
+      <td><a href="player-haiku-4.5_2f_wwdf-v1-cautious.html"><span class="pid">haiku-4.5<span>/wwdf-v1-cautious</span></span></a></td>
 <td class="num">0.0</td><td class="num">3</td>    </tr>
-    <tr>
-      <td>1</td>
-      <td><span class="pid">haiku-5.5<span>/wwdf-v1-plain</span></span></td>
+    <tr data-seat="1">
+      <td><span class="avatar">1</span></td>
+      <td><a href="player-haiku-5.5_2f_wwdf-v1-plain.html"><span class="pid">haiku-5.5<span>/wwdf-v1-plain</span></span></a></td>
 <td class="num">0.0</td><td class="num">3</td>    </tr>
-    <tr>
-      <td>2</td>
-      <td><span class="pid">haiku-5.5<span>/wwdf-v1-cautious</span></span></td>
+    <tr data-seat="2">
+      <td><span class="avatar">2</span></td>
+      <td><a href="player-haiku-5.5_2f_wwdf-v1-cautious.html"><span class="pid">haiku-5.5<span>/wwdf-v1-cautious</span></span></a></td>
 <td class="num">0.0</td><td class="num">3</td>    </tr>
-    <tr>
-      <td>3</td>
-      <td><span class="pid">haiku-5.5<span>/wwdf-v1-aggressive</span></span></td>
+    <tr data-seat="3">
+      <td><span class="avatar">3</span></td>
+      <td><a href="player-haiku-5.5_2f_wwdf-v1-aggressive.html"><span class="pid">haiku-5.5<span>/wwdf-v1-aggressive</span></span></a></td>
 <td class="num">1.0</td><td class="num">1</td>    </tr>
-    <tr>
-      <td>4</td>
-      <td><span class="pid">haiku-4.5<span>/wwdf-v1-aggressive</span></span></td>
+    <tr data-seat="4">
+      <td><span class="avatar">4</span></td>
+      <td><a href="player-haiku-4.5_2f_wwdf-v1-aggressive.html"><span class="pid">haiku-4.5<span>/wwdf-v1-aggressive</span></span></a></td>
 <td class="num">0.0</td><td class="num">3</td>    </tr>
-    <tr>
-      <td>5</td>
-      <td><span class="pid">haiku-5.5<span>/wwdf-v1-analytical</span></span></td>
+    <tr data-seat="5">
+      <td><span class="avatar">5</span></td>
+      <td><a href="player-haiku-5.5_2f_wwdf-v1-analytical.html"><span class="pid">haiku-5.5<span>/wwdf-v1-analytical</span></span></a></td>
 <td class="num">1.0</td><td class="num">1</td>    </tr>
-    <tr>
-      <td>6</td>
-      <td><span class="pid">haiku-4.5<span>/wwdf-v1-plain</span></span></td>
+    <tr data-seat="6">
+      <td><span class="avatar">6</span></td>
+      <td><a href="player-haiku-4.5_2f_wwdf-v1-plain.html"><span class="pid">haiku-4.5<span>/wwdf-v1-plain</span></span></a></td>
 <td class="num">0.0</td><td class="num">3</td>    </tr>
   </tbody>
 </table></div>
@@ -412,9 +488,12 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
   <button id="replay-play">▶ Play</button>
   <button id="replay-next" title="Next (→)">▶</button>
   <button id="replay-last" title="End">⏭</button>
-  <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
   <span id="replay-label" class="muted"></span>
   <span id="replay-live" class="muted"></span>
+</div>
+<div class="scrub">
+  <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
+  <div id="replay-marks"></div>
 </div>
 <div id="replay-frame"><noscript><p class="muted">The replay needs JavaScript; the turn list below works without it.</p></noscript></div>
 <p id="replay-info" class="muted"></p>
@@ -432,6 +511,11 @@ const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const DIE = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const name = (seats, i) => esc(seats[i] ?? `seat ${i}`);
+// A seat's number in its colour, so talk can be followed without reading every name.
+const avatar = (seat) => `<span class="avatar">${Number(seat)}</span>`;
+const seatAttr = (seat) => `data-seat="${Number(seat)}"`;
+const said = (seat, who, text, { tone = "", after = "" } = {}) =>
+  `<p class="said${tone}" ${seatAttr(seat)}>${avatar(seat)}<span class="line"><b>${who}</b> ${text}${after}</span></p>`;
 
 const RENDERERS = {
   connect4(f, seats) {
@@ -488,11 +572,11 @@ const RENDERERS = {
         const cls = i === f.to_move ? ' class="turn"' : "";
         const d = dead.get(i);
         const status = d ? `<span class="muted">${esc(fate[d.cause])}, day ${d.day}</span>` : "alive";
-        return `<tr${cls}><td>${name(seats, i)}</td><td>${esc(role)}</td><td>${status}</td></tr>`;
+        return `<tr${cls} ${seatAttr(i)}><td>${avatar(i)} ${name(seats, i)}</td><td>${esc(role)}</td><td>${status}</td></tr>`;
       })
       .join("");
-    const said = f.messages
-      .map((m) => `<li>${name(seats, m.seat)} (round ${m.round}): ${esc(m.text)}</li>`)
+    const talk = f.messages
+      .map((m) => said(m.seat, name(seats, m.seat), `<small>round ${Number(m.round)}</small> ${esc(m.text)}`))
       .join("");
     const pick = (v) => `${name(seats, v.seat)} → ${name(seats, v.target)}`;
     const line = (label, items) => (items.length ? `<p class="ld-bids">${label}: ${items.join(", ")}</p>` : "");
@@ -505,7 +589,7 @@ const RENDERERS = {
     return (
       `<p class="status">${status}</p>` +
       `<div class="ww"><div class="wrap"><table class="ld"><thead><tr><th>Player</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>` +
-      `<div>${said ? `<ul>${said}</ul>` : ""}` +
+      `<div>${talk}` +
       line("Wolf votes tonight", f.wolf_votes.map(pick)) +
       line("Day votes", f.votes.map(pick)) +
       (f.votes.length
@@ -546,7 +630,7 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
       seat === out ? "out" : "",
       roles?.[seat] === "wolf" ? "wolf" : "",
     ].join(" ");
-    return `<g class="${tone.trim()}"><circle cx="${cx}" cy="${cy}" r="20"/><text x="${cx}" y="${cy}">${seat}</text></g>`;
+    return `<g class="${tone.trim()}" ${seatAttr(seat)}><circle cx="${cx}" cy="${cy}" r="20"/><text x="${cx}" y="${cy}">${seat}</text></g>`;
   }).join("");
   const label = votes.map((v) => `${player(v.seat)} votes ${player(v.target)}`).join(", ");
   return (
@@ -554,6 +638,53 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
     '<defs><marker id="vote-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z"/></marker></defs>' +
     `${arrows}${circles}</svg>`
   );
+}
+
+// The shape of a match, for the strip under the slider: phases as bands, and each moment
+// that changes the game as a tick. A game with no such moments gets an empty strip.
+function timeline(game, frames, seats) {
+  const bands = [];
+  const ticks = [];
+  if (game === "liars_dice") {
+    let round = null;
+    frames.forEach((f, i) => {
+      const r = f.last_reveal;
+      if (!r || r.round === round) return;
+      round = r.round;
+      ticks.push({ at: i, text: `Round ${Number(r.round)}: ${name(seats, r.loser)} lost a die` });
+    });
+  }
+  if (game === "werewolf" || game === "werewolf_dayfirst") {
+    const fate = { night: "killed at night", vote: "voted out" };
+    let phase = null;
+    let dead = 0;
+    frames.forEach((f, i) => {
+      if (!f.winner && f.phase !== phase) {
+        phase = f.phase;
+        const label = phase === "night" ? "Night" : phase === "vote" ? "Vote, day" : "Day";
+        bands.push({ from: i, phase, text: `${label} ${Number(f.day)}` });
+      }
+      f.deaths.slice(dead).forEach((d) => {
+        ticks.push({ at: i, text: `${name(seats, d.seat)} ${fate[d.cause]}, day ${Number(d.day)}` });
+      });
+      dead = f.deaths.length;
+    });
+  }
+  return { bands, ticks };
+}
+
+function renderTimeline({ bands, ticks }, last) {
+  if (!last || (!bands.length && !ticks.length)) return "";
+  const at = (frame) => ((100 * frame) / last).toFixed(2);
+  const strip = bands.map((b, i) => {
+    const to = bands[i + 1]?.from ?? last;
+    const style = `left:${at(b.from)}%;width:${at(to - b.from)}%`;
+    return `<button type="button" class="band ${esc(b.phase)}" style="${style}" data-jump="${b.from}" title="${b.text}" aria-label="${b.text}"></button>`;
+  });
+  const marks = ticks.map(
+    (t) => `<button type="button" class="tick" style="left:${at(t.at)}%" data-jump="${t.at}" title="${t.text}" aria-label="${t.text}"></button>`,
+  );
+  return strip.join("") + marks.join("");
 }
 
 function renderFrame(game, frame, seats) {
@@ -588,6 +719,9 @@ function initReplay(doc) {
   slider.max = String(last);
   let idx = last;
   let timer = null;
+  const marks = () => {
+    $("replay-marks").innerHTML = renderTimeline(timeline(data.game, data.frames, data.seats), last);
+  };
 
   function show(i) {
     idx = Math.max(0, Math.min(last, i));
@@ -622,6 +756,10 @@ function initReplay(doc) {
   $("replay-last").onclick = () => { stop(); show(last); };
   $("replay-play").onclick = play;
   slider.oninput = () => { stop(); show(Number(slider.value)); };
+  $("replay-marks").onclick = (e) => {
+    const frame = e.target.closest?.("[data-jump]")?.dataset.jump;
+    if (frame !== undefined) { stop(); show(Number(frame)); }
+  };
   doc.querySelectorAll("tr[data-frame]").forEach((tr) => {
     tr.onclick = () => { stop(); show(Number(tr.dataset.frame)); };
   });
@@ -629,6 +767,7 @@ function initReplay(doc) {
     if (e.key === "ArrowLeft") { stop(); show(idx - 1); }
     if (e.key === "ArrowRight") { stop(); show(idx + 1); }
   });
+  marks();
   show(last);
 
   function follow() {
@@ -642,6 +781,7 @@ function initReplay(doc) {
       data.frames.push(frame);
       last += 1;
       slider.max = String(last);
+      marks();
       show(atEnd ? last : idx); // only viewers at the newest frame are moved along
     });
     stream.addEventListener("done", (e) => {
@@ -711,10 +851,10 @@ function renderSeats(step, chosen) {
   return seats
     .map((seat) => {
       const d = fate.get(seat);
-      if (d) return `<span class="seat dead">${player(seat)} <small>${esc(d.role)}</small></span>`;
-      if (step.kind !== "vote") return `<span class="seat">${player(seat)}</span>`;
+      if (d) return `<span class="seat dead" ${seatAttr(seat)}>${player(seat)} <small>${esc(d.role)}</small></span>`;
+      if (step.kind !== "vote") return `<span class="seat" ${seatAttr(seat)}>${player(seat)}</span>`;
       const on = chosen.has(seat);
-      return `<button class="seat${on ? " on" : ""}" data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
+      return `<button class="seat${on ? " on" : ""}" ${seatAttr(seat)} data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
     })
     .join("");
 }
@@ -725,7 +865,7 @@ function renderTranscript(messages) {
     .map((m) => {
       const head = m.day === day ? "" : `<h3>Day ${Number(m.day)}</h3>`;
       day = m.day;
-      return `${head}<p class="said"><b>${player(m.seat)}</b> ${esc(m.text)}</p>`;
+      return head + said(m.seat, player(m.seat), esc(m.text));
     })
     .join("");
 }
@@ -805,7 +945,7 @@ function renderTruth(frames, turns, roles) {
       bluffs += tells.filter((x) => x.kind === "bluff").length;
       const tone = tells.find((x) => x.kind === "bluff") ? " bluff" : tells.length ? " wrong" : "";
       const notes = tells.map((x) => `<span class="tell">${x.text}</span>`).join("");
-      return `${head}<p class="said${tone}"><b>${player(t.seat)}</b> <small>${esc(roles[t.seat])}</small> ${esc(t.action.message)}${notes}</p>`;
+      return head + said(t.seat, player(t.seat), `<small>${esc(roles[t.seat])}</small> ${esc(t.action.message)}`, { tone, after: notes });
     })
     .join("");
   const count = bluffs === 1 ? "1 bluff" : `${bluffs} bluffs`;
@@ -903,6 +1043,7 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined") module.exports = {
   RENDERERS, renderFrame, describeTurn, esc, initReplay, holdFor,
   blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind, roundTable,
+  timeline, renderTimeline,
 };
 
 </script>
@@ -1268,6 +1409,113 @@ if (typeof module !== "undefined") module.exports = {
 </details>
 </div>
 </main>
+<script>
+"use strict";
+// Sorting and filtering for any table marked up for it, on every page, plain JS. Inlined by
+// base.html. Without JavaScript the tables stay readable, just fixed. Sorting is instant: a
+// table reordered on click shouldn't animate. Loaded by Node in tests (module.exports).
+
+// "$0.0123", "#116", "0.75 (4)" and "1620.4 (1500.1 – 1740.7)" sort by their leading number,
+// and an empty cell or a dash has no value at all.
+function sortValue(text) {
+  const t = text.trim();
+  if (t === "" || t === "–") return null;
+  const n = t.match(/^[#$]?(-?\d+(?:\.\d+)?)/);
+  return n ? Number(n[1]) : t.toLowerCase();
+}
+
+// Cells with no value stay last in both directions; numbers sort ahead of words.
+function compareValues(a, b, direction) {
+  if (a === null || b === null) return (a === null) - (b === null);
+  if (typeof a !== typeof b) return typeof a === "number" ? -1 : 1;
+  const order = typeof a === "number" ? a - b : a.localeCompare(b);
+  return order * direction;
+}
+
+function initSorting(doc) {
+  doc.querySelectorAll("table.sortable").forEach((table) => {
+    const heads = [...table.tHead.rows[0].cells];
+    heads.forEach((th, column) => {
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "sort";
+      button.textContent = th.textContent;
+      th.textContent = "";
+      th.append(button);
+      button.onclick = () => {
+        const rows = [...table.tBodies[0].rows];
+        const values = new Map(rows.map((r) => [r, sortValue(r.cells[column].textContent)]));
+        const numeric = [...values.values()].some((v) => typeof v === "number");
+        const was = th.getAttribute("aria-sort");
+        // Biggest first is what a number column is usually opened for, A to Z for words.
+        const descending = was ? was === "ascending" : numeric;
+        heads.forEach((h) => h.removeAttribute("aria-sort"));
+        th.setAttribute("aria-sort", descending ? "descending" : "ascending");
+        const direction = descending ? -1 : 1;
+        rows.sort((a, b) => compareValues(values.get(a), values.get(b), direction));
+        table.tBodies[0].append(...rows);
+      };
+    });
+  });
+}
+
+// One row of chips per column worth filtering by: a single value has nothing to choose
+// between, and a dozen would be noise. Chips combine, and the count says what's left.
+const FACETS = ["game", "result"];
+const MAX_CHIPS = 8;
+
+function initFilters(doc) {
+  doc.querySelectorAll("table.filterable").forEach((table) => {
+    const rows = [...table.tBodies[0].rows];
+    const chosen = {};
+    const count = doc.createElement("span");
+    count.className = "muted filter-count";
+    const apply = () => {
+      const shown = rows.filter((row) => {
+        const on = Object.entries(chosen).every(([facet, value]) => row.dataset[facet] === value);
+        row.hidden = !on;
+        return on;
+      });
+      count.textContent = `${shown.length} of ${rows.length}`;
+    };
+    const bars = [];
+    for (const facet of FACETS) {
+      const values = [...new Set(rows.map((r) => r.dataset[facet]))].sort();
+      if (values.length < 2 || values.length > MAX_CHIPS) continue;
+      const bar = doc.createElement("div");
+      bar.className = "filters";
+      const chips = [null, ...values].map((value) => {
+        const chip = doc.createElement("button");
+        chip.type = "button";
+        chip.textContent = value ?? "All";
+        chip.setAttribute("aria-pressed", String(value === null));
+        chip.onclick = () => {
+          if (value === null) delete chosen[facet];
+          else chosen[facet] = value;
+          chips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+          apply();
+        };
+        return chip;
+      });
+      bar.append(...chips);
+      bars.push(bar);
+    }
+    if (!bars.length) return;
+    bars[bars.length - 1].append(count);
+    apply();
+    const panel = table.closest(".wrap");
+    bars.forEach((bar) => panel.before(bar));
+  });
+}
+
+if (typeof document !== "undefined") {
+  initSorting(document);
+  initFilters(document);
+}
+
+if (typeof module !== "undefined") module.exports = { sortValue, compareValues, initSorting, initFilters };
+
+</script>
 <script>
   // Instant on purpose: a colour change across a page of tables shouldn't animate.
   (() => {

@@ -1,0 +1,177 @@
+{
+ "player_id": "haiku-5.5/c4-v1",
+ "model": "haiku-5.5",
+ "overall": {
+  "games": 20,
+  "won": 8,
+  "drew": 0,
+  "lost": 12,
+  "win_rate": 0.4,
+  "cost_usd": 0.011385000000000001,
+  "cost_per_game": 0.0005692500000000001,
+  "illegal_rate": 0.18636363636363637,
+  "cache_hit": 0.6359113228169198,
+  "latency_ms": 1669.011049723757
+ },
+ "games": [
+  {
+   "game": "connect4",
+   "place": 2,
+   "field": 2,
+   "ordinal": 7.97,
+   "games": 20,
+   "won": 8,
+   "drew": 0,
+   "lost": 12,
+   "win_rate": 0.4,
+   "cost_usd": 0.011385000000000001,
+   "cost_per_game": 0.0005692500000000001,
+   "illegal_rate": 0.18636363636363637,
+   "cache_hit": 0.6359113228169198,
+   "latency_ms": 1669.011049723757
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 36,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000615
+  },
+  {
+   "id": 35,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000723
+  },
+  {
+   "id": 34,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000513
+  },
+  {
+   "id": 33,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000724
+  },
+  {
+   "id": 32,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000776
+  },
+  {
+   "id": 31,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000567
+  },
+  {
+   "id": 30,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000306
+  },
+  {
+   "id": 29,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000669
+  },
+  {
+   "id": 28,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000767
+  },
+  {
+   "id": 27,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000622
+  },
+  {
+   "id": 26,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000357
+  },
+  {
+   "id": 25,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000773
+  },
+  {
+   "id": 24,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000671
+  },
+  {
+   "id": 23,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000622
+  },
+  {
+   "id": 22,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000306
+  },
+  {
+   "id": 21,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000615
+  },
+  {
+   "id": 20,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000204
+  },
+  {
+   "id": 19,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000567
+  },
+  {
+   "id": 18,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000153
+  },
+  {
+   "id": 17,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.000835
+  }
+ ]
+}

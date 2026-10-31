@@ -1,0 +1,123 @@
+{
+ "player_id": "random3",
+ "model": "random3",
+ "overall": {
+  "games": 10,
+  "won": 6,
+  "drew": 0,
+  "lost": 4,
+  "win_rate": 0.6,
+  "cost_usd": 0.0,
+  "cost_per_game": 0.0,
+  "illegal_rate": 0.0,
+  "cache_hit": null,
+  "latency_ms": 0.0
+ },
+ "games": [
+  {
+   "game": "liars_dice",
+   "place": null,
+   "field": 3,
+   "ordinal": 7.28,
+   "games": 2,
+   "won": 2,
+   "drew": 0,
+   "lost": 0,
+   "win_rate": 1.0,
+   "cost_usd": 0.0,
+   "cost_per_game": 0.0,
+   "illegal_rate": 0.0,
+   "cache_hit": null,
+   "latency_ms": 0.0
+  },
+  {
+   "game": "connect4",
+   "place": null,
+   "field": 2,
+   "ordinal": 6.08,
+   "games": 8,
+   "won": 4,
+   "drew": 0,
+   "lost": 4,
+   "win_rate": 0.5,
+   "cost_usd": 0.0,
+   "cost_per_game": 0.0,
+   "illegal_rate": 0.0,
+   "cache_hit": null,
+   "latency_ms": 0.0
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 16,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 15,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 12,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 11,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 10,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 9,
+   "game": "connect4",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 8,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 7,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 6,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 5,
+   "game": "connect4",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.0
+  }
+ ]
+}

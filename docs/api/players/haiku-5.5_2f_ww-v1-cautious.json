@@ -1,0 +1,57 @@
+{
+ "player_id": "haiku-5.5/ww-v1-cautious",
+ "model": "haiku-5.5",
+ "overall": {
+  "games": 1,
+  "won": 0,
+  "drew": 0,
+  "lost": 1,
+  "win_rate": 0.0,
+  "cost_usd": 0.001633,
+  "cost_per_game": 0.001633,
+  "illegal_rate": 0.42857142857142855,
+  "cache_hit": 0.18016928657799275,
+  "latency_ms": 1285.8
+ },
+ "games": [
+  {
+   "game": "werewolf",
+   "place": 15,
+   "field": 15,
+   "ordinal": -0.83,
+   "games": 1,
+   "won": 0,
+   "drew": 0,
+   "lost": 1,
+   "win_rate": 0.0,
+   "cost_usd": 0.001633,
+   "cost_per_game": 0.001633,
+   "illegal_rate": 0.42857142857142855,
+   "cache_hit": 0.18016928657799275,
+   "latency_ms": 1285.8
+  }
+ ],
+ "roles": {
+  "player_id": "haiku-5.5/ww-v1-cautious",
+  "wolf_games": 0,
+  "wolf_win_rate": null,
+  "seer_games": 1,
+  "seer_win_rate": 0.0,
+  "villager_games": 0,
+  "villager_win_rate": null,
+  "true_claims": 2,
+  "false_claims": 0,
+  "leaks": 0,
+  "truncated_messages": 1,
+  "forfeits": 1
+ },
+ "recent": [
+  {
+   "id": 67,
+   "game": "werewolf",
+   "role": "seer",
+   "outcome": "lost",
+   "cost_usd": 0.001633
+  }
+ ]
+}

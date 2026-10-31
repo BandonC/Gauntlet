@@ -19,10 +19,17 @@ from arena.web import (
     game_name,
     match_html,
     match_result,
+    model_of,
     move_label,
+    pct,
+    player_slug,
     render,
     result_cells,
     result_tally,
+    seat_outcome,
+    summarise,
+    village_share,
+    wilson,
 )
 
 URLS = Urls()
@@ -433,7 +440,7 @@ def _contrast(a, b):
 
 def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
     _, system, toggled = _palettes()
-    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 21
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 40
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
@@ -445,11 +452,37 @@ def test_every_palette_stays_readable(index, text, on):
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
-@pytest.mark.parametrize("wash", ["wash-1", "wash-2", "wash-3"])
+@pytest.mark.parametrize(
+    "wash", [f"{k}wash-{n}" for k in ("", "c4-", "dice-", "ww-", "df-") for n in (1, 2, 3)]
+)
 @pytest.mark.parametrize("text", ["fg", "muted", "link"])
 def test_text_stays_readable_on_every_colour_of_the_page_wash(index, wash, text):
     t = _tokens(_palettes()[index])
     assert _contrast(t[text], t[wash]) >= 4.5
+
+
+def _glows(block):
+    return [
+        ((int(r), int(g), int(b)), float(a))
+        for r, g, b, a in re.findall(r"--glow-[ab]: rgba\((\d+), (\d+), (\d+), ([\d.]+)\)", block)
+    ]
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize(
+    "wash", [f"{k}wash-{n}" for k in ("", "c4-", "dice-", "ww-", "df-") for n in (1, 2, 3)]
+)
+@pytest.mark.parametrize("text", ["fg", "muted", "link"])
+def test_text_stays_readable_where_a_glow_and_the_wallpaper_cross_the_wash(index, wash, text):
+    """The pixels text really sits on: wash, then the corner glows, then the wallpaper, which
+    is at most 16% of a mark behind the text column, faded to 28% there."""
+    block = _palettes()[index]
+    t = _tokens(block)
+    for rgb, alpha in _glows(block):
+        glow = "#" + "".join(f"{c:02x}" for c in rgb)
+        lit = _mixed(glow, t[wash], alpha)
+        for mark in ("g-c4", "g-dice", "g-ww", "g-df"):
+            assert _contrast(t[text], _mixed(t[mark], lit, 0.16 * 0.28)) >= 4.5
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
@@ -463,6 +496,29 @@ def test_primary_buttons_stay_readable(index):
 def test_chart_marks_stand_out_from_the_surface(index, mark):
     t = _tokens(_palettes()[index])
     assert _contrast(t[mark], t["surface"]) >= 3
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize("seat", range(7))
+def test_a_seat_number_is_readable_on_its_colour(index, seat):
+    t = _tokens(_palettes()[index])
+    assert _contrast(t[f"seat-{seat}"], t["surface"]) >= 4.5
+
+
+def _mixed(colour, base, share):
+    channels = (
+        round(share * int(colour[i : i + 2], 16) + (1 - share) * int(base[i : i + 2], 16))
+        for i in (1, 3, 5)
+    )
+    return "#" + "".join(f"{c:02x}" for c in channels)
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize("mark", ["g-c4", "g-dice", "g-ww", "g-df"])
+def test_hero_text_stays_readable_on_its_stronger_colours(index, mark):
+    t = _tokens(_palettes()[index])
+    assert "34%" in SITE_CSS.read_text("utf-8").split(".hero {")[1].split("}")[0]
+    assert _contrast(t["fg"], _mixed(t[mark], t["surface"], 0.34)) >= 4.5
 
 
 def test_the_site_has_no_3d():
@@ -554,6 +610,8 @@ def test_every_game_has_its_own_wallpaper_and_the_home_page_a_mix():
     assert "--tile-mix:" in css
     for game in list_games():
         assert f"--tile-{game}:" in css and f"body.g-{game} {{" in css
+        rule = css.split(f"body.g-{game} {{")[1].split("}")[0]
+        assert "--wash-1: var(" in rule and "--wash-3: var(" in rule  # each has its own colours
 
 
 def test_game_pages_carry_their_game_on_the_body():
@@ -683,3 +741,220 @@ def test_export_json_encodes_postgres_decimals_as_numbers():
     assert json.loads(out) == {"n": 3, "x": 0.25}
     with pytest.raises(TypeError):
         json.dumps({"s": {1}}, default=_json_default)
+
+
+def seat_row(**over):
+    row = {
+        "player_id": "haiku-5.5/ww-v2-plain",
+        "provider": "anthropic",
+        "match_id": 9,
+        "game": "werewolf",
+        "seed": 1,
+        "options": None,
+        "scores": [1, 1, 0, 0, 0, 0, 0],
+        "seat": 0,
+        "turns": 10,
+        "accepted": 9,
+        "attempts": 12,
+        "latency_ms": 2000,
+        "cost_usd": 0.01,
+        "input_tokens": 100,
+        "cache_read_tokens": 300,
+        "cache_write_tokens": 0,
+    }
+    return row | over
+
+
+def player_context(**over):
+    overall = summarise([seat_row()])
+    context = {
+        "player_id": "haiku-5.5/ww-v2-plain",
+        "model": "haiku-5.5",
+        "overall": overall,
+        "games": [
+            {"game": "werewolf", "place": 2, "field": 8, "ordinal": 3.1, **overall},
+        ],
+        "roles": {
+            "wolf_games": 10,
+            "wolf_win_rate": 0.9,
+            "seer_games": 0,
+            "seer_win_rate": None,
+            "villager_games": 20,
+            "villager_win_rate": 0.25,
+            "true_claims": 3,
+            "false_claims": 2,
+            "leaks": 1,
+            "forfeits": 0,
+        },
+        "recent": [
+            {"id": 9, "game": "werewolf", "role": "wolf", "outcome": "won", "cost_usd": 0.01}
+        ],
+    }
+    return context | over
+
+
+@pytest.mark.parametrize(
+    ("player_id", "slug"),
+    [
+        ("random2", "random2"),
+        ("haiku-5.5/c4-v1", "haiku-5.5_2f_c4-v1"),
+        ("a_b", "a_5f_b"),
+        ("Haiku", "_48_aiku"),
+    ],
+)
+def test_a_player_slug_is_one_safe_path_segment(player_id, slug):
+    assert player_slug(player_id) == slug
+
+
+def test_no_two_players_share_a_slug():
+    ids = ["a/b", "a_2f_b", "A/b", "a b", "a%20b", "a.b", "é", "<x>"]
+    assert len({player_slug(i) for i in ids}) == len(ids)
+
+
+@pytest.mark.parametrize(
+    ("value", "text"), [(None, "–"), (0.0, "0.0%"), (0.425, "42.5%"), (1.0, "100.0%")]
+)
+def test_pct(value, text):
+    assert pct(value) == text
+
+
+def test_wilson_matches_the_intervals_recorded_for_tournaments_6_and_7():
+    assert [round(100 * x, 1) for x in wilson(17, 40)] == [28.5, 57.8]
+    low, high = wilson(7, 40)
+    assert round(100 * low) == 9 and round(100 * high) == 32
+
+
+def test_wilson_stays_inside_zero_and_one():
+    assert wilson(0, 5)[0] == 0.0 and wilson(5, 5)[1] == 1.0
+
+
+def test_the_village_share_counts_finished_games_only():
+    seven = list("abcdefg")
+    v = list_row(id=1, game="werewolf", seats=seven, scores=[0, 0, 1, 1, 1, 1, 1])
+    w = list_row(id=2, game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    live = list_row(id=3, game="werewolf", seats=seven, status="running")
+    share = village_share([v, w, w, w, live])
+    assert (share["won"], share["games"], share["share"]) == (1, 4, 0.25)
+    assert village_share([live]) is None
+
+
+def test_the_rule_change_panels_lead_with_the_percentage_and_its_uncertainty():
+    seven = list("abcdefg")
+    row = list_row(game="werewolf", seats=seven, scores=[0, 0, 1, 1, 1, 1, 1])
+    lost = list_row(game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    both = [
+        {"game": "werewolf", "matches": [row, lost, lost, lost]},
+        {"game": "werewolf_dayfirst", "matches": [row]},
+    ]
+    html = render("index.html", URLS, boards={}, role_stats=[], stories=both)
+    assert '<p class="headline">25.0%</p>' in html and "Village wins, 1 of 4." in html
+    assert "95% interval 5% to 70%" in html
+
+
+@pytest.mark.parametrize(
+    ("game", "scores", "seat", "outcome"),
+    [
+        ("connect4", [1.0, 0.0], 0, "won"),
+        ("connect4", [1.0, 0.0], 1, "lost"),
+        ("connect4", [0.5, 0.5], 1, "drew"),
+        ("liars_dice", [0, 1, 0], 1, "won"),
+        ("werewolf", [1, 1, 0, 0, 0, 0, 0], 1, "won"),  # winners share a score
+        ("werewolf_dayfirst", [0, 0, 1, 1, 1, 1, 1], 0, "lost"),
+    ],
+)
+def test_a_seat_outcome_is_from_that_seats_point_of_view(game, scores, seat, outcome):
+    assert seat_outcome(game, scores, seat) == outcome
+
+
+def test_summarise_totals_a_players_seats():
+    won = seat_row()
+    lost = seat_row(seat=3, cost_usd=0.03, attempts=8, accepted=8, cache_read_tokens=100)
+    s = summarise([won, lost])
+    assert (s["games"], s["won"], s["lost"], s["win_rate"]) == (2, 1, 1, 0.5)
+    assert s["cost_usd"] == pytest.approx(0.04) and s["cost_per_game"] == pytest.approx(0.02)
+    assert s["illegal_rate"] == pytest.approx(3 / 20)  # as store/metrics.py defines it
+    assert s["cache_hit"] == pytest.approx(400 / 600)
+    assert s["latency_ms"] == 200
+
+
+def test_summarise_has_no_rates_without_anything_to_measure():
+    s = summarise([])
+    assert s["games"] == 0
+    assert s["win_rate"] is s["cost_per_game"] is s["illegal_rate"] is None
+    assert s["cache_hit"] is s["latency_ms"] is None
+
+
+def test_a_model_is_the_part_of_the_id_before_the_prompt():
+    assert model_of("haiku-5.5/c4-v1") == "haiku-5.5" and model_of("random") == "random"
+
+
+def test_every_leaderboard_and_seat_list_links_to_the_player():
+    boards = {"connect4": [lb_row("haiku-5.5/c4-v1")]}
+    index = render("index.html", URLS, boards=boards, role_stats=[])
+    assert 'href="/players/haiku-5.5_2f_c4-v1"' in index
+    assert 'href="/players/haiku"' in render("match.html", URLS, m=match())
+    final = {"p/1": {"rating": 1700.0, "low": 1600.0, "high": 1800.0}}
+    html = render("tournament.html", URLS, t=tournament(), matches=[], final=final)
+    assert 'href="/players/p_2f_1"' in html
+
+
+def test_the_player_page_shows_the_record_by_game_and_role():
+    html = render("player.html", URLS, **player_context())
+    assert "<title>haiku-5.5/ww-v2-plain · LLM Arena</title>" in html
+    assert '<body class="g-werewolf">' in html and "Werewolf: 2 of 8" in html
+    assert "90% of 10" in html and "– of 0" in html and "<dt>Bluffs</dt><dd>2</dd>" in html
+    assert '<a href="/matches/9">#9</a>' in html and "<td>wolf</td>" in html
+    assert 'data-result="Won"' in html and "Their cost" in html
+
+
+def test_a_player_without_finished_games_still_has_a_page():
+    context = player_context(overall=summarise([]), games=[], roles=None, recent=[])
+    html = render("player.html", URLS, **context)
+    assert "No finished games yet." in html and "<body>" in html
+
+
+def test_a_seat_that_never_acted_shows_no_latency_instead_of_crashing():
+    silent = summarise([seat_row(turns=0, accepted=0, attempts=0, latency_ms=0, cost_usd=0.0)])
+    assert silent["latency_ms"] is None and silent["illegal_rate"] is None
+    context = player_context(
+        games=[{"game": "werewolf", "place": 2, "field": 8, "ordinal": 3.1, **silent}]
+    )
+    assert ">–<" in render("player.html", URLS, **context)
+    row = {"model": "m", **silent}
+    models = [{"model": "m", "players": [], **silent}]
+    html = render("compare.html", URLS, models=models, games=[{"game": "werewolf", "rows": [row]}])
+    assert ">–<" in html
+
+
+def test_a_player_page_for_another_game_has_no_role_section():
+    context = player_context(
+        roles=None,
+        recent=[{"id": 2, "game": "connect4", "role": None, "outcome": "drew", "cost_usd": 0.0}],
+    )
+    html = render("player.html", URLS, **context)
+    assert "Werewolf by role" not in html and "<th>Role</th>" not in html and ">Drew<" in html
+
+
+def test_the_comparison_lists_each_model_and_its_players():
+    s = summarise([seat_row()])
+    models = [{"model": "haiku-5.5", "players": ["haiku-5.5/ww-v2-plain"], **s}]
+    games = [{"game": "werewolf", "rows": [{"model": "haiku-5.5", **s}]}]
+    html = render("compare.html", URLS, models=models, games=games)
+    assert "<h2>haiku-5.5</h2>" in html and 'href="/players/haiku-5.5_2f_ww-v2-plain"' in html
+    assert 'class="game-tag g-werewolf"' in html and "100.0%" in html
+    assert 'aria-current="page">Compare</a>' in html
+    assert "No games with real models yet." in render("compare.html", URLS, models=[], games=[])
+
+
+def test_tables_that_can_sort_say_so_and_match_rows_carry_their_filters():
+    html = render("matches.html", URLS, matches=[list_row(status="running")])
+    assert 'class="sortable filterable"' in html
+    assert 'data-game="Connect 4" data-result="running"' in html
+    assert "function initSorting" in html  # the script is inlined on every page
+
+
+def test_the_match_page_has_a_timeline_strip_under_a_full_width_slider():
+    html = render("match.html", URLS, m=match())
+    assert '<div class="scrub">' in html
+    assert html.index('id="replay-pos"') < html.index('id="replay-marks"')
+    assert '<tr data-seat="1">' in html and '<span class="avatar">1</span>' in html

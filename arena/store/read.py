@@ -49,6 +49,39 @@ FROM turns WHERE cost_usd > 0
 """
 
 
+# One row per seat of a finished match. Player and model pages summarise these, so the two
+# can't disagree about what a win, a cost or an illegal move is.
+SEAT_RESULTS_SQL = """
+SELECT s.player_id, p.provider, m.id AS match_id, m.game, m.seed, m.options, m.scores, s.seat,
+       count(t.turn_no) AS turns,
+       count(t.turn_no) FILTER (WHERE NOT t.forfeited) AS accepted,
+       coalesce(sum(t.attempts), 0)::bigint AS attempts,
+       coalesce(sum(t.latency_ms), 0)::bigint AS latency_ms,
+       coalesce(sum(t.cost_usd), 0)::float AS cost_usd,
+       coalesce(sum(t.input_tokens), 0)::bigint AS input_tokens,
+       coalesce(sum(t.cache_read_tokens), 0)::bigint AS cache_read_tokens,
+       coalesce(sum(t.cache_write_tokens), 0)::bigint AS cache_write_tokens
+FROM match_seats s
+JOIN matches m ON m.id = s.match_id
+JOIN players p ON p.id = s.player_id
+LEFT JOIN turns t ON t.match_id = s.match_id AND t.seat = s.seat
+WHERE m.status = 'completed' AND ($1::text IS NULL OR s.player_id = $1)
+GROUP BY s.player_id, p.provider, m.id, s.seat
+ORDER BY m.id DESC, s.seat
+"""
+
+
+async def seat_results(pool: asyncpg.Pool, player_id: str | None = None) -> list[dict]:
+    """Every seat of every finished match, newest first (or just one player's)."""
+    return [dict(r) for r in await pool.fetch(SEAT_RESULTS_SQL, player_id)]
+
+
+async def player_ids(pool: asyncpg.Pool) -> list[str]:
+    """Everyone who has been seated at a match, so every name on a page has a player page."""
+    rows = await pool.fetch("SELECT DISTINCT player_id FROM match_seats ORDER BY player_id")
+    return [r["player_id"] for r in rows]
+
+
 async def totals(pool: asyncpg.Pool) -> dict:
     """Games, tokens and spend with real models: free bot and random games don't count."""
     row = await pool.fetchrow(TOTALS_SQL)

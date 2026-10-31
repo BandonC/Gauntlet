@@ -10,6 +10,11 @@ const esc = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const DIE = ["", "⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
 const name = (seats, i) => esc(seats[i] ?? `seat ${i}`);
+// A seat's number in its colour, so talk can be followed without reading every name.
+const avatar = (seat) => `<span class="avatar">${Number(seat)}</span>`;
+const seatAttr = (seat) => `data-seat="${Number(seat)}"`;
+const said = (seat, who, text, { tone = "", after = "" } = {}) =>
+  `<p class="said${tone}" ${seatAttr(seat)}>${avatar(seat)}<span class="line"><b>${who}</b> ${text}${after}</span></p>`;
 
 const RENDERERS = {
   connect4(f, seats) {
@@ -66,11 +71,11 @@ const RENDERERS = {
         const cls = i === f.to_move ? ' class="turn"' : "";
         const d = dead.get(i);
         const status = d ? `<span class="muted">${esc(fate[d.cause])}, day ${d.day}</span>` : "alive";
-        return `<tr${cls}><td>${name(seats, i)}</td><td>${esc(role)}</td><td>${status}</td></tr>`;
+        return `<tr${cls} ${seatAttr(i)}><td>${avatar(i)} ${name(seats, i)}</td><td>${esc(role)}</td><td>${status}</td></tr>`;
       })
       .join("");
-    const said = f.messages
-      .map((m) => `<li>${name(seats, m.seat)} (round ${m.round}): ${esc(m.text)}</li>`)
+    const talk = f.messages
+      .map((m) => said(m.seat, name(seats, m.seat), `<small>round ${Number(m.round)}</small> ${esc(m.text)}`))
       .join("");
     const pick = (v) => `${name(seats, v.seat)} → ${name(seats, v.target)}`;
     const line = (label, items) => (items.length ? `<p class="ld-bids">${label}: ${items.join(", ")}</p>` : "");
@@ -83,7 +88,7 @@ const RENDERERS = {
     return (
       `<p class="status">${status}</p>` +
       `<div class="ww"><div class="wrap"><table class="ld"><thead><tr><th>Player</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>` +
-      `<div>${said ? `<ul>${said}</ul>` : ""}` +
+      `<div>${talk}` +
       line("Wolf votes tonight", f.wolf_votes.map(pick)) +
       line("Day votes", f.votes.map(pick)) +
       (f.votes.length
@@ -124,7 +129,7 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
       seat === out ? "out" : "",
       roles?.[seat] === "wolf" ? "wolf" : "",
     ].join(" ");
-    return `<g class="${tone.trim()}"><circle cx="${cx}" cy="${cy}" r="20"/><text x="${cx}" y="${cy}">${seat}</text></g>`;
+    return `<g class="${tone.trim()}" ${seatAttr(seat)}><circle cx="${cx}" cy="${cy}" r="20"/><text x="${cx}" y="${cy}">${seat}</text></g>`;
   }).join("");
   const label = votes.map((v) => `${player(v.seat)} votes ${player(v.target)}`).join(", ");
   return (
@@ -132,6 +137,53 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
     '<defs><marker id="vote-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z"/></marker></defs>' +
     `${arrows}${circles}</svg>`
   );
+}
+
+// The shape of a match, for the strip under the slider: phases as bands, and each moment
+// that changes the game as a tick. A game with no such moments gets an empty strip.
+function timeline(game, frames, seats) {
+  const bands = [];
+  const ticks = [];
+  if (game === "liars_dice") {
+    let round = null;
+    frames.forEach((f, i) => {
+      const r = f.last_reveal;
+      if (!r || r.round === round) return;
+      round = r.round;
+      ticks.push({ at: i, text: `Round ${Number(r.round)}: ${name(seats, r.loser)} lost a die` });
+    });
+  }
+  if (game === "werewolf" || game === "werewolf_dayfirst") {
+    const fate = { night: "killed at night", vote: "voted out" };
+    let phase = null;
+    let dead = 0;
+    frames.forEach((f, i) => {
+      if (!f.winner && f.phase !== phase) {
+        phase = f.phase;
+        const label = phase === "night" ? "Night" : phase === "vote" ? "Vote, day" : "Day";
+        bands.push({ from: i, phase, text: `${label} ${Number(f.day)}` });
+      }
+      f.deaths.slice(dead).forEach((d) => {
+        ticks.push({ at: i, text: `${name(seats, d.seat)} ${fate[d.cause]}, day ${Number(d.day)}` });
+      });
+      dead = f.deaths.length;
+    });
+  }
+  return { bands, ticks };
+}
+
+function renderTimeline({ bands, ticks }, last) {
+  if (!last || (!bands.length && !ticks.length)) return "";
+  const at = (frame) => ((100 * frame) / last).toFixed(2);
+  const strip = bands.map((b, i) => {
+    const to = bands[i + 1]?.from ?? last;
+    const style = `left:${at(b.from)}%;width:${at(to - b.from)}%`;
+    return `<button type="button" class="band ${esc(b.phase)}" style="${style}" data-jump="${b.from}" title="${b.text}" aria-label="${b.text}"></button>`;
+  });
+  const marks = ticks.map(
+    (t) => `<button type="button" class="tick" style="left:${at(t.at)}%" data-jump="${t.at}" title="${t.text}" aria-label="${t.text}"></button>`,
+  );
+  return strip.join("") + marks.join("");
 }
 
 function renderFrame(game, frame, seats) {
@@ -166,6 +218,9 @@ function initReplay(doc) {
   slider.max = String(last);
   let idx = last;
   let timer = null;
+  const marks = () => {
+    $("replay-marks").innerHTML = renderTimeline(timeline(data.game, data.frames, data.seats), last);
+  };
 
   function show(i) {
     idx = Math.max(0, Math.min(last, i));
@@ -200,6 +255,10 @@ function initReplay(doc) {
   $("replay-last").onclick = () => { stop(); show(last); };
   $("replay-play").onclick = play;
   slider.oninput = () => { stop(); show(Number(slider.value)); };
+  $("replay-marks").onclick = (e) => {
+    const frame = e.target.closest?.("[data-jump]")?.dataset.jump;
+    if (frame !== undefined) { stop(); show(Number(frame)); }
+  };
   doc.querySelectorAll("tr[data-frame]").forEach((tr) => {
     tr.onclick = () => { stop(); show(Number(tr.dataset.frame)); };
   });
@@ -207,6 +266,7 @@ function initReplay(doc) {
     if (e.key === "ArrowLeft") { stop(); show(idx - 1); }
     if (e.key === "ArrowRight") { stop(); show(idx + 1); }
   });
+  marks();
   show(last);
 
   function follow() {
@@ -220,6 +280,7 @@ function initReplay(doc) {
       data.frames.push(frame);
       last += 1;
       slider.max = String(last);
+      marks();
       show(atEnd ? last : idx); // only viewers at the newest frame are moved along
     });
     stream.addEventListener("done", (e) => {
@@ -289,10 +350,10 @@ function renderSeats(step, chosen) {
   return seats
     .map((seat) => {
       const d = fate.get(seat);
-      if (d) return `<span class="seat dead">${player(seat)} <small>${esc(d.role)}</small></span>`;
-      if (step.kind !== "vote") return `<span class="seat">${player(seat)}</span>`;
+      if (d) return `<span class="seat dead" ${seatAttr(seat)}>${player(seat)} <small>${esc(d.role)}</small></span>`;
+      if (step.kind !== "vote") return `<span class="seat" ${seatAttr(seat)}>${player(seat)}</span>`;
       const on = chosen.has(seat);
-      return `<button class="seat${on ? " on" : ""}" data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
+      return `<button class="seat${on ? " on" : ""}" ${seatAttr(seat)} data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
     })
     .join("");
 }
@@ -303,7 +364,7 @@ function renderTranscript(messages) {
     .map((m) => {
       const head = m.day === day ? "" : `<h3>Day ${Number(m.day)}</h3>`;
       day = m.day;
-      return `${head}<p class="said"><b>${player(m.seat)}</b> ${esc(m.text)}</p>`;
+      return head + said(m.seat, player(m.seat), esc(m.text));
     })
     .join("");
 }
@@ -383,7 +444,7 @@ function renderTruth(frames, turns, roles) {
       bluffs += tells.filter((x) => x.kind === "bluff").length;
       const tone = tells.find((x) => x.kind === "bluff") ? " bluff" : tells.length ? " wrong" : "";
       const notes = tells.map((x) => `<span class="tell">${x.text}</span>`).join("");
-      return `${head}<p class="said${tone}"><b>${player(t.seat)}</b> <small>${esc(roles[t.seat])}</small> ${esc(t.action.message)}${notes}</p>`;
+      return head + said(t.seat, player(t.seat), `<small>${esc(roles[t.seat])}</small> ${esc(t.action.message)}`, { tone, after: notes });
     })
     .join("");
   const count = bluffs === 1 ? "1 bluff" : `${bluffs} bluffs`;
@@ -481,4 +542,5 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined") module.exports = {
   RENDERERS, renderFrame, describeTurn, esc, initReplay, holdFor,
   blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind, roundTable,
+  timeline, renderTimeline,
 };

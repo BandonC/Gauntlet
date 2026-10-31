@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-head"><h1>Tournaments</h1></div>
 {% if tournaments %}
-<div class="wrap"><table>
+<div class="wrap"><table class="sortable">
   <thead><tr><th>ID</th><th>Game</th><th>Format</th><th>Status</th><th>Round</th><th>Progress</th><th class="num">Spent</th></tr></thead>
   <tbody>
   {% for t in tournaments %}

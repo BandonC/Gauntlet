@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_macros.html" import link, player, result %}
+{% from "_macros.html" import link, player_link, result %}
 {% set active = "matches" %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
 {% block body_attrs %} class="g-{{ m.game }}"{% endblock %}
@@ -38,9 +38,9 @@
   <thead><tr><th>Seat</th><th>Player</th>{% if m.scores %}<th class="num">Score</th>{% endif %}{% if m.placements %}<th class="num">Place</th>{% endif %}</tr></thead>
   <tbody>
   {% for p in m.seats %}
-    <tr>
-      <td>{{ loop.index0 }}</td>
-      <td>{{ player(p) }}</td>
+    <tr data-seat="{{ loop.index0 }}">
+      <td><span class="avatar">{{ loop.index0 }}</span></td>
+      <td>{{ player_link(p, url) }}</td>
       {% if m.scores %}<td class="num">{{ m.scores[loop.index0] }}</td>{% endif %}
       {% if m.placements %}<td class="num">{{ m.placements[loop.index0] }}</td>{% endif %}
     </tr>
@@ -54,9 +54,12 @@
   <button id="replay-play">▶ Play</button>
   <button id="replay-next" title="Next (→)">▶</button>
   <button id="replay-last" title="End">⏭</button>
-  <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
   <span id="replay-label" class="muted"></span>
   <span id="replay-live" class="muted"></span>
+</div>
+<div class="scrub">
+  <input id="replay-pos" type="range" min="0" max="0" value="0" aria-label="Position">
+  <div id="replay-marks"></div>
 </div>
 <div id="replay-frame"><noscript><p class="muted">The replay needs JavaScript; the turn list below works without it.</p></noscript></div>
 <p id="replay-info" class="muted"></p>
