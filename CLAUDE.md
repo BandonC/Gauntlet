@@ -179,6 +179,10 @@ migrations/             forward-only SQL, applied in filename order
   be enforced; effort is a signal, not a limit, and no player set it when it was added.
 - `turns.stop_reasons` has one entry per attempt, in the provider's own words, so `max_tokens`
   (cut off) can be told from `end_turn` (skipped the tool). Turns from before it are empty.
+- `turns.reply_blocks` and recordings keep each attempt's content blocks: type, characters, and
+  the words of text blocks only. Thinking is size only and signatures are never stored. It stays
+  out of `read.match_detail` on purpose: text can be private reasoning, and match data is
+  embedded in pages and exported. The adapter used to drop text when a reply had a tool call.
 - `usage.output_tokens_details.thinking_tokens` is a breakdown of `output_tokens`, which stays
   the billed total. It lands in `Usage.thinking_tokens` and `turns.thinking_tokens`; 0 means none
   reported. `costs.py` never reads it, and a test holds that.

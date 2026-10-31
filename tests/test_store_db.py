@@ -677,6 +677,20 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     assert await web.tournament_page(pool, urls, 10**9) is None
 
 
+async def test_reply_blocks_survive_the_turn_log_but_stay_out_of_match_data(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    store = PostgresTurnStore(pool, "w0")
+    blocks = [[{"type": "text", "chars": 7, "text": "private"}], [{"type": "tool_use", "chars": 9}]]
+    turn = TurnRecord(
+        0, 0, {"column": 3}, False, 2, None, None, Usage(), 0.0, 5, reply_blocks=blocks
+    )
+    await store.append_turn(str(m.id), turn)
+    assert (await store.load_turns(str(m.id)))[0].reply_blocks == blocks
+    detail = await read.match_detail(pool, m.id)
+    assert "reply_blocks" not in detail["turns"][0] and "private" not in json.dumps(detail)
+
+
 async def test_stop_reasons_survive_the_turn_log_one_per_attempt(pool):
     await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
     (m,) = await _claim_all(pool, 1)

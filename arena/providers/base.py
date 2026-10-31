@@ -14,10 +14,10 @@ Error policy (important for fairness, see CLAUDE.md):
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Protocol
 
-from arena.types import Action, ActionSpec, Usage
+from arena.types import JSON, Action, ActionSpec, Usage
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,7 @@ class Completion:
     raw_text: str
     usage: Usage
     stop_reason: str | None = None  # the provider's word: tool_use, max_tokens, stop, length...
+    blocks: list[JSON] = field(default_factory=list)  # {type, chars} and text for text blocks
 
 
 class ProviderError(Exception):

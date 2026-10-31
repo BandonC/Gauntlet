@@ -81,8 +81,25 @@ class AnthropicProvider:
             thinking_tokens=_thinking_tokens(u),
         )
         return Completion(
-            tool_input=tool_input, raw_text=raw, usage=usage, stop_reason=resp.stop_reason
+            tool_input=tool_input,
+            raw_text=raw,
+            usage=usage,
+            stop_reason=resp.stop_reason,
+            blocks=[_block(b) for b in resp.content],
         )
+
+
+def _block(block: object) -> dict:
+    """One content block for the log: its type and size. Only text blocks keep their words;
+    thinking is size only, and its signature is never stored."""
+    kind = getattr(block, "type", "unknown")
+    if kind == "text":
+        return {"type": kind, "chars": len(block.text), "text": block.text}
+    if kind == "thinking":
+        return {"type": kind, "chars": len(block.thinking)}
+    if kind == "tool_use":
+        return {"type": kind, "chars": len(json.dumps(block.input))}
+    return {"type": kind, "chars": 0}
 
 
 def _tool_choice(req: CompletionRequest) -> dict:
