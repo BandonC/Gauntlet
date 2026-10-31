@@ -497,7 +497,7 @@ def _instruction(view: JSON) -> str:
 # Literal phrases only, so paraphrases ("I can see who's guilty") are missed.
 _ROLE = (
     r"(?:(?:just|only)\s+)?(?:(?:a|an|the)\s+)?(?:(?:simple|plain)\s+)?"
-    r"(werewolf|wolf|seer|villager)\b"
+    r"(werewolf|wolf|seer|villager)(?![\w-])"  # not "I'm wolf-hunting"
 )
 _SELF_CLAIM = re.compile(
     rf"\b(?:(?:i\s+am|i['’]m)\s+{_ROLE}|as\s+{_ROLE}\s*,?\s*i\b)", re.IGNORECASE
