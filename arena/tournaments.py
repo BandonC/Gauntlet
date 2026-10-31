@@ -21,6 +21,15 @@ def round_robin(player_ids: list[str], games_per_pair: int) -> list[list[str]]:
     return seatings
 
 
+def shuffle_matches(seatings: list[list[str]], seed: int) -> list[list[str]]:
+    """The same matches, in a seeded random order. Live ratings depend on play order: if
+    each pairing plays as a block, a player meeting a strong opponent after its rating
+    has risen pays less for the same result (see First real run in CLAUDE.md)."""
+    shuffled = list(seatings)
+    random.Random(f"{seed}:order").shuffle(shuffled)
+    return shuffled
+
+
 # --- Swiss ------------------------------------------------------------------------
 # Each pairing plays GAMES_PER_PAIRING games with seats swapped (first-move advantage
 # cancels, as in round_robin). A bye is worth BYE_POINTS: the same as winning both games

@@ -1,6 +1,8 @@
-"""Materialised ratings. Weng-Lin (wl_* columns) updates on every match at any table
-size and ranks the leaderboard; Elo (column `rating`, the v1 rating) and Glicko-2
-(glicko_* columns) are heads-up-only extras beside it. Written in the same transaction
+"""Live ratings, materialised per match, plus final ratings computed per tournament.
+
+Weng-Lin (wl_* columns) updates on every match at any table size and ranks the
+leaderboard; Elo (column `rating`, the v1 rating) and Glicko-2 (glicko_* columns) are
+heads-up-only extras beside it. Written in the same transaction
 as queue.complete, so a match is rated exactly once and only if its completion commits.
 
 Concurrent completions that share a player serialise on that player's `ratings` row
@@ -16,7 +18,7 @@ from __future__ import annotations
 
 import asyncpg
 
-from arena.ratings import elo, glicko2, weng_lin
+from arena.ratings import bradley_terry, elo, glicko2, weng_lin
 from arena.ratings.glicko2 import Glicko
 from arena.ratings.weng_lin import WengLin
 
@@ -72,6 +74,27 @@ FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE m.status = 'completed' AND ($1::text IS NULL OR m.game = $1)
 GROUP BY m.id
 ORDER BY m.completed_at, m.id
+"""
+
+
+FINAL_RESULTS_SQL = """
+SELECT m.scores, array_agg(s.player_id ORDER BY s.seat) AS seats
+FROM matches m JOIN match_seats s ON s.match_id = m.id
+WHERE m.tournament_id = $1 AND m.status = 'completed'
+GROUP BY m.id
+HAVING count(*) = 2
+"""
+
+# The newest finished tournament of a game that was entirely heads-up.
+LATEST_FINAL_SQL = """
+SELECT max(t.id) FROM tournaments t
+WHERE t.game = $1 AND t.status = 'completed'
+  AND EXISTS (SELECT 1 FROM matches m WHERE m.tournament_id = t.id)
+  AND NOT EXISTS (
+      SELECT 1 FROM matches m
+      WHERE m.tournament_id = t.id
+        AND (SELECT count(*) FROM match_seats s WHERE s.match_id = m.id) <> 2
+  )
 """
 
 
@@ -147,8 +170,32 @@ async def rebuild(pool: asyncpg.Pool, game: str | None = None) -> int:
     return len(matches)
 
 
+async def final_ratings(pool: asyncpg.Pool, tournament_id: int) -> dict[str, dict] | None:
+    """Bradley-Terry ratings of one finished tournament, best first. None while it's
+    unfinished, if it wasn't heads-up, or if no finite estimate exists."""
+    status = await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tournament_id)
+    if status != "completed":
+        return None
+    rows = await pool.fetch(FINAL_RESULTS_SQL, tournament_id)
+    fitted = bradley_terry.fit(
+        (r["seats"][0], r["seats"][1], r["scores"][0]) for r in rows if len(set(r["seats"])) == 2
+    )
+    if fitted is None:
+        return None
+    best_first = sorted(fitted.items(), key=lambda kv: (-kv[1].rating, kv[0]))
+    return {
+        pid: {"rating": round(r.rating, 1), "low": round(r.low, 1), "high": round(r.high, 1)}
+        for pid, r in best_first
+    }
+
+
 async def leaderboard(pool: asyncpg.Pool, game: str) -> list[dict]:
+    """Live ratings for every player, plus each one's final rating from the game's
+    latest heads-up tournament (None if it didn't play there, or none exists). Finals
+    only compare within one tournament, so they come from that single fit."""
     rows = await pool.fetch(LEADERBOARD_SQL, game)
+    final_id = await pool.fetchval(LATEST_FINAL_SQL, game)
+    finals = await final_ratings(pool, final_id) if final_id else None
     return [
         {
             "player_id": r["player_id"],
@@ -162,6 +209,8 @@ async def leaderboard(pool: asyncpg.Pool, game: str) -> list[dict]:
             "elo": round(r["elo"], 1),
             "games": r["games_played"],
             "points": r["points"],
+            "final": (finals or {}).get(r["player_id"]),
+            "final_tournament_id": final_id if finals else None,
         }
         for r in rows
     ]
