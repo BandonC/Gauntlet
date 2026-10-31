@@ -44,7 +44,7 @@ def test_v2_only_adds_the_length_line_to_its_v1_style(style):
 
 def test_every_earlier_prompt_is_ascii_so_reading_utf8_kept_its_identity():
     for path in PROMPTS_DIR.rglob("*.txt"):
-        if "v2-" not in str(path):
+        if "v2-" not in str(path) and "werewolf_dayfirst" not in str(path):
             assert path.read_bytes().isascii(), path
 
 

@@ -26,6 +26,7 @@ Optimise for correctness and clear failure semantics over features.
 | Swiss tournaments, multi-seat table tournaments, pause/resume on failed matches | Done, db-tested |
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer, proven by a real run (tournament 6, see Gotchas) |
+| `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots. **No real model has played it.** |
 
 ## Commands
 
@@ -36,6 +37,7 @@ cp .env.example .env && cp roster.example.toml roster.toml   # then edit both
 docker compose up -d db testdb
 
 pytest                                   # unit tests; db tests skip without DATABASE_URL
+pytest -m slow                           # balance simulations, excluded by default
 DATABASE_URL=postgresql://arena:arena@localhost:5433/arena_test pytest -m db
 ruff check arena tests && ruff format arena tests
 
@@ -44,6 +46,7 @@ arena migrate
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
 arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
+arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
 arena leaderboard --game connect4
@@ -76,7 +79,8 @@ arena/
   games/base.py         Game protocol  ← read first
   games/connect4.py     reference implementation
   games/liars_dice.py   hidden information (dice), per-round randomness
-  games/werewolf.py     hidden roles, free text, phases, role-claim classifier
+  games/werewolf.py     hidden roles, free text, phases, role-claim classifier; also
+                        WerewolfDayFirst, the same game opening on day 1
   engine/match_runner.py  MatchRunner, iter_states (replay), TurnStore, LeaseLost
   players/              Player protocol, RandomPlayer/ScriptedPlayer, LLMPlayer, prompts
   players/prompts/<game>/<version>/{system,turn}.txt
@@ -434,6 +438,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   neither is deliberate: a hypothetical in match 96 and seat 2 accusing "Player 2" in match
   102. 111 of the 167 are Haiku 5.5 villagers' "Player N here, villager" habit, so true-claim
   counts say more about style than honesty.
+- `werewolf_dayfirst` is `Werewolf` opening on discussion, so the first kill and inspection
+  come on night 2 (night n still precedes day n, and there is no night 1). It exists so
+  tournament 6 stays valid: `werewolf` keeps its rules, and ratings are per game. Its
+  `v1-*` prompts are byte copies of `werewolf/v2-*`, because no prompt mentions night; the
+  rules reach them through `$rules`. Bots use `model = "werewolf"` for both. A new game id
+  also needs `metrics.WEREWOLF_GAMES` (else its role stats are silently empty),
+  `web.MOVE_LABELS` and `RENDERERS` in `replay.js`. Don't compare ordinals across the two.
+- `addopts` excludes `slow`; a `-m` on the command line replaces it, so `pytest -m db` and
+  `pytest -m slow` both work. Plain `pytest` keeps a few-game smoke test of the simulator.
 - Werewolf balance: a non-wolf voted out on day 1 means the next kill reaches parity, so the
   game is lopsided. Tournament 6 village votes hit a wolf 125 of 229 times (54%), but they
   bunch: one seat took 5 of 6 votes on 23 of 40 first days. So `arena/balance.py` has `focus`,
