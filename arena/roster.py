@@ -32,6 +32,22 @@ class PlayerConfig:
     max_tokens: int = 256
     pricing: Pricing = FREE
     seed: int = 0
+    tool_choice: str = "forced"  # "auto" for models that reject forced tool use
+    thinking_budget: int | None = None  # tokens of manual thinking, Anthropic only
+
+    def __post_init__(self) -> None:
+        """Refuse here what the API would refuse later, in the middle of a tournament."""
+        if self.tool_choice not in ("forced", "auto"):
+            raise ValueError(f"{self.id}: tool_choice must be forced or auto")
+        customised = self.tool_choice != "forced" or self.thinking_budget is not None
+        if customised and self.provider != "anthropic":
+            raise ValueError(f"{self.id}: tool_choice and thinking_budget are Anthropic only")
+        if self.thinking_budget is None:
+            return
+        if self.tool_choice == "forced":
+            raise ValueError(f"{self.id}: thinking_budget needs tool_choice = auto")
+        if not 1024 <= self.thinking_budget < self.max_tokens:
+            raise ValueError(f"{self.id}: thinking_budget must be 1024 or more, below max_tokens")
 
 
 @dataclass(frozen=True)
@@ -73,7 +89,13 @@ def config_hash(cfg: PlayerConfig) -> str:
     if cfg.provider == "bot":
         return f"bot-{cfg.model}-{cfg.seed}"
     return identity_hash(
-        cfg.provider, cfg.model, load_prompt(cfg.prompt), cfg.temperature, cfg.max_tokens
+        cfg.provider,
+        cfg.model,
+        load_prompt(cfg.prompt),
+        cfg.temperature,
+        cfg.max_tokens,
+        cfg.tool_choice,
+        cfg.thinking_budget,
     )
 
 
@@ -143,5 +165,7 @@ class PlayerFactory:
             load_prompt(cfg.prompt),
             temperature=cfg.temperature,
             max_tokens=cfg.max_tokens,
+            tool_choice=cfg.tool_choice,
+            thinking_budget=cfg.thinking_budget,
         )
         return player, cfg.pricing

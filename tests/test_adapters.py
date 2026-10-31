@@ -2,6 +2,7 @@
 If a vendor changes its response shape, these are the tests that should break."""
 
 import json
+from dataclasses import replace
 
 import httpx2 as httpx
 import pytest
@@ -50,6 +51,77 @@ async def test_anthropic_tool_use_parsed():
     assert (out.usage.input_tokens, out.usage.cache_read_tokens) == (120, 900)
     assert seen["body"]["tool_choice"] == {"type": "tool", "name": "drop_piece"}
     assert seen["body"]["system"][0]["cache_control"] == {"type": "ephemeral"}
+
+
+def anthropic_reply(content, **usage):
+    return httpx.Response(
+        200,
+        json={
+            "id": "msg_1",
+            "type": "message",
+            "role": "assistant",
+            "model": "m",
+            "stop_reason": "end_turn",
+            "stop_sequence": None,
+            "content": content,
+            "usage": {"input_tokens": 10, "output_tokens": 300, **usage},
+        },
+    )
+
+
+TOOL_USE = {"type": "tool_use", "id": "t", "name": "drop_piece", "input": {"column": 3}}
+THINKING = {"type": "thinking", "thinking": "summary", "signature": "sig"}
+
+
+async def send(req, content, **usage):
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.update(json.loads(request.content))
+        return anthropic_reply(content, **usage)
+
+    out = await AnthropicProvider(api_key="k", http_client=client(handler)).complete(req)
+    return seen, out
+
+
+async def test_anthropic_sends_no_thinking_setting_by_default():
+    seen, _ = await send(REQ, [TOOL_USE])
+    assert "thinking" not in seen
+
+
+async def test_anthropic_auto_allows_one_tool_call_and_forces_none():
+    seen, out = await send(replace(REQ, tool_choice="auto"), [TOOL_USE])
+    assert seen["tool_choice"] == {"type": "auto", "disable_parallel_tool_use": True}
+    assert out.tool_input == {"column": 3}
+
+
+async def test_anthropic_auto_reply_in_text_is_no_action_not_an_error():
+    _, out = await send(replace(REQ, tool_choice="auto"), [{"type": "text", "text": "column 3"}])
+    assert out.tool_input is None and out.raw_text == "column 3"
+
+
+async def test_anthropic_thinking_budget_is_sent():
+    req = replace(REQ, tool_choice="auto", thinking_budget=1024, max_tokens=2048)
+    seen, _ = await send(req, [TOOL_USE])
+    assert seen["thinking"] == {"type": "enabled", "budget_tokens": 1024}
+    assert seen["max_tokens"] == 2048
+
+
+async def test_anthropic_thinking_tokens_are_recorded_inside_output_tokens():
+    details = {"thinking_tokens": 280}
+    _, out = await send(REQ, [THINKING, TOOL_USE], output_tokens_details=details)
+    assert (out.usage.output_tokens, out.usage.thinking_tokens) == (300, 280)
+    assert out.tool_input == {"column": 3} and out.raw_text == '{"column": 3}'
+
+
+async def test_anthropic_reply_without_a_breakdown_records_no_thinking_tokens():
+    _, out = await send(REQ, [TOOL_USE])
+    assert out.usage.thinking_tokens == 0
+
+
+async def test_anthropic_reply_of_only_thinking_is_no_action():
+    _, out = await send(replace(REQ, tool_choice="auto"), [THINKING])
+    assert out.tool_input is None and out.raw_text == ""
 
 
 async def test_anthropic_429_is_retryable_with_retry_after():
