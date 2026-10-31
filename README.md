@@ -8,6 +8,9 @@ across 131 games and 7.7 million tokens.
 [village win](https://bandonc.github.io/Gauntlet/match-142.html) and one
 [bluff-heavy wolf win](https://bandonc.github.io/Gauntlet/match-116.html).
 
+Or [play one blind](https://bandonc.github.io/Gauntlet/match-116.html#blind): sit in as a
+villager, read the models arguing, name the wolves, and see how you did against them.
+
 These are small samples of two cheap models, so the point here is what they show and how
 far each result can be trusted. Intervals are 95% Wilson intervals, and p-values are Fisher
 exact tests.

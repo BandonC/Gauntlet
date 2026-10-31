@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_macros.html" import game_tag, link, player %}
+{% set active = "" %}
+{% block title %}{{ player_id }} · LLM Arena{% endblock %}
+{% block body_attrs %}{% if games %} class="g-{{ games[0].game }}"{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head banner{% if games %} g-{{ games[0].game }}{% endif %}">
+  <h1>{{ player(player_id) }}</h1>
+  <p>{% for g in games %}{{ g.game | game_name }}{% if g.place %}: {{ g.place }} of {{ g.field }}{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+</div>
+{% if not games %}
+<p class="muted">No finished games yet.</p>
+{% else %}
+<dl class="stats">
+  <div><dt>Games</dt><dd>{{ overall.games }}</dd></div>
+  <div><dt>Won</dt><dd>{{ overall.won }} ({{ overall.win_rate | pct }})</dd></div>
+  <div><dt>Cost per game</dt><dd>{{ overall.cost_per_game | usd }}</dd></div>
+  <div><dt>Illegal moves</dt><dd>{{ overall.illegal_rate | pct }}</dd></div>
+  <div><dt>Cache hits</dt><dd>{{ overall.cache_hit | pct }}</dd></div>
+</dl>
+<h2>By game</h2>
+<div class="wrap"><table class="sortable">
+  <thead><tr><th>Game</th><th class="num">Place</th><th class="num">Ordinal</th><th class="num">Games</th><th class="num">Won</th><th class="num">Cost per game</th><th class="num">Illegal moves</th><th class="num">Mean latency</th></tr></thead>
+  <tbody>
+  {% for g in games %}
+    <tr>
+      <td>{{ game_tag(g.game) }}</td>
+      <td class="num">{{ g.place or '–' }}</td>
+      <td class="num">{{ g.ordinal if g.ordinal is not none else '–' }}</td>
+      <td class="num">{{ g.games }}</td>
+      <td class="num">{{ g.win_rate | pct }}</td>
+      <td class="num">{{ g.cost_per_game | usd }}</td>
+      <td class="num">{{ g.illegal_rate | pct }}</td>
+      <td class="num">{{ g.latency_ms | ms }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% if roles %}
+<h2>Werewolf by role</h2>
+<p class="muted">Claims are literal matches only, so paraphrased bluffs are missed.</p>
+<dl class="stats">
+  {% for role in ('wolf', 'seer', 'villager') %}
+  <div><dt>{{ role | capitalize }}</dt><dd>{{ roles[role ~ '_win_rate'] | pct(0) }} of {{ roles[role ~ '_games'] }}</dd></div>
+  {% endfor %}
+  <div><dt>Bluffs</dt><dd>{{ roles.false_claims }}</dd></div>
+  <div><dt>True claims</dt><dd>{{ roles.true_claims }}</dd></div>
+  <div><dt>Leaks</dt><dd>{{ roles.leaks }}</dd></div>
+  <div><dt>Forfeits</dt><dd>{{ roles.forfeits }}</dd></div>
+</dl>
+{% endif %}
+<h2>Games</h2>
+{% set has_roles = recent | selectattr('role') | list %}
+<div class="wrap"><table class="sortable filterable">
+  <thead><tr><th>ID</th><th>Game</th>{% if has_roles %}<th>Role</th>{% endif %}<th>Result</th><th class="num">Their cost</th></tr></thead>
+  <tbody>
+  {% for r in recent %}
+    <tr data-game="{{ r.game | game_name }}" data-result="{{ r.outcome | capitalize }}">
+      <td>{{ link(url('match', id=r.id), '#' ~ r.id) }}</td>
+      <td>{{ game_tag(r.game) }}</td>
+      {% if has_roles %}<td>{{ r.role or '–' }}</td>{% endif %}
+      <td>{{ r.outcome | capitalize }}</td>
+      <td class="num">{{ r.cost_usd | usd }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endif %}
+{% endblock %}

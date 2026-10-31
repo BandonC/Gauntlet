@@ -1,19 +1,45 @@
 {# A link, or plain text when a partial export left the target out. #}
 {% macro link(href, text) %}{% if href %}<a href="{{ href }}">{{ text }}</a>{% else %}{{ text }}{% endif %}{% endmacro %}
 
-{% macro match_table(matches, url) %}
+{# Player ids are model/prompt: the model carries the name, the prompt stays quiet. #}
+{% macro player(id) %}{% set model, slash, rest = id.partition('/') %}<span class="pid">{{ model }}{% if slash %}<span>/{{ rest }}</span>{% endif %}</span>{% endmacro %}
+
+{# A player, linked to their page. #}
+{% macro player_link(id, url) %}{% set href = url('player', id=id | player_slug) %}{% if href %}<a href="{{ href }}">{{ player(id) }}</a>{% else %}{{ player(id) }}{% endif %}{% endmacro %}
+
+{# A coloured mark beside plain text: identity is never carried by the words' colour. #}
+{% macro result(m) %}{% set word = m | match_result %}{% if word and m | result_class %}<span class="chip {{ m | result_class }}">{{ word }}</span>{% else %}{{ word or m.status }}{% endif %}{% endmacro %}
+
+{% macro game_tag(game) %}<span class="game-tag g-{{ game }}">{{ game | game_name }}</span>{% endmacro %}
+
+{# One square per finished game, grouped by result. Each links to its game when it can. #}
+{% macro waffle(matches, url) %}
+{% set cells = matches | result_cells %}
+{% if cells %}
+<div class="waffle" role="img" aria-label="{{ matches | result_tally }}">
+  {% for c in cells %}{% set href = url('match', id=c.id) %}{% if href %}<a class="cell {{ c.side }}" href="{{ href }}" title="#{{ c.id }}: {{ c.word }}"></a>{% else %}<span class="cell {{ c.side }}" title="#{{ c.id }}: {{ c.word }}"></span>{% endif %}{% endfor %}
+</div>
+<p class="keys">{% for word, n in matches | result_counts %}<span class="key {{ word | lower }}">{{ word }} {{ n }}</span>{% endfor %}</p>
+{% endif %}
+{% endmacro %}
+
+{# A pair reads as "a vs b"; a table of seven is just its size, with the names on hover. #}
+{% macro seated(m) %}{% if m.seats | length > 2 %}<span title="{{ m.seats | join(', ') }}">{{ m.seats | length }} players</span>{% else %}{{ m.seats | join(' vs ') }}{% endif %}{% endmacro %}
+
+{# Every row of a table tournament has the same seat count, so saying so adds nothing. #}
+{% macro match_table(matches, url, within_tournament=False) %}
 {% if matches %}
-<div class="wrap"><table>
-  <thead><tr><th>ID</th><th>Game</th><th>Players</th><th>Tournament</th><th>Status</th><th>Scores</th><th class="num">Cost</th></tr></thead>
+{% set show_players = not within_tournament or matches[0].seats | length == 2 %}
+<div class="wrap"><table class="sortable filterable">
+  <thead><tr><th>ID</th>{% if not within_tournament %}<th>Game</th>{% endif %}{% if show_players %}<th>Players</th>{% endif %}<th>Result</th>{% if not within_tournament %}<th>Tournament</th>{% endif %}<th class="num">Cost</th></tr></thead>
   <tbody>
   {% for m in matches %}
-    <tr>
+    <tr data-game="{{ m.game | game_name }}" data-result="{{ m | match_result or m.status }}">
       <td>{{ link(url('match', id=m.id), '#' ~ m.id) }}</td>
-      <td>{{ m.game }}</td>
-      <td>{{ m.seats | join(' vs ') }}</td>
-      <td>{% if m.tournament_id is not none %}{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>
-      <td>{{ m.status }}</td>
-      <td>{{ m.scores | join(' – ') if m.scores else '' }}</td>
+      {% if not within_tournament %}<td>{{ game_tag(m.game) }}</td>{% endif %}
+      {% if show_players %}<td>{{ seated(m) }}</td>{% endif %}
+      <td>{{ result(m) }}</td>
+      {% if not within_tournament %}<td>{% if m.tournament_id is not none %}{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>{% endif %}
       <td class="num">{{ m.cost_usd | usd }}</td>
     </tr>
   {% endfor %}

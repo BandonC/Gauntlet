@@ -4,41 +4,51 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}LLM Arena{% endblock %}</title>
+<script>
+  // Before first paint, so a saved theme never flashes the other one.
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
 <style>
-  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; --bad:#f87171; }
-  }
-  * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg);
-         font:15px/1.5 ui-sans-serif, system-ui, sans-serif; }
-  main { max-width: 960px; margin: 0 auto; padding: 16px 16px 64px; }
-  nav { display:flex; gap:16px; align-items:baseline; padding-bottom:12px;
-        border-bottom:1px solid var(--line); margin-bottom:8px; }
-  nav .brand { font-weight:700; margin-right:auto; }
-  a { color: inherit; } nav a { text-decoration:none; } nav a:hover { text-decoration:underline; }
-  h1 { font-size: 20px; margin: 16px 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
-  .muted { color: var(--muted); } .bad { color: var(--bad); }
-  table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align: top; }
-  th { font-weight:600; font-size:13px; color:var(--muted); }
-  td.num, th.num { text-align:right; }
-  code { font: 13px ui-monospace, monospace; }
-  .wrap { overflow-x: auto; }
-  dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 8px 0; }
-  dt { color: var(--muted); }
+{{ site_css }}
 </style>
 {% block head %}{% endblock %}
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
 <main>
   <nav>
-    <a class="brand" href="{{ url('index') }}">LLM Arena</a>
-    <a href="{{ url('index') }}">Leaderboards</a>
-    <a href="{{ url('tournaments') }}">Tournaments</a>
-    <a href="{{ url('matches') }}">Matches</a>
+    <a class="brand" href="{{ url('index') }}"><i aria-hidden="true"></i>LLM Arena</a>
+    <a href="{{ url('index') }}"{% if active == 'index' %} aria-current="page"{% endif %}>Leaderboards</a>
+    <a href="{{ url('tournaments') }}"{% if active == 'tournaments' %} aria-current="page"{% endif %}>Tournaments</a>
+    <a href="{{ url('matches') }}"{% if active == 'matches' %} aria-current="page"{% endif %}>Matches</a>
+    <a href="{{ url('compare') }}"{% if active == 'compare' %} aria-current="page"{% endif %}>Compare</a>
+    <button id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a.6.6 0 0 0-.8-.7 9.7 9.7 0 1 0 12.2 12.2.6.6 0 0 0-.7-.8z"/></svg>
+    </button>
   </nav>
   {% block content %}{% endblock %}
 </main>
+<script>
+{{ site_js }}
+</script>
+<script>
+  // Instant on purpose: a colour change across a page of tables shouldn't animate.
+  (() => {
+    const root = document.documentElement;
+    const button = document.getElementById("theme-toggle");
+    const dark = () => (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    const label = () => {
+      button.dataset.mode = dark() ? "dark" : "light";
+      button.setAttribute("aria-label", dark() ? "Switch to light mode" : "Switch to dark mode");
+    };
+    button.hidden = false;
+    label();
+    button.onclick = () => {
+      root.dataset.theme = dark() ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+      label();
+    };
+  })();
+</script>
 </body>
 </html>
