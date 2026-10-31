@@ -880,6 +880,16 @@ def detail_roles(rows, detail):
     return next(r["options"]["roles"] for r in rows if list(r["seats"]) == detail["seats"])
 
 
+async def test_a_single_werewolf_table_seats_all_seven_and_finishes_the_tournament(pool):
+    tid, n = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=3)
+    assert n == 1
+    await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)
+    assert await tournament_status(pool, tid) == "completed"
+    seated = await pool.fetch("SELECT player_id FROM match_seats")
+    assert sorted(r["player_id"] for r in seated) == sorted(p.id for p in WW[:7])
+    assert await ratings.final_ratings(pool, tid) is None  # not heads-up
+
+
 async def test_truncated_flag_survives_the_turn_log(pool):
     tid, _ = await create_tables(pool, "werewolf", WW[:7], 7, 1, budget_usd=None, seed=2)
     m = await queue.claim(pool, "w0", 30)

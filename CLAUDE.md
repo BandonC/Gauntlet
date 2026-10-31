@@ -43,6 +43,7 @@ arena play connect4 --p1 random:1 --p2 random:2           # free, in memory
 arena migrate
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
+arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
 arena leaderboard --game connect4
@@ -339,6 +340,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   and stores as `options.roles`; without options Werewolf shuffles from the seed. Role
   counts differ by at most 1 per role when the search finds that, else it logs a warning.
   Any new read of `initial_state` for a stored match must pass the options.
+- Werewolf style prompts: `werewolf/v1-plain`, `-cautious`, `-aggressive`, `-analytical` are
+  `werewolf/v1` plus one play-style paragraph, so both Haikus give 8 distinct players
+  (`haiku-5.5/ww-v1-plain`, ...). A table needs 7 distinct ids: `table_schedule` refuses
+  duplicates and identical configs can't share the players table. `--tables` alone means
+  `--format tables`, and `--table-size` is optional when a game seats one number. With more
+  ids than seats, a single table seats a seeded 7 and the rest sit out.
 - Werewolf context: full text by default. `context_token_limit` (option, default 20,000,
   estimated at 4 characters a token over rules + view) reduces the oldest finished days
   to votes and deaths inside `player_view`. The current day always stays in full, so a
