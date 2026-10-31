@@ -405,6 +405,11 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   latest 50, like the server. Export writes over files of the same name and deletes
   nothing. asyncpg returns `sum()` over bigint as Decimal; `_json_default` turns it into
   a number.
+- Partial export (`--tournaments`, `--matches`): `export.PartialUrls` returns "" for a page
+  left out, and templates use the `link` macro so it shows as plain text. A new link to a
+  match or tournament page must use that macro too, or a partial export gets a dead link.
+  `docs/` is that export, for GitHub Pages: regenerate it with the command above, and scan
+  it before publishing, since replays show every role and every message.
 - Live view: `live.match_events` polls `read.match_progress` once a second per viewer and
   replays the log only when the turn count moves, so the turn log stays the only source
   of truth (no LISTEN/NOTIFY). An event's id is the turn count, so EventSource resumes from

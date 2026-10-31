@@ -1,3 +1,6 @@
+{# A link, or plain text when a partial export left the target out. #}
+{% macro link(href, text) %}{% if href %}<a href="{{ href }}">{{ text }}</a>{% else %}{{ text }}{% endif %}{% endmacro %}
+
 {% macro match_table(matches, url) %}
 {% if matches %}
 <div class="wrap"><table>
@@ -5,10 +8,10 @@
   <tbody>
   {% for m in matches %}
     <tr>
-      <td><a href="{{ url('match', id=m.id) }}">#{{ m.id }}</a></td>
+      <td>{{ link(url('match', id=m.id), '#' ~ m.id) }}</td>
       <td>{{ m.game }}</td>
       <td>{{ m.seats | join(' vs ') }}</td>
-      <td>{% if m.tournament_id is not none %}<a href="{{ url('tournament', id=m.tournament_id) }}">#{{ m.tournament_id }}</a>{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>
+      <td>{% if m.tournament_id is not none %}{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>
       <td>{{ m.status }}</td>
       <td>{{ m.scores | join(' – ') if m.scores else '' }}</td>
       <td class="num">{{ m.cost_usd | usd }}</td>
