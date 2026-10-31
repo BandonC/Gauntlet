@@ -86,6 +86,9 @@ const RENDERERS = {
       `<div>${said ? `<ul>${said}</ul>` : ""}` +
       line("Wolf votes tonight", f.wolf_votes.map(pick)) +
       line("Day votes", f.votes.map(pick)) +
+      (f.votes.length
+        ? roundTable({ seats: f.roles.length, dead: f.deaths.map((d) => d.seat), votes: f.votes, roles: f.roles })
+        : "") +
       line("Seer", found) +
       "</div></div>"
     );
@@ -93,6 +96,43 @@ const RENDERERS = {
 };
 
 const fallback = (f) => `<pre>${esc(JSON.stringify(f, null, 1))}</pre>`;
+
+// Seats in a ring with a vote drawn as an arrow, so a pile-on reads at a glance. Plain text
+// beside it always carries the same votes. `roles` is only passed where they may be seen.
+function roundTable({ seats, dead, votes, out = null, roles = null }) {
+  const centre = 130;
+  const at = (seat) => {
+    const angle = ((-90 + (seat * 360) / seats) * Math.PI) / 180;
+    return [centre + 100 * Math.cos(angle), centre + 100 * Math.sin(angle)];
+  };
+  const arrows = votes
+    .map(({ seat, target }) => {
+      const [x1, y1] = at(seat);
+      const [x2, y2] = at(target);
+      const len = Math.hypot(x2 - x1, y2 - y1);
+      const [ux, uy] = [(x2 - x1) / len, (y2 - y1) / len];
+      const [nx, ny] = [-uy * 3, ux * 3]; // two seats voting for each other shouldn't overlap
+      const x = (a, by) => (a + ux * by + nx).toFixed(1);
+      const y = (a, by) => (a + uy * by + ny).toFixed(1);
+      return `<line x1="${x(x1, 23)}" y1="${y(y1, 23)}" x2="${x(x2, -27)}" y2="${y(y2, -27)}" marker-end="url(#vote-arrow)"/>`;
+    })
+    .join("");
+  const circles = Array.from({ length: seats }, (_, seat) => {
+    const [cx, cy] = at(seat).map((v) => v.toFixed(1));
+    const tone = [
+      dead.includes(seat) ? "dead" : "",
+      seat === out ? "out" : "",
+      roles?.[seat] === "wolf" ? "wolf" : "",
+    ].join(" ");
+    return `<g class="${tone.trim()}"><circle cx="${cx}" cy="${cy}" r="20"/><text x="${cx}" y="${cy}">${seat}</text></g>`;
+  }).join("");
+  const label = votes.map((v) => `${player(v.seat)} votes ${player(v.target)}`).join(", ");
+  return (
+    `<svg class="round" viewBox="0 0 260 260" role="img" aria-label="${esc(label || "No votes")}">` +
+    '<defs><marker id="vote-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10z"/></marker></defs>' +
+    `${arrows}${circles}</svg>`
+  );
+}
 
 function renderFrame(game, frame, seats) {
   return (RENDERERS[game] || fallback)(frame, seats);
@@ -289,7 +329,13 @@ function renderBlind(step, chosen = new Set()) {
   const out = step.out
     ? `${player(step.out.seat)} is voted out: a ${esc(step.out.role)}.`
     : "A tied vote: nobody goes.";
-  return head(`<p class="status">${out}</p><p class="ld-bids">Votes: ${votes || "none"}</p>`) + log;
+  const table = roundTable({
+    seats: step.alive.length + step.dead.length,
+    dead: step.dead.map((d) => d.seat),
+    votes: step.votes,
+    out: step.out?.seat ?? null,
+  });
+  return head(`<p class="status">${out}</p><p class="ld-bids">Votes: ${votes || "none"}</p>`) + table + log;
 }
 
 // Per day: how many of your picks were wolves, and how the village's own votes did.
@@ -311,6 +357,41 @@ function blindScore(frames, turns, picks) {
         villageVotes: votes.length,
       };
     });
+}
+
+// What a claim was, once the roles are known. A wolf lying and a villager who was simply
+// wrong are different things, and only the classifier's literal matches are ever marked.
+function tell(claim, speaker, roles) {
+  if (claim.kind === "leak") return { kind: "bluff", text: "Gave the wolves away" };
+  if (claim.kind !== "false") return null;
+  const about = claim.seat === speaker ? "claims to be" : `calls ${player(claim.seat)}`;
+  const text = `${about} a ${esc(claim.role)}`;
+  if (roles[speaker] === "wolf" || claim.seat === speaker) return { kind: "bluff", text: `Bluff: ${text}` };
+  return { kind: "wrong", text: `Wrong: ${text}` };
+}
+
+function renderTruth(frames, turns, roles) {
+  let day = 0;
+  let bluffs = 0;
+  const lines = turns
+    .filter((t) => t.action?.action === "say")
+    .map((t) => {
+      const today = frames[t.turn_no].day;
+      const head = today === day ? "" : `<h3>Day ${Number(today)}</h3>`;
+      day = today;
+      const tells = (t.claims ?? []).map((c) => tell(c, t.seat, roles)).filter(Boolean);
+      bluffs += tells.filter((x) => x.kind === "bluff").length;
+      const tone = tells.find((x) => x.kind === "bluff") ? " bluff" : tells.length ? " wrong" : "";
+      const notes = tells.map((x) => `<span class="tell">${x.text}</span>`).join("");
+      return `${head}<p class="said${tone}"><b>${player(t.seat)}</b> <small>${esc(roles[t.seat])}</small> ${esc(t.action.message)}${notes}</p>`;
+    })
+    .join("");
+  const count = bluffs === 1 ? "1 bluff" : `${bluffs} bluffs`;
+  return (
+    `<section class="truth"><h2>The same game, with the truth on</h2>` +
+    `<p class="muted">${count} marked. Only literal claims count, so paraphrased lies slip through.</p>` +
+    `<div class="transcript">${lines}</div></section>`
+  );
 }
 
 function renderBlindEnd(frames, turns, picks, seats) {
@@ -335,7 +416,8 @@ function renderBlindEnd(frames, turns, picks, seats) {
   return (
     `<p class="status">The ${esc(final.winner)} win${final.winner === "wolves" ? "" : "s"}.</p>` +
     (score ? `<ul>${score}</ul>` : "") +
-    `<div class="cards">${cards}</div>`
+    `<div class="cards">${cards}</div>` +
+    renderTruth(frames, turns, final.roles)
   );
 }
 
@@ -398,5 +480,5 @@ if (typeof document !== "undefined") {
 
 if (typeof module !== "undefined") module.exports = {
   RENDERERS, renderFrame, describeTurn, esc, initReplay, holdFor,
-  blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind,
+  blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind, roundTable,
 };

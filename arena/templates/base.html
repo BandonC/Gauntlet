@@ -13,7 +13,7 @@
 </style>
 {% block head %}{% endblock %}
 </head>
-<body>
+<body{% block body_attrs %}{% endblock %}>
 <main>
   <nav>
     <a class="brand" href="{{ url('index') }}"><i aria-hidden="true"></i>LLM Arena</a>

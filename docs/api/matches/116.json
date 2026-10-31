@@ -52,7 +52,8 @@
     "output_tokens": 80,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 1,
@@ -73,7 +74,14 @@
     "output_tokens": 110,
     "cache_read_tokens": 916,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 1,
+     "role": "villager",
+     "kind": "true"
+    }
+   ]
   },
   {
    "turn_no": 2,
@@ -94,7 +102,8 @@
     "output_tokens": 107,
     "cache_read_tokens": 920,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 3,
@@ -115,7 +124,14 @@
     "output_tokens": 135,
     "cache_read_tokens": 919,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 3,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 4,
@@ -136,7 +152,8 @@
     "output_tokens": 101,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 5,
@@ -157,7 +174,14 @@
     "output_tokens": 138,
     "cache_read_tokens": 918,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 5,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 6,
@@ -178,7 +202,14 @@
     "output_tokens": 92,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 6,
+     "role": "villager",
+     "kind": "true"
+    }
+   ]
   },
   {
    "turn_no": 7,
@@ -199,7 +230,8 @@
     "output_tokens": 130,
     "cache_read_tokens": 916,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 8,
@@ -220,7 +252,8 @@
     "output_tokens": 123,
     "cache_read_tokens": 920,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 9,
@@ -241,7 +274,14 @@
     "output_tokens": 146,
     "cache_read_tokens": 919,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 3,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 10,
@@ -262,7 +302,8 @@
     "output_tokens": 97,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 11,
@@ -283,7 +324,8 @@
     "output_tokens": 139,
     "cache_read_tokens": 918,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 12,
@@ -304,7 +346,8 @@
     "output_tokens": 97,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 13,
@@ -325,7 +368,8 @@
     "output_tokens": 96,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 14,
@@ -346,7 +390,8 @@
     "output_tokens": 50,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 15,
@@ -367,7 +412,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 929
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 16,
@@ -388,7 +434,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 933
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 17,
@@ -409,7 +456,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 932
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 18,
@@ -439,7 +487,8 @@
     "output_tokens": 100,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 19,
@@ -460,7 +509,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 931,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 20,
@@ -481,7 +531,8 @@
     "output_tokens": 50,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 21,
@@ -502,7 +553,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 927
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 22,
@@ -523,7 +575,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 926
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 23,
@@ -544,7 +597,8 @@
     "output_tokens": 55,
     "cache_read_tokens": 0,
     "cache_write_tokens": 932
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 24,
@@ -565,7 +619,8 @@
     "output_tokens": 136,
     "cache_read_tokens": 920,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 25,
@@ -586,7 +641,14 @@
     "output_tokens": 143,
     "cache_read_tokens": 919,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 3,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 26,
@@ -607,7 +669,14 @@
     "output_tokens": 142,
     "cache_read_tokens": 918,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 5,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 27,
@@ -628,7 +697,8 @@
     "output_tokens": 102,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 28,
@@ -649,7 +719,8 @@
     "output_tokens": 103,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 29,
@@ -670,7 +741,14 @@
     "output_tokens": 134,
     "cache_read_tokens": 919,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 3,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 30,
@@ -691,7 +769,14 @@
     "output_tokens": 137,
     "cache_read_tokens": 918,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": [
+    {
+     "seat": 5,
+     "role": "villager",
+     "kind": "false"
+    }
+   ]
   },
   {
    "turn_no": 31,
@@ -712,7 +797,8 @@
     "output_tokens": 113,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 32,
@@ -733,7 +819,8 @@
     "output_tokens": 99,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 33,
@@ -754,7 +841,8 @@
     "output_tokens": 124,
     "cache_read_tokens": 920,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 34,
@@ -775,7 +863,8 @@
     "output_tokens": 50,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 35,
@@ -796,7 +885,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 927
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 36,
@@ -817,7 +907,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 926
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 37,
@@ -838,7 +929,8 @@
     "output_tokens": 54,
     "cache_read_tokens": 0,
     "cache_write_tokens": 925
-   }
+   },
+   "claims": []
   },
   {
    "turn_no": 38,
@@ -859,7 +951,8 @@
     "output_tokens": 50,
     "cache_read_tokens": 0,
     "cache_write_tokens": 0
-   }
+   },
+   "claims": []
   }
  ],
  "frames": [

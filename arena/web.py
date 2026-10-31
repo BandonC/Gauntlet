@@ -8,6 +8,7 @@ Data comes from the same functions as the JSON API (store/read.py, the leaderboa
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from collections.abc import Collection
 from dataclasses import dataclass, field
@@ -71,6 +72,20 @@ GAME_BLURBS = {
     "werewolf": "Seven seats, two wolves, a night kill to open. Bluffing in plain text.",
     "werewolf_dayfirst": "The same game opening by day, with everyone still alive.",
 }
+
+
+def _is_baseline(row: dict) -> bool:
+    return re.fullmatch(r"random\d*", row["player_id"]) is not None
+
+
+def contenders(rows: list[dict]) -> list[dict]:
+    """The real field. If only baselines have played, they're all there is to show."""
+    return [r for r in rows if not _is_baseline(r)] or rows
+
+
+def baselines(rows: list[dict]) -> list[dict]:
+    field = contenders(rows)
+    return [r for r in rows if r not in field]
 
 
 def game_blurb(game: str) -> str:
@@ -173,6 +188,8 @@ env.filters["result_cells"] = result_cells
 env.filters["result_counts"] = result_counts
 env.filters["compact"] = compact
 env.filters["game_blurb"] = game_blurb
+env.filters["contenders"] = contenders
+env.filters["baselines"] = baselines
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.
 REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"

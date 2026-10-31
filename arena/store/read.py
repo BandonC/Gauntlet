@@ -7,6 +7,8 @@ import asyncpg
 
 from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.registry import get_game
+from arena.games.werewolf import classify_claims
+from arena.store.metrics import WEREWOLF_GAMES
 from arena.store.turns import PostgresTurnStore
 
 TOURNAMENTS_SQL = """
@@ -76,6 +78,15 @@ async def match_progress(pool: asyncpg.Pool, match_id: int) -> tuple[str, int] |
     return None if row is None else (row["status"], row["turns"])
 
 
+def _claims(game: str, action: dict | None, seat: int, first_frame: dict) -> list[dict]:
+    """A message's role claims, for the replay's truth overlay. Spectator data: never a view."""
+    message = (action or {}).get("message")
+    if game not in WEREWOLF_GAMES or not message:
+        return []
+    claims = classify_claims(message, seat, first_frame["roles"])
+    return [{"seat": c.seat, "role": c.role, "kind": c.kind} for c in claims]
+
+
 async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
     """Seats, status, turns, and a spectator frame per turn. None if no such match."""
     m = await pool.fetchrow("SELECT * FROM matches WHERE id = $1", match_id)
@@ -117,6 +128,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
                 "cost_usd": t.cost_usd,
                 "latency_ms": t.latency_ms,
                 "tokens": t.usage.__dict__,
+                "claims": _claims(m["game"], t.action, t.seat, frames[0]),
             }
             for t in turns
         ],

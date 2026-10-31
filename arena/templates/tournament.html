@@ -2,6 +2,7 @@
 {% from "_macros.html" import match_table, player, waffle %}
 {% set active = "tournaments" %}
 {% block title %}Tournament #{{ t.id }} · LLM Arena{% endblock %}
+{% block body_attrs %} class="g-{{ t.game }}"{% endblock %}
 {% block content %}
 <div class="page-head banner g-{{ t.game }}">
   <h1>Tournament #{{ t.id }}</h1>

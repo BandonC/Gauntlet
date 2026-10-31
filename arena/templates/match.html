@@ -2,6 +2,7 @@
 {% from "_macros.html" import link, player, result %}
 {% set active = "matches" %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
+{% block body_attrs %} class="g-{{ m.game }}"{% endblock %}
 {% block head %}
 <script>if (location.hash === "#blind") document.documentElement.classList.add("blind");</script>
 {% endblock %}
