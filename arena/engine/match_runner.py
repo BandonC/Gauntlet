@@ -63,6 +63,7 @@ class TurnRecord:
     latency_ms: int
     truncated: bool = False  # the engine shortened this action (Game.normalize_action)
     rejections: list[JSON] = field(default_factory=list)  # {attempt, action, reason}, in order
+    stop_reasons: list[str | None] = field(default_factory=list)  # one per attempt, in order
 
 
 @dataclass(frozen=True)
@@ -189,6 +190,7 @@ class MatchRunner:
         latency = 0
         error: str | None = None
         rejections: list[JSON] = []
+        stop_reasons: list[str | None] = []
         raw: str | None = None
 
         for attempt in range(1, self.max_attempts + 1):
@@ -207,6 +209,7 @@ class MatchRunner:
             usage += decision.usage
             latency += decision.latency_ms
             raw = decision.raw
+            stop_reasons.append(decision.stop_reason)
             if decision.action is None:
                 error = "no move was returned; call the tool with a legal move"
             else:
@@ -226,6 +229,7 @@ class MatchRunner:
                     latency,
                     truncated=action != decision.action,
                     rejections=rejections,
+                    stop_reasons=stop_reasons,
                 )
                 return record, self.game.apply(state, seat, action)
             rejections.append({"attempt": attempt, "action": decision.action, "reason": error})
@@ -242,6 +246,7 @@ class MatchRunner:
             usage,
             latency,
             rejections=rejections,
+            stop_reasons=stop_reasons,
         )
         return record, self.game.forfeit(state, seat)
 
@@ -258,6 +263,7 @@ class MatchRunner:
         latency_ms: int,
         truncated: bool = False,
         rejections: list[JSON] | None = None,
+        stop_reasons: list[str | None] | None = None,
     ) -> TurnRecord:
         return TurnRecord(
             turn_no=turn_no,
@@ -272,6 +278,7 @@ class MatchRunner:
             latency_ms=latency_ms,
             truncated=truncated,
             rejections=rejections or [],
+            stop_reasons=stop_reasons or [],
         )
 
     def _outcome(self, spec: MatchSpec, state: State, turns: list[TurnRecord]) -> MatchOutcome:

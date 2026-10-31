@@ -21,6 +21,8 @@ def identity_hash(
     max_tokens: int,
     tool_choice: str = "forced",
     thinking_budget: int | None = None,
+    thinking_mode: str = "default",
+    effort: str | None = None,
 ) -> str:
     cfg: dict = {
         "provider": provider,
@@ -36,6 +38,10 @@ def identity_hash(
         cfg["tool_choice"] = tool_choice
     if thinking_budget is not None:
         cfg["thinking_budget"] = thinking_budget
+    if thinking_mode != "default":
+        cfg["thinking_mode"] = thinking_mode
+    if effort is not None:
+        cfg["effort"] = effort
     return hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest()[:16]
 
 
@@ -51,6 +57,8 @@ class LLMPlayer:
         max_tokens: int = 256,
         tool_choice: str = "forced",
         thinking_budget: int | None = None,
+        thinking_mode: str = "default",
+        effort: str | None = None,
     ):
         self.player_id = player_id
         self.provider = provider
@@ -60,6 +68,8 @@ class LLMPlayer:
         self.max_tokens = max_tokens
         self.tool_choice = tool_choice
         self.thinking_budget = thinking_budget
+        self.thinking_mode = thinking_mode
+        self.effort = effort
 
     @property
     def config_hash(self) -> str:
@@ -72,6 +82,8 @@ class LLMPlayer:
             self.max_tokens,
             self.tool_choice,
             self.thinking_budget,
+            self.thinking_mode,
+            self.effort,
         )
 
     async def act(self, ctx: TurnContext) -> Decision:
@@ -84,6 +96,8 @@ class LLMPlayer:
             temperature=self.temperature,
             tool_choice=self.tool_choice,
             thinking_budget=self.thinking_budget,
+            thinking_mode=self.thinking_mode,
+            effort=self.effort,
         )
         start = time.perf_counter()
         completion = await self.provider.complete(req)  # ProviderError propagates
@@ -93,4 +107,5 @@ class LLMPlayer:
             raw=completion.raw_text,
             usage=completion.usage,
             latency_ms=latency_ms,
+            stop_reason=completion.stop_reason,
         )

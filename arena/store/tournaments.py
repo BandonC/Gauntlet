@@ -113,6 +113,8 @@ async def upsert_players(conn: asyncpg.Connection, players: list[PlayerConfig]) 
                 "seed": p.seed,
                 "tool_choice": p.tool_choice,
                 "thinking_budget": p.thinking_budget,
+                "thinking_mode": p.thinking_mode,
+                "effort": p.effort,
             },
             h,
         )

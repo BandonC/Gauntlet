@@ -28,6 +28,7 @@ class Decision:
     raw: str | None = None
     usage: Usage = field(default_factory=Usage)
     latency_ms: int = 0
+    stop_reason: str | None = None
 
 
 class Player(Protocol):

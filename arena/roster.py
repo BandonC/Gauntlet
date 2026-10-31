@@ -34,14 +34,34 @@ class PlayerConfig:
     seed: int = 0
     tool_choice: str = "forced"  # "auto" for models that reject forced tool use
     thinking_budget: int | None = None  # tokens of manual thinking, Anthropic only
+    thinking_mode: str = "default"  # "between_tools": no up-front thinking, Anthropic only
+    effort: str | None = None  # output_config.effort, Anthropic only
 
     def __post_init__(self) -> None:
         """Refuse here what the API would refuse later, in the middle of a tournament."""
         if self.tool_choice not in ("forced", "auto"):
             raise ValueError(f"{self.id}: tool_choice must be forced or auto")
-        customised = self.tool_choice != "forced" or self.thinking_budget is not None
+        if self.thinking_mode not in ("default", "between_tools"):
+            raise ValueError(f"{self.id}: thinking_mode must be default or between_tools")
+        if self.effort not in (None, "low", "medium", "high", "xhigh", "max"):
+            raise ValueError(f"{self.id}: effort must be low, medium, high, xhigh or max")
+        customised = (
+            self.tool_choice != "forced"
+            or self.thinking_budget is not None
+            or self.thinking_mode != "default"
+            or self.effort is not None
+        )
         if customised and self.provider != "anthropic":
-            raise ValueError(f"{self.id}: tool_choice and thinking_budget are Anthropic only")
+            raise ValueError(
+                f"{self.id}: tool_choice, thinking and effort settings are Anthropic only"
+            )
+        if self.thinking_mode == "between_tools":
+            if self.tool_choice == "forced":
+                raise ValueError(f"{self.id}: between_tools needs tool_choice = auto")
+            if self.thinking_budget is not None:
+                raise ValueError(f"{self.id}: between_tools can't take a thinking_budget")
+            if self.effort in ("xhigh", "max"):
+                raise ValueError(f"{self.id}: between_tools only works at effort high or below")
         if self.thinking_budget is None:
             return
         if self.tool_choice == "forced":
@@ -96,6 +116,8 @@ def config_hash(cfg: PlayerConfig) -> str:
         cfg.max_tokens,
         cfg.tool_choice,
         cfg.thinking_budget,
+        cfg.thinking_mode,
+        cfg.effort,
     )
 
 
@@ -167,5 +189,7 @@ class PlayerFactory:
             max_tokens=cfg.max_tokens,
             tool_choice=cfg.tool_choice,
             thinking_budget=cfg.thinking_budget,
+            thinking_mode=cfg.thinking_mode,
+            effort=cfg.effort,
         )
         return player, cfg.pricing
