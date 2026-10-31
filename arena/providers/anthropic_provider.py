@@ -44,8 +44,10 @@ class AnthropicProvider:
                     "input_schema": req.tool.input_schema,
                 }
             ],
-            tool_choice={"type": "tool", "name": req.tool.name},
+            tool_choice=_tool_choice(req),
         )
+        if req.thinking_budget is not None:
+            kwargs["thinking"] = {"type": "enabled", "budget_tokens": req.thinking_budget}
         # req.temperature is intentionally not sent: the current Anthropic SDK's
         # messages.create() has no sampling parameters. Keep temperature in player
         # config anyway (it's part of identity for providers that accept it).
@@ -72,8 +74,22 @@ class AnthropicProvider:
             output_tokens=u.output_tokens,
             cache_read_tokens=getattr(u, "cache_read_input_tokens", 0) or 0,
             cache_write_tokens=getattr(u, "cache_creation_input_tokens", 0) or 0,
+            thinking_tokens=_thinking_tokens(u),
         )
         return Completion(tool_input=tool_input, raw_text=raw, usage=usage)
+
+
+def _tool_choice(req: CompletionRequest) -> dict:
+    if req.tool_choice == "auto":
+        # The model may answer in text: the match runner counts that as an invalid attempt.
+        return {"type": "auto", "disable_parallel_tool_use": True}
+    return {"type": "tool", "name": req.tool.name}
+
+
+def _thinking_tokens(usage: object) -> int:
+    """Reasoning inside output_tokens, which stays the billed total. 0 if not reported."""
+    details = getattr(usage, "output_tokens_details", None)
+    return getattr(details, "thinking_tokens", 0) or 0
 
 
 def _retry_after(e: anthropic.APIStatusError) -> float | None:

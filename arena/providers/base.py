@@ -1,8 +1,8 @@
 """Provider contract: one interface over every LLM API.
 
-A provider makes exactly one API call per `complete()` and forces the model to answer
-with the given tool. Retries live in `RetryingProvider`, rate limits in `RateLimiter`,
-so vendor adapters stay thin.
+A provider makes exactly one API call per `complete()` and asks the model to answer with
+the given tool, forcing it unless the request says `auto`. Retries live in
+`RetryingProvider`, rate limits in `RateLimiter`, so vendor adapters stay thin.
 
 Error policy (important for fairness, see CLAUDE.md):
 - Infrastructure failures (429, 5xx, timeouts) raise ProviderError. Once retries are
@@ -29,6 +29,8 @@ class CompletionRequest:
     max_tokens: int = 256
     temperature: float | None = 0.0  # None = don't send (some models reject it)
     cache_system: bool = True
+    tool_choice: str = "forced"  # "auto" for models that reject forced tool use
+    thinking_budget: int | None = None  # manual thinking, Anthropic only
 
 
 @dataclass(frozen=True)

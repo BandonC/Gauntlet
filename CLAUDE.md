@@ -131,7 +131,8 @@ migrations/             forward-only SQL, applied in filename order
    per-seat view (e.g. a discussion log in state), never from Python object state.
 7. **Prompts are immutable once used.** New wording = new version directory
    (`connect4/v2`). Player identity = `identity_hash(provider, model, prompt + content
-   hash, temperature, max_tokens)`. Any change = new roster id;
+   hash, temperature, max_tokens, plus tool_choice and thinking_budget when set)`. Any change
+   = new roster id;
    `upsert_players` refuses to reuse an id with a different config.
 8. **Prices come only from `roster.toml`.** Never hard-code prices. Missing cache
    prices fall back to the input price (over-count, never under-count).
@@ -166,6 +167,16 @@ migrations/             forward-only SQL, applied in filename order
   `max_tokens` and expect several times the cost.
 - Prompt caching only applies above a model-specific minimum prompt length; Connect 4's
   short system prompt likely won't cache. Check `cache_read_tokens` before assuming.
+- Sonnet 5.5, Opus 5.5 and Fable 5.1 reject forced tool use with a 400, on `messages.create` and
+  `count_tokens` (checked 2026-10-31, both); Sonnet 5, Opus 5, Fable 5 and Haiku 5.5 accept it.
+  Roster `tool_choice = "auto"` is for those three. A forced reply has no thinking block.
+- `thinking_budget` sends `budget_tokens`, which the docs list as a 400 on Sonnet 5.5, Opus 5.5,
+  Fable, Sonnet 5, Opus 5, Haiku 5.5 and Opus 4.7-4.8. `count_tokens` doesn't check this: it
+  answered 200 for Sonnet 5.5, so it can't prove a thinking setting. Those models think by
+  default when `thinking` is omitted, and `max_tokens` is the only hard limit, including thinking.
+- `usage.output_tokens_details.thinking_tokens` is a breakdown of `output_tokens`, which stays
+  the billed total. It lands in `Usage.thinking_tokens` and `turns.thinking_tokens`; 0 means none
+  reported. `costs.py` never reads it, and a test holds that.
 - SDK built-in retries are disabled (`max_retries=0`); `RetryingProvider` is the only
   retry layer. Keep it that way so retries are visible and testable.
 
