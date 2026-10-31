@@ -656,8 +656,9 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     urls = web.Urls()
 
     index = await web.index_page(pool, urls)
-    assert "<h2>connect4</h2>" in index and "r1" in index and "r2" in index
-    assert "<h2>liars_dice</h2>" in index and "No rated matches yet." in index
+    assert '<h2 id="connect4">Connect 4</h2>' in index and "r1" in index and "r2" in index
+    assert '<h2 id="liars_dice">Liar&#39;s Dice</h2>' in index
+    assert "No rated matches yet." in index
 
     ids = [m["id"] for m in await read.list_matches(pool, tid)]
     assert len(ids) == n
@@ -693,7 +694,8 @@ async def test_export_writes_a_browsable_site_whose_links_all_resolve(pool, tmp_
         assert hrefs, html_file.name
         for href in hrefs:
             assert not href.startswith("/"), (html_file.name, href)  # would break on disk
-            assert (tmp_path / href).is_file(), (html_file.name, href)
+            target = href.partition("#")[0]  # "#roles" is this page
+            assert not target or (tmp_path / target).is_file(), (html_file.name, href)
     t_html = (tmp_path / f"tournament-{tid}.html").read_text(encoding="utf-8")
     assert all(f'href="match-{i}.html"' in t_html for i in ids)
     assert 'id="replay-data"' in (tmp_path / f"match-{ids[0]}.html").read_text(encoding="utf-8")
@@ -731,7 +733,8 @@ async def test_a_partial_export_writes_only_what_was_chosen_and_has_no_dead_link
     }
     for html_file in tmp_path.glob("*.html"):
         for href in re.findall(r'href="([^"]*)"', html_file.read_text(encoding="utf-8")):
-            assert href and (tmp_path / href).is_file(), (html_file.name, href)
+            target = href.partition("#")[0]  # "#roles" is this page
+            assert href and (not target or (tmp_path / target).is_file()), (html_file.name, href)
 
     t_html = (tmp_path / f"tournament-{kept}.html").read_text(encoding="utf-8")
     assert f'href="match-{ids[0]}.html"' in t_html
@@ -938,6 +941,7 @@ async def test_a_day_first_tournament_runs_rates_apart_and_keeps_its_role_metric
     detail = await read.match_detail(pool, mid)
     assert detail["frames"][0]["phase"] == "discussion" and len(detail["frames"][0]["alive"]) == 7
     assert "says:" in await web.match_page(pool, web.Urls(), mid)
+    assert f'href="/matches/{mid + 7}#blind"' in await web.index_page(pool, web.Urls())  # newest
 
 
 async def test_a_single_werewolf_table_seats_all_seven_and_finishes_the_tournament(pool):

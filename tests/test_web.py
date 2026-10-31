@@ -3,8 +3,20 @@ import json
 import pytest
 from jinja2 import UndefinedError
 
+from arena.games.registry import list_games
 from arena.live import format_event, resume_point
-from arena.web import SERVER_ROUTES, Urls, match_html, move_label, render
+from arena.web import (
+    GAME_NAMES,
+    SERVER_ROUTES,
+    SITE_CSS,
+    Urls,
+    game_name,
+    match_html,
+    match_result,
+    move_label,
+    render,
+    result_tally,
+)
 
 URLS = Urls()
 
@@ -118,7 +130,7 @@ def test_leaderboard_escapes_player_ids_and_shows_confidence():
         boards={"connect4": [lb_row("<script>x</script>")], "liars_dice": []},
         role_stats=[],
     )
-    assert "<script>x</script>" not in html and "&lt;script&gt;x&lt;/script&gt;" in html
+    assert "<script>x" not in html and "&lt;script&gt;x&lt;" in html
     assert ">9.75<" in html and "27.75 ± 18.00" in html  # Weng-Lin ranks the board
     assert "1600.0 ± 200.0" in html and ">1516.0<" in html
     assert "No rated matches yet." in html  # liars_dice has none
@@ -254,7 +266,9 @@ def test_match_page_shows_moves_rejections_and_forfeits():
     assert "<td>column 3" in html  # a readable label, not raw JSON
     assert "last rejected: column 9 is out of range 0-6" in html
     assert ">forfeit<" in html and "300 / 40 / 1000" in html and "$0.00011" in html
-    assert 'href="/tournaments/7"' in html and "seat 0: haiku (1.0, place 1)" in html
+    assert 'href="/tournaments/7"' in html and '<span class="pid">haiku</span>' in html
+    assert "<dt>Result</dt><dd>haiku won</dd>" in html
+    assert '<td class="num">1.0</td>' in html  # each seat's score has its own row
 
 
 def test_links_follow_the_url_table_so_export_can_use_file_paths():
@@ -297,10 +311,108 @@ def test_play_blind_is_only_offered_on_finished_werewolf_games(game, status, off
     assert ('id="blind-view"' in html) is offered
 
 
+@pytest.mark.parametrize(
+    ("over", "result"),
+    [
+        ({"seats": ["a", "b"], "scores": [1.0, 0.0]}, "a won"),
+        ({"seats": ["a", "b"], "scores": [0.0, 1.0]}, "b won"),
+        ({"seats": ["a", "b"], "scores": [0.5, 0.5]}, "Draw"),
+        ({"game": "liars_dice", "seats": ["a", "b", "c"], "scores": [0, 1, 0]}, "b won"),
+        ({"game": "werewolf", "seats": list("abcdefg"), "scores": [1, 1, 0, 0, 0, 0, 0]}, "Wolves"),
+        (
+            {
+                "game": "werewolf_dayfirst",
+                "seats": list("abcdefg"),
+                "scores": [0, 0, 1, 1, 1, 1, 1],
+            },
+            "Village",
+        ),
+        ({"status": "running", "scores": None}, None),
+        ({"status": "failed", "scores": None}, None),
+    ],
+)
+def test_a_result_says_who_won(over, result):
+    assert match_result(list_row() | over) == result
+
+
+def test_an_unfinished_match_shows_its_status_where_the_result_goes():
+    html = render("matches.html", URLS, matches=[list_row(status="running")])
+    assert "<td>running</td>" in html
+
+
+def test_game_names_read_well_and_unknown_games_fall_back_to_their_id():
+    assert game_name("werewolf_dayfirst") == "Werewolf (day-first)"
+    assert game_name("chess") == "chess"
+    assert all(g in GAME_NAMES for g in list_games())  # a new game needs a display name
+
+
+def test_a_table_of_seven_is_summarised_with_the_names_on_hover():
+    seats = [f"p{i}" for i in range(7)]
+    html = render("matches.html", URLS, matches=[list_row(seats=seats)])
+    assert ">7 players<" in html and 'title="p0, p1, p2, p3, p4, p5, p6"' in html
+    assert "p0 vs p1" not in html
+
+
+def test_inside_a_tournament_rows_drop_what_the_page_already_says():
+    t = tournament()
+    html = render("tournament.html", URLS, t=t, matches=[list_row()], final=None)
+    assert "<th>Result</th>" in html
+    assert "<th>Game</th>" not in html and "<th>Tournament</th>" not in html
+
+
+def test_a_table_tournament_drops_the_seat_count_and_keeps_pairs_named():
+    t = tournament()
+    seats = [f"p{i}" for i in range(7)]
+    table = render("tournament.html", URLS, t=t, matches=[list_row(seats=seats)], final=None)
+    assert "<th>Players</th>" not in table and "7 players" not in table
+    pair = render("tournament.html", URLS, t=t, matches=[list_row()], final=None)
+    assert "<th>Players</th>" in pair and "a vs b" in pair
+
+
+def test_a_werewolf_tournament_totals_its_results_and_others_do_not():
+    seven = list("abcdefg")
+    wolves = list_row(game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    village = list_row(game="werewolf", seats=seven, scores=[0, 0, 1, 1, 1, 1, 1])
+    live = list_row(game="werewolf", seats=seven, status="running")
+    assert result_tally([wolves, village, wolves, live]) == "Wolves 2, Village 1"
+    assert result_tally([list_row(scores=[1.0, 0.0])]) is None
+    assert result_tally([]) is None
+    t = tournament()
+    html = render("tournament.html", URLS, t=t, matches=[wolves], final=None)
+    assert "<dt>Results</dt><dd>Wolves 1</dd>" in html
+
+
+def test_a_player_id_splits_into_a_model_and_a_quieter_prompt():
+    html = render(
+        "index.html", URLS, boards={"connect4": [lb_row("haiku-5.5/c4-v1")]}, role_stats=[]
+    )
+    assert '<span class="pid">haiku-5.5<span>/c4-v1</span></span>' in html
+
+
+def test_the_home_page_invites_you_to_play_blind_only_when_a_game_is_available():
+    boards = {"connect4": []}
+    html = render("index.html", URLS, boards=boards, role_stats=[], blind_url="/matches/9#blind")
+    assert 'href="/matches/9#blind"' in html
+    assert "/matches/9#blind" not in render("index.html", URLS, boards=boards, role_stats=[])
+    assert 'class="btn primary"' not in render(
+        "index.html", URLS, boards=boards, role_stats=[], blind_url=None
+    )
+
+
+def test_hidden_buttons_stay_hidden_despite_the_button_display_rule():
+    assert "[hidden] { display: none !important; }" in SITE_CSS.read_text("utf-8")
+
+
+def test_the_stylesheet_is_inlined_and_cannot_close_its_own_tag():
+    html = render("matches.html", URLS, matches=[])
+    assert "--ease-out" in html and "</style" not in SITE_CSS.read_text("utf-8").lower()
+    assert "transition: all" not in SITE_CSS.read_text("utf-8")  # always name the property
+
+
 def test_the_spoilers_are_all_inside_what_play_blind_hides():
     html = match_html(URLS, match(game="werewolf_dayfirst", status="completed"))
     hidden = html[html.index('<div class="spoiler">') :]
-    for part in ("<dl>", 'id="replay-frame"', "<h2>Turns</h2>"):
+    for part in ("<dt>Result</dt>", "<th>Player</th>", 'id="replay-frame"', "<summary>Turns"):
         assert part in hidden
 
 
@@ -353,7 +465,7 @@ def test_replay_data_carries_the_same_labels_as_the_turn_table():
 def test_match_list_shows_game_and_tournament_round():
     rows = [list_row(id=4, game="liars_dice", round=2), list_row(id=5, tournament_id=None)]
     html = render("matches.html", URLS, matches=rows)
-    assert "<td>liars_dice</td>" in html and "<td>connect4</td>" in html
+    assert "<td>Liar&#39;s Dice</td>" in html and "<td>Connect 4</td>" in html
     assert '<a href="/tournaments/7">#7</a>, round 2' in html
 
 

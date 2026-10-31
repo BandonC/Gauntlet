@@ -92,7 +92,8 @@ arena/
                         PostgresTurnStore (fenced), tournament creation, leaderboard
   worker.py             claim → run with heartbeat → complete / release for retry
   api.py                FastAPI: JSON API + HTML routes
-  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export
+  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export; all
+                        styles live in templates/site.css, inlined into every page
   live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   store/read.py         read queries shared by the API, pages and export
@@ -281,7 +282,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
    For free-text actions, add a scripted bot instead.
 5. Prompt in `players/prompts/<name>/v1/`.
 6. A small JS renderer for its `spectator_view` frames on the replay page (one function
-   per game, no framework), and a move label formatter in `web.MOVE_LABELS`.
+   per game, no framework), a move label formatter in `web.MOVE_LABELS`, and a display name
+   in `web.GAME_NAMES` (a test checks every registered game has one).
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
@@ -405,6 +407,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   latest 50, like the server. Export writes over files of the same name and deletes
   nothing. asyncpg returns `sum()` over bigint as Decimal; `_json_default` turns it into
   a number.
+- UI work: `.claude/skills/` holds three skills copied from `emilkowalski/skill` (MIT, licence
+  beside them): `emil-design-eng` for motion and component rules, `review-animations` to review
+  motion, `break-ui` to test against worst-case data. Stepping a replay stays instant, name the
+  property in every `transition`, and gate hover behind `(hover: hover) and (pointer: fine)`.
+  Before merging a page change, run `npx impeccable detect <url>` on the rendered page with
+  `DO_NOT_TRACK=1`, and check 320px: headless Chrome won't go that narrow, so measure in a
+  same-origin iframe. Impeccable is run this way only; it isn't installed in the repo.
+- Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
+  drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
 - Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in
   as a villager. Spectator frames hold every role, so `blindSteps` copies out public facts
   only; `test_blind_steps_depend_on_nothing_a_villager_cannot_know` destroys the hidden

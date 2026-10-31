@@ -1,19 +1,26 @@
 {# A link, or plain text when a partial export left the target out. #}
 {% macro link(href, text) %}{% if href %}<a href="{{ href }}">{{ text }}</a>{% else %}{{ text }}{% endif %}{% endmacro %}
 
-{% macro match_table(matches, url) %}
+{# Player ids are model/prompt: the model carries the name, the prompt stays quiet. #}
+{% macro player(id) %}{% set model, slash, rest = id.partition('/') %}<span class="pid">{{ model }}{% if slash %}<span>/{{ rest }}</span>{% endif %}</span>{% endmacro %}
+
+{# A pair reads as "a vs b"; a table of seven is just its size, with the names on hover. #}
+{% macro seated(m) %}{% if m.seats | length > 2 %}<span title="{{ m.seats | join(', ') }}">{{ m.seats | length }} players</span>{% else %}{{ m.seats | join(' vs ') }}{% endif %}{% endmacro %}
+
+{# Every row of a table tournament has the same seat count, so saying so adds nothing. #}
+{% macro match_table(matches, url, within_tournament=False) %}
 {% if matches %}
+{% set show_players = not within_tournament or matches[0].seats | length == 2 %}
 <div class="wrap"><table>
-  <thead><tr><th>ID</th><th>Game</th><th>Players</th><th>Tournament</th><th>Status</th><th>Scores</th><th class="num">Cost</th></tr></thead>
+  <thead><tr><th>ID</th>{% if not within_tournament %}<th>Game</th>{% endif %}{% if show_players %}<th>Players</th>{% endif %}<th>Result</th>{% if not within_tournament %}<th>Tournament</th>{% endif %}<th class="num">Cost</th></tr></thead>
   <tbody>
   {% for m in matches %}
     <tr>
       <td>{{ link(url('match', id=m.id), '#' ~ m.id) }}</td>
-      <td>{{ m.game }}</td>
-      <td>{{ m.seats | join(' vs ') }}</td>
-      <td>{% if m.tournament_id is not none %}{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>
-      <td>{{ m.status }}</td>
-      <td>{{ m.scores | join(' – ') if m.scores else '' }}</td>
+      {% if not within_tournament %}<td>{{ m.game | game_name }}</td>{% endif %}
+      {% if show_players %}<td>{{ seated(m) }}</td>{% endif %}
+      <td>{{ (m | match_result) or m.status }}</td>
+      {% if not within_tournament %}<td>{% if m.tournament_id is not none %}{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</td>{% endif %}
       <td class="num">{{ m.cost_usd | usd }}</td>
     </tr>
   {% endfor %}
