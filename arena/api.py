@@ -4,6 +4,7 @@ Pages:
   GET /                      leaderboards for every game
   GET /tournaments           GET /tournaments/{id}
   GET /matches               GET /matches/{id}
+  GET /players/{slug}        GET /compare
 
 JSON endpoints:
   GET /api/health
@@ -12,6 +13,8 @@ JSON endpoints:
   GET /api/tournaments/{id}/final      order-independent final ratings, or null
   GET /api/leaderboard/{game}
   GET /api/metrics/{game}?tournament_id=   illegal-move rate, forfeits, latency, cost, cache
+  GET /api/players/{slug}              one player's record, per game and by role
+  GET /api/compare                     each model across its players
   GET /api/matches?tournament_id=&limit=
   GET /api/matches/{id}                seats, status, turns, and a spectator frame per turn
   GET /api/matches/{id}/events?after=  Server-Sent Events: each new turn, then done (live.py)
@@ -76,6 +79,16 @@ async def match_page(match_id: int) -> HTMLResponse:
     return _page(await web.match_page(app.state.pool, URLS, match_id), "match")
 
 
+@app.get("/players/{slug}", response_class=HTMLResponse)
+async def player_page(slug: str) -> HTMLResponse:
+    return _page(await web.player_page(app.state.pool, URLS, slug), "player")
+
+
+@app.get("/compare", response_class=HTMLResponse)
+async def compare_page() -> HTMLResponse:
+    return _page(await web.compare_page(app.state.pool, URLS), "page")
+
+
 @app.get("/api/health")
 async def health() -> dict:
     await app.state.pool.fetchval("SELECT 1")
@@ -110,6 +123,19 @@ async def metrics(game: str, tournament_id: int | None = None) -> list[dict]:
 @app.get("/api/werewolf/roles")
 async def werewolf_roles(tournament_id: int | None = None) -> list[dict]:
     return await m_store.werewolf_metrics(app.state.pool, tournament_id)
+
+
+@app.get("/api/players/{slug}")
+async def player(slug: str) -> dict:
+    found = await web.player_json(app.state.pool, slug)
+    if found is None:
+        raise HTTPException(404, "player not found")
+    return found
+
+
+@app.get("/api/compare")
+async def compare() -> dict:
+    return await web.compare_data(app.state.pool)
 
 
 @app.get("/api/matches")

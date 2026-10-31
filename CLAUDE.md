@@ -92,7 +92,9 @@ arena/
                         PostgresTurnStore (fenced), tournament creation, leaderboard
   worker.py             claim → run with heartbeat → complete / release for retry
   api.py                FastAPI: JSON API + HTML routes
-  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export
+  web.py, templates/    Jinja2 page builders (pool, Urls) -> HTML; reused by export; table
+                        sorting and filtering live in templates/site.js; all
+                        styles live in templates/site.css, inlined into every page
   live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   store/read.py         read queries shared by the API, pages and export
@@ -281,7 +283,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
    For free-text actions, add a scripted bot instead.
 5. Prompt in `players/prompts/<name>/v1/`.
 6. A small JS renderer for its `spectator_view` frames on the replay page (one function
-   per game, no framework), and a move label formatter in `web.MOVE_LABELS`.
+   per game, no framework), a move label formatter in `web.MOVE_LABELS`, and a display name
+   in `web.GAME_NAMES` (a test checks every registered game has one).
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
@@ -405,6 +408,69 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   latest 50, like the server. Export writes over files of the same name and deletes
   nothing. asyncpg returns `sum()` over bigint as Decimal; `_json_default` turns it into
   a number.
+- UI work: `.claude/skills/` holds three skills copied from `emilkowalski/skill` (MIT, licence
+  beside them): `emil-design-eng` for motion and component rules, `review-animations` to review
+  motion, `break-ui` to test against worst-case data. Stepping a replay stays instant, name the
+  property in every `transition`, and gate hover behind `(hover: hover) and (pointer: fine)`.
+  Before merging a page change, run `npx impeccable detect <url>` on the rendered page with
+  `DO_NOT_TRACK=1`, and check 320px: headless Chrome won't go that narrow, so measure in a
+  same-origin iframe. Impeccable is run this way only; it isn't installed in the repo.
+- Themes: light parchment, dark moonlit, following the system until the nav toggle saves a
+  choice. `site.css` has two identical dark blocks (system, toggle) because CSS can't share
+  one; tests fail if they differ, or if any text token drops below WCAG AA (4.5:1) on `bg`
+  or `surface`. The theme is set in `<head>` before paint, and switching never animates.
+  Replay stepping stays instant. No 3D anywhere: the user removed it, and a test holds that.
+- Colour by job: `--g-*` and `--mark-*` are chart marks, separate from text tokens, checked
+  with the dataviz skill's `validate_palette.js` against `surface` in both themes; re-run it
+  if one changes. Words stay in text colours, with a coloured dot beside them. Each game has
+  a colour and a pure-CSS pattern (`.banner.g-<game>::before`), so a new game needs one, plus
+  `web.GAME_BLURBS`; tests check both. Text in `GAME_BLURBS` and the home page's rule-change
+  section is hand-written, while its numbers are live.
+- Page wash: `--wash-1` to `--wash-3` colour the whole page in each theme, under the glows and
+  wallpaper. Each game page swaps in its own set (`--c4-wash-*`, `--dice-`, `--ww-`, `--df-`) from
+  its `body.g-<game>` rule, so a new game needs a set in all three palette blocks. Text is tested
+  against every wash with the glows and wallpaper composited on top, because the plain wash
+  passed while the real pixels were 4.0:1. `npx impeccable detect` lists low contrast here as
+  advisory, against colours like #cab99d that are darker than the test's composited worst case.
+- Seats: `--seat-0` to `--seat-6` in each palette, set by `data-seat` (`said` in `replay.js`,
+  `seatAttr`). The number always goes with the colour, so a seat never depends on colour alone.
+  They sit behind a number, so they're held to 4.5:1 on `surface` as well as the dataviz checks.
+- Player pages: ids hold slashes, so URLs and file names use `web.player_slug`, reversible and
+  lower case so a case-insensitive disk can't merge two players. Partial exports still write
+  every player, since they hold only totals. `read.seat_results` feeds player pages and Compare,
+  so they share one definition of a win. Seats that never acted exist: on the original rules a
+  villager killed on night 1 takes no turn (34 seats in tournaments 5 and 6). Their latency and
+  illegal rate are None, and a page must render that. Only the real export found this.
+- Compare groups by the id's prefix (`model_of`) and skips providers `bot` and `random`. Its win
+  rates aren't head to head, and overall win rate is left off on purpose: it would mix games.
+- `templates/site.js` (Markup global, inlined on every page) sorts any `table.sortable` and
+  filters any `table.filterable` by the `data-game` and `data-result` on its rows. A sort value
+  is a cell's leading number, so keep annotations after the number. No value (blank or `–`)
+  stays last both ways. A facet shows only with 2 to 8 values.
+- Replay timeline: `timeline()` works out bands and ticks from spectator frames, so it's spoiler
+  data and lives inside `.spoiler`. The strip is inset 8px, half the slider's thumb, so a mark
+  sits under its frame; Chrome measured 0px off. A new game gets an empty strip until it adds a
+  case there.
+- Page wallpaper: `body::before` masks a game's motif tile (`--tile-<game>`, SVG data URIs in
+  `site.css`) over its colour; home mixes all four. A new game needs a tile and a body rule.
+- `read.match_detail` puts `claims` on each Werewolf turn for the reveal's truth overlay.
+  That's spectator data: `blindSteps` must never read it, and a test feeds it false claims to
+  prove it can't reach the blind view. A false claim is a bluff from a wolf or about the
+  speaker's own seat; a villager's false accusation is shown as wrong, not as a lie.
+- `web.baselines` folds players named `random` or `random<n>` under each leaderboard. They
+  stay on the page and in the JSON, and everyone else is still ranked by the same numbers.
+- Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
+  drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
+- Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in
+  as a villager. Spectator frames hold every role, so `blindSteps` copies out public facts
+  only; `test_blind_steps_depend_on_nothing_a_villager_cannot_know` destroys the hidden
+  fields and requires identical output, and any new step field must keep that test passing.
+  The data is still in the page, so this keeps a game honest, not secret. Per Emil Kowalski's
+  rules, stepping stays instant and only the final reveal animates.
+- `RENDERERS.werewolf_dayfirst` must be set before `initReplay` runs. It was set after at
+  first, so day-first replays opened on raw JSON, which tests missed by requiring the whole
+  file before rendering. `npx impeccable detect <url>` found it as a `pre` overflow.
+  Scan rendered pages: file scans don't execute the page, and found nothing here.
 - Partial export (`--tournaments`, `--matches`): `export.PartialUrls` returns "" for a page
   left out, and templates use the `link` macro so it shows as plain text. A new link to a
   match or tournament page must use that macro too, or a partial export gets a dead link.

@@ -1,0 +1,187 @@
+{
+ "models": [
+  {
+   "model": "haiku-5.5",
+   "players": [
+    "haiku-5.5/c4-v1",
+    "haiku-5.5/ld-v1",
+    "haiku-5.5/ww-v1-aggressive",
+    "haiku-5.5/ww-v1-analytical",
+    "haiku-5.5/ww-v1-cautious",
+    "haiku-5.5/ww-v1-plain",
+    "haiku-5.5/ww-v2-aggressive",
+    "haiku-5.5/ww-v2-analytical",
+    "haiku-5.5/ww-v2-cautious",
+    "haiku-5.5/ww-v2-plain",
+    "haiku-5.5/wwdf-v1-aggressive",
+    "haiku-5.5/wwdf-v1-analytical",
+    "haiku-5.5/wwdf-v1-cautious",
+    "haiku-5.5/wwdf-v1-plain"
+   ],
+   "games": 324,
+   "won": 144,
+   "drew": 0,
+   "lost": 180,
+   "win_rate": 0.4444444444444444,
+   "cost_usd": 0.390329,
+   "cost_per_game": 0.001204719135802469,
+   "illegal_rate": 0.025196850393700787,
+   "cache_hit": 0.2868223702778839,
+   "latency_ms": 3186.5403225806454
+  },
+  {
+   "model": "haiku-4.5",
+   "players": [
+    "haiku-4.5/c4-v1",
+    "haiku-4.5/ld-v1",
+    "haiku-4.5/ww-v1-aggressive",
+    "haiku-4.5/ww-v1-analytical",
+    "haiku-4.5/ww-v1-plain",
+    "haiku-4.5/ww-v2-aggressive",
+    "haiku-4.5/ww-v2-analytical",
+    "haiku-4.5/ww-v2-cautious",
+    "haiku-4.5/ww-v2-plain",
+    "haiku-4.5/wwdf-v1-aggressive",
+    "haiku-4.5/wwdf-v1-analytical",
+    "haiku-4.5/wwdf-v1-cautious",
+    "haiku-4.5/wwdf-v1-plain"
+   ],
+   "games": 323,
+   "won": 124,
+   "drew": 0,
+   "lost": 199,
+   "win_rate": 0.38390092879256965,
+   "cost_usd": 4.122064,
+   "cost_per_game": 0.012761808049535604,
+   "illegal_rate": 0.010160427807486631,
+   "cache_hit": 0.0,
+   "latency_ms": 3145.4532685035115
+  }
+ ],
+ "games": [
+  {
+   "game": "connect4",
+   "rows": [
+    {
+     "model": "haiku-5.5",
+     "games": 20,
+     "won": 8,
+     "drew": 0,
+     "lost": 12,
+     "win_rate": 0.4,
+     "cost_usd": 0.011385000000000001,
+     "cost_per_game": 0.0005692500000000001,
+     "illegal_rate": 0.18636363636363637,
+     "cache_hit": 0.6359113228169198,
+     "latency_ms": 1669.011049723757
+    },
+    {
+     "model": "haiku-4.5",
+     "games": 20,
+     "won": 12,
+     "drew": 0,
+     "lost": 8,
+     "win_rate": 0.6,
+     "cost_usd": 0.216358,
+     "cost_per_game": 0.0108179,
+     "illegal_rate": 0.07653061224489796,
+     "cache_hit": 0.0,
+     "latency_ms": 1025.6906077348067
+    }
+   ]
+  },
+  {
+   "game": "liars_dice",
+   "rows": [
+    {
+     "model": "haiku-5.5",
+     "games": 20,
+     "won": 7,
+     "drew": 0,
+     "lost": 13,
+     "win_rate": 0.35,
+     "cost_usd": 0.012451,
+     "cost_per_game": 0.00062255,
+     "illegal_rate": 0.0,
+     "cache_hit": 0.7063874890205065,
+     "latency_ms": 1230.077380952381
+    },
+    {
+     "model": "haiku-4.5",
+     "games": 20,
+     "won": 7,
+     "drew": 0,
+     "lost": 13,
+     "win_rate": 0.35,
+     "cost_usd": 0.270868,
+     "cost_per_game": 0.0135434,
+     "illegal_rate": 0.0,
+     "cache_hit": 0.0,
+     "latency_ms": 1100.9289617486338
+    }
+   ]
+  },
+  {
+   "game": "werewolf",
+   "rows": [
+    {
+     "model": "haiku-5.5",
+     "games": 144,
+     "won": 58,
+     "drew": 0,
+     "lost": 86,
+     "win_rate": 0.4027777777777778,
+     "cost_usd": 0.141259,
+     "cost_per_game": 0.0009809652777777777,
+     "illegal_rate": 0.009216589861751152,
+     "cache_hit": 0.26145611653538425,
+     "latency_ms": 2309.168730650155
+    },
+    {
+     "model": "haiku-4.5",
+     "games": 143,
+     "won": 45,
+     "drew": 0,
+     "lost": 98,
+     "win_rate": 0.3146853146853147,
+     "cost_usd": 1.369982,
+     "cost_per_game": 0.009580293706293706,
+     "illegal_rate": 0.001607717041800643,
+     "cache_hit": 0.0,
+     "latency_ms": 2360.634460547504
+    }
+   ]
+  },
+  {
+   "game": "werewolf_dayfirst",
+   "rows": [
+    {
+     "model": "haiku-5.5",
+     "games": 140,
+     "won": 71,
+     "drew": 0,
+     "lost": 69,
+     "win_rate": 0.5071428571428571,
+     "cost_usd": 0.225234,
+     "cost_per_game": 0.0016088142857142856,
+     "illegal_rate": 0.0011547344110854503,
+     "cache_hit": 0.23408224800607985,
+     "latency_ms": 4539.304046242774
+    },
+    {
+     "model": "haiku-4.5",
+     "games": 140,
+     "won": 60,
+     "drew": 0,
+     "lost": 80,
+     "win_rate": 0.42857142857142855,
+     "cost_usd": 2.264856,
+     "cost_per_game": 0.016177542857142856,
+     "illegal_rate": 0.0034522439585730723,
+     "cache_hit": 0.0,
+     "latency_ms": 4583.325635103926
+    }
+   ]
+  }
+ ]
+}

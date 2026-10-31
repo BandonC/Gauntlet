@@ -8,7 +8,8 @@ every page; JSON mirrors the API paths under `api/`.
 Liar's Dice replays show every seat's dice (spectator frames), exactly as the server does.
 
 A partial export (`--tournaments 6,7 --matches 116,142`) writes only those pages. Leaderboards
-still cover everything, and whatever was left out shows as plain text instead of a dead link.
+and player pages still cover everything, and whatever was left out shows as plain text instead
+of a dead link.
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ FILE_ROUTES = {
     "matches": "matches.html",
     "match": "match-{id}.html",
     "match_events": "",  # no server to stream from: exported pages never go live
+    "player": "player-{id}.html",
+    "compare": "compare.html",
 }
 FILE_URLS = web.Urls(dict(FILE_ROUTES))
 
@@ -102,6 +105,12 @@ async def export_site(
     page(FILE_URLS("index"), await web.index_page(pool, urls))
     page(FILE_URLS("tournaments"), await web.tournaments_page(pool, urls, only_t))
     page(FILE_URLS("matches"), await web.matches_page(pool, urls, only_m))
+    page(FILE_URLS("compare"), await web.compare_page(pool, urls))
+    data("compare.json", await web.compare_data(pool))
+    for player_id in await read.player_ids(pool):
+        slug = web.player_slug(player_id)
+        page(FILE_URLS("player", id=slug), await web.player_page(pool, urls, slug))
+        data(f"players/{slug}.json", await web.player_data(pool, player_id))
 
     kept_tournaments = [t for t in all_tournaments if t["id"] in t_ids]
     for t in kept_tournaments:

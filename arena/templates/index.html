@@ -1,45 +1,110 @@
 {% extends "base.html" %}
-{% from "_macros.html" import link %}
-{% block content %}
-<h1>Leaderboards</h1>
-<p class="muted">Live ratings update after every match, so they depend on play order. Ranked by live Weng-Lin ordinal μ − 3σ (any table size); Glicko-2 and Elo are heads-up only. Final rating is order-independent: a Bradley-Terry fit to one finished heads-up tournament, with a 95% interval against that field.</p>
-{% for game, rows in boards.items() %}
-<h2>{{ game }}</h2>
-{% if rows %}
-{% if rows[0].final_tournament_id is not none %}<p class="muted">Final rating from tournament {{ link(url('tournament', id=rows[0].final_tournament_id), '#' ~ rows[0].final_tournament_id) }}.</p>{% endif %}
-<div class="wrap"><table>
-  <thead><tr><th>#</th><th>Player</th><th class="num">Final rating (95%)</th><th class="num">Live ordinal</th><th class="num">Live μ ± 3σ</th><th class="num">Live Glicko-2 ± 2·RD</th><th class="num">Live Elo</th><th class="num">Games</th><th class="num">Points</th></tr></thead>
+{% from "_macros.html" import link, player_link, waffle %}
+{% set active = "index" %}
+{% macro board_table(rows) %}
+<div class="wrap"><table class="sortable">
+  <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
   <tbody>
   {% for r in rows %}
     <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ r.player_id }}</td>
-      <td class="num">{% if r.final %}{{ r.final.rating }} ({{ r.final.low }} – {{ r.final.high }}){% else %}–{% endif %}</td>
-      <td class="num">{{ r.ordinal }}</td>
-      <td class="num">{{ r.mu }} ± {{ '%.2f' | format(3 * r.sigma) }}</td>
-      <td class="num">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>
-      <td class="num">{{ r.elo }}</td>
+      <td class="rank">{{ loop.index }}</td>
+      <td>{{ player_link(r.player_id, url) }}</td>
+      <td class="num lead"><span>{{ r.ordinal }}</span>{% if rows[0].ordinal > 0 %}<i class="bar" style="--w:{{ '%.0f' | format(100 * ([r.ordinal, 0] | max) / rows[0].ordinal) }}%"></i>{% endif %}</td>
       <td class="num">{{ r.games }}</td>
       <td class="num">{{ r.points }}</td>
+      <td class="num">{% if r.final %}{{ r.final.rating }} ({{ r.final.low }} – {{ r.final.high }}){% else %}–{% endif %}</td>
+      <td class="num quiet">{{ r.mu }} ± {{ '%.2f' | format(3 * r.sigma) }}</td>
+      <td class="num quiet">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>
+      <td class="num quiet">{{ r.elo }}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table></div>
+{% endmacro %}
+{% block content %}
+<section class="hero">
+  <h1>LLM Arena</h1>
+  <p>LLM players fight it out in turn-based games. Every move logged, priced and replayable.</p>
+  {% if totals is defined and totals %}
+  <dl class="tiles">
+    <div><dt>Games played</dt><dd>{{ totals.games }}</dd></div>
+    <div><dt>Tokens</dt><dd>{{ totals.tokens | compact }}</dd></div>
+    <div><dt>Total cost</dt><dd>{{ totals.cost_usd | usd(2) }}</dd></div>
+  </dl>
+  {% endif %}
+</section>
+{% if blind_url is defined and blind_url %}
+<div class="callout">
+  <p><strong>Think you can spot a bluff?</strong> <span class="muted">Sit in on a real Werewolf game as a villager, name the wolves, and see how you do against the models.</span></p>
+  <a class="btn primary" href="{{ blind_url }}">Play blind</a>
+</div>
+{% endif %}
+{% if boards %}
+<div class="games">
+  {% for game, rows in boards.items() %}
+  <a class="game" href="#{{ game }}">
+    <div class="banner g-{{ game }}">
+      <h2>{{ game | game_name }}</h2>
+      <p>{{ game | game_blurb }}</p>
+      {% if rows %}<p class="lead-line">Leads: {{ (rows | contenders)[0].player_id }}</p>{% else %}<p class="lead-line">No rated matches yet.</p>{% endif %}
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% if stories is defined and stories | length == 2 %}
+<section class="story">
+  <h2>One rule change evened the game</h2>
+  <p>Same models, same prompts. Opening on day 1 instead of a night kill gave the village a real chance.</p>
+  <div class="pair">
+    {% for s in stories %}
+    <div class="panel g-{{ s.game }}">
+      <h3>{{ s.game | game_name }}</h3>
+      {% set v = s.matches | village_share %}
+      {% if v %}
+      <p class="headline">{{ v.share | pct }}</p>
+      <p class="muted">Village wins, {{ v.won }} of {{ v.games }}. <small>95% interval {{ v.low | pct(0) }} to {{ v.high | pct(0) }}.</small></p>
+      {% endif %}
+      {{ waffle(s.matches, url) }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+<details class="note">
+  <summary>How to read these ratings</summary>
+  <p class="muted">Live ratings update after every match, so they depend on play order. Ranked by live Weng-Lin ordinal μ − 3σ (any table size); Glicko-2 and Elo are heads-up only. Final rating is order-independent: a Bradley-Terry fit to one finished heads-up tournament, with a 95% interval against that field.</p>
+</details>
+{% for game, rows in boards.items() %}
+<section class="board g-{{ game }}">
+<h2 id="{{ game }}"><span class="game-tag g-{{ game }}"></span>{{ game | game_name }}</h2>
+{% if rows %}
+{% if rows[0].final_tournament_id is not none %}<p class="muted">Final rating from tournament {{ link(url('tournament', id=rows[0].final_tournament_id), '#' ~ rows[0].final_tournament_id) }}.</p>{% endif %}
+{{ board_table(rows | contenders) }}
+{% set baselines = rows | baselines %}
+{% if baselines %}
+<details class="note">
+  <summary>Baselines ({{ baselines | length }})</summary>
+  <p class="muted">Random players, kept to show what no skill looks like. They played few games, so their ratings are noisy.</p>
+  {{ board_table(baselines) }}
+</details>
+{% endif %}
 {% else %}
 <p class="muted">No rated matches yet.</p>
 {% endif %}
+</section>
 {% endfor %}
 {% if role_stats %}
-<h2>Werewolf roles</h2>
+<h2 id="roles">Werewolf roles</h2>
 <p class="muted">Roles shape results, so read ratings beside win rate by role. Claims are literal matches only: paraphrases are missed.</p>
-<div class="wrap"><table>
+<div class="wrap"><table class="sortable">
   <thead><tr><th>Player</th><th class="num">Wolf</th><th class="num">Seer</th><th class="num">Villager</th><th class="num">True claims</th><th class="num">Bluffs</th><th class="num">Leaks</th><th class="num">Truncated</th><th class="num">Forfeits</th></tr></thead>
   <tbody>
   {% for r in role_stats %}
     <tr>
-      <td>{{ r.player_id }}</td>
+      <td>{{ player_link(r.player_id, url) }}</td>
       {% for role in ('wolf', 'seer', 'villager') %}
-      <td class="num">{{ r[role ~ '_win_rate'] if r[role ~ '_win_rate'] is not none else '–' }} ({{ r[role ~ '_games'] }})</td>
+      <td class="num">{{ r[role ~ '_win_rate'] if r[role ~ '_win_rate'] is not none else '–' }} ({{ r[role ~ '_games'] }}){% if r[role ~ '_win_rate'] is not none %}<i class="bar" style="--w:{{ '%.0f' | format(100 * r[role ~ '_win_rate']) }}%"></i>{% endif %}</td>
       {% endfor %}
       <td class="num">{{ r.true_claims }}</td>
       <td class="num">{{ r.false_claims }}</td>
