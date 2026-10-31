@@ -13,7 +13,9 @@ from arena.web import (
     SERVER_ROUTES,
     SITE_CSS,
     Urls,
+    baselines,
     compact,
+    contenders,
     game_name,
     match_html,
     match_result,
@@ -431,11 +433,11 @@ def _contrast(a, b):
 
 def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
     _, system, toggled = _palettes()
-    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 17
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 18
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
-@pytest.mark.parametrize("text", ["fg", "muted", "accent", "bad", "good", "x", "o"])
+@pytest.mark.parametrize("text", ["fg", "muted", "accent", "bad", "good", "x", "o", "link"])
 @pytest.mark.parametrize("on", ["bg", "surface"])
 def test_every_palette_stays_readable(index, text, on):
     t = _tokens(_palettes()[index])
@@ -533,6 +535,43 @@ def test_the_rule_change_story_needs_both_rulesets():
     assert "One rule change" not in render(
         "index.html", URLS, boards={}, role_stats=[], stories=both[:1]
     )
+
+
+def test_every_game_has_its_own_wallpaper_and_the_home_page_a_mix():
+    css = SITE_CSS.read_text("utf-8")
+    assert "--tile-mix:" in css
+    for game in list_games():
+        assert f"--tile-{game}:" in css and f"body.g-{game} {{" in css
+
+
+def test_game_pages_carry_their_game_on_the_body():
+    html = render("tournament.html", URLS, t=tournament(), matches=[], final=None)
+    assert '<body class="g-connect4">' in html
+    assert '<body class="g-liars_dice">' in match_html(URLS, match(game="liars_dice"))
+    assert "<body>" in render("matches.html", URLS, matches=[])
+
+
+@pytest.mark.parametrize("name", ["random", "random2", "random13"])
+def test_random_players_fold_into_baselines(name):
+    rows = [lb_row("haiku-5.5/c4-v1"), lb_row(name)]
+    assert contenders(rows) == rows[:1] and baselines(rows) == rows[1:]
+
+
+@pytest.mark.parametrize("name", ["randomized-bot", "liars-dice-bot", "my-random"])
+def test_a_name_that_merely_contains_random_is_a_real_player(name):
+    assert baselines([lb_row("a"), lb_row(name)]) == []
+
+
+def test_a_board_of_only_baselines_still_shows_them():
+    rows = [lb_row("random"), lb_row("random2")]
+    assert contenders(rows) == rows and baselines(rows) == []
+
+
+def test_baselines_stay_on_the_page_folded_and_out_of_the_lead():
+    boards = {"connect4": [lb_row("random"), lb_row("haiku-5.5/c4-v1")]}
+    html = render("index.html", URLS, boards=boards, role_stats=[])
+    assert "<summary>Baselines (1)</summary>" in html and ">random<" in html
+    assert "Leads: haiku-5.5/c4-v1" in html
 
 
 def test_the_theme_is_applied_before_the_stylesheet_paints():

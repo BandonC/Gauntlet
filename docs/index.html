@@ -17,11 +17,17 @@
   color-scheme: light;
   --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #5a6270; --line: #dcd3c3;
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
-  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(11, 107, 107, 0.1);
+  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.28); --glow-b: rgba(0, 143, 134, 0.2);
   /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
   --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
-  --mark-wolf: #a8201a; --mark-village: #008f86;
+  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #1a5fb4;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
+  --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-liars_dice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg transform='translate%2852 56%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cg transform='translate%28150 150%29 rotate%2818%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-werewolf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cpath transform='translate%2860 62%29 rotate%28-12%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cpath transform='translate%28150 44%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28186 120%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%2844 170%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28150 172%29 rotate%2820%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3C/svg%3E");
+  --tile-werewolf_dayfirst: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg transform='translate%2850 50%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3Cg transform='translate%28142 142%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-mix: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cg transform='translate%2860 62%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cpath transform='translate%28232 66%29 rotate%28-10%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cg transform='translate%2878 236%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3Cg transform='translate%28240 240%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cpath transform='translate%28160 150%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3C/svg%3E");
 }
 /* The two dark blocks must match: one follows the system, the other the toggle. */
 @media (prefers-color-scheme: dark) {
@@ -29,18 +35,18 @@
     color-scheme: dark;
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
-    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
-    --mark-wolf: #e05a50; --mark-village: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
   }
 }
 :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #9aa6b8; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
-    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.11); --glow-b: rgba(64, 120, 200, 0.17);
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.28);
     --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
-    --mark-wolf: #e05a50; --mark-village: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
 }
 
 /* Base */
@@ -56,7 +62,22 @@ body {
   background-attachment: fixed;
 }
 main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
+/* The wallpaper: faint game motifs in game colours, behind everything and never interactive. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.13;
+  background: linear-gradient(115deg, var(--g-c4), var(--g-dice) 38%, var(--g-ww) 68%, var(--g-df));
+  /* Full strength in the margins, faint behind the column of text. */
+  mask: var(--tile, var(--tile-mix)) 0 0 / auto,
+    linear-gradient(90deg, #000 6%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.28) 80%, #000 94%);
+  mask-composite: intersect;
+}
+body.g-connect4 { --tile: var(--tile-connect4); }
+body.g-liars_dice { --tile: var(--tile-liars_dice); }
+body.g-werewolf { --tile: var(--tile-werewolf); }
+body.g-werewolf_dayfirst { --tile: var(--tile-werewolf_dayfirst); }
+body[class*="g-"]::before { background: var(--g); opacity: 0.16; }
 a { color: inherit; }
+main > :not(nav) a:not(.btn, .game, .cell) { color: var(--link); text-underline-offset: 2px; }
 p, dd, li { max-width: 62ch; text-wrap: pretty; }
 h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
 h2 { font-size: 17px; margin: 36px 0 8px; }
@@ -85,7 +106,6 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 .page-head { margin-bottom: 20px; }
 .page-head p { margin: 4px 0 0; color: var(--muted); }
 .jump { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; }
-.jump a { color: var(--muted); }
 
 /* Game identity: one colour and one pattern per game, drawn from what the game is made of. */
 .g-connect4 { --g: var(--g-c4); }
@@ -218,6 +238,7 @@ summary { cursor: pointer; color: var(--muted); }
 details.fold { margin-top: 36px; }
 details.fold > summary { font-size: 17px; font-weight: 600; color: var(--fg); }
 details.note { margin: 12px 0 0; }
+details.note p { max-width: none; }
 
 /* The invitation to play blind */
 .callout {
@@ -252,15 +273,34 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
 #blind { display: none; }
 .blind #blind { display: block; }
 .blind .spoiler { display: none; }
-.blind-head { position: sticky; top: 0; background: var(--bg); padding: 4px 0; border-bottom: 1px solid var(--line); }
+.blind-head { position: sticky; top: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(6px); padding: 4px 0; border-bottom: 1px solid var(--line); }
 .blind-head p { margin: 6px 0; }
-.blind-foot { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; margin: 0; border-top: 1px solid var(--line); }
+.blind-foot { position: sticky; bottom: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(6px); padding: 8px 0; margin: 0; border-top: 1px solid var(--line); }
 .seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .seat { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; }
 .seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
 .seat.dead { color: var(--muted); text-decoration: line-through; }
 .seat.dead small { display: inline-block; }
 .said { margin: 4px 0; }
+
+/* The round table: seats in a ring, a vote is an arrow. Flat on purpose. */
+.round { display: block; width: min(280px, 100%); margin: 8px auto; }
+.round line { stroke: var(--accent); stroke-width: 2; }
+.round marker path { fill: var(--accent); }
+.round circle { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.round text { fill: var(--fg); font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+.round .dead circle { fill: none; stroke-dasharray: none; opacity: 0.5; }
+.round .dead text { fill: var(--muted); }
+.round .wolf circle { stroke: var(--mark-wolf); stroke-width: 2.5; }
+.round .out circle { stroke: var(--bad); stroke-width: 3; opacity: 1; }
+
+/* The truth overlay: the same transcript, roles shown and bluffs marked. */
+.truth { margin-top: 28px; }
+.truth .said { max-width: none; padding: 6px 10px; border-left: 3px solid transparent; }
+.truth .said small { margin-right: 4px; }
+.truth .said.bluff { border-left-color: var(--mark-wolf); background: color-mix(in srgb, var(--mark-wolf) 10%, var(--surface)); }
+.truth .said.wrong { border-left-color: var(--muted); background: var(--surface); }
+.tell { display: block; font-size: 13px; font-weight: 600; }
 
 /* The reveal: one rare moment, so the cards may arrive in turn. Nothing waits on it. */
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 16px 0; }
@@ -387,17 +427,6 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
     <tr>
       <td class="rank">2</td>
-      <td><span class="pid">random</span></td>
-      <td class="num lead"><span>11.19</span><i class="bar" style="--w:96%"></i></td>
-      <td class="num">8</td>
-      <td class="num">6.0</td>
-      <td class="num">–</td>
-      <td class="num quiet">31.33 ± 20.13</td>
-      <td class="num quiet">1663.7 ± 338.0</td>
-      <td class="num quiet">1556.0</td>
-    </tr>
-    <tr>
-      <td class="rank">3</td>
       <td><span class="pid">haiku-5.5<span>/c4-v1</span></span></td>
       <td class="num lead"><span>7.97</span><i class="bar" style="--w:69%"></i></td>
       <td class="num">20</td>
@@ -407,10 +436,30 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
       <td class="num quiet">1464.5 ± 188.6</td>
       <td class="num quiet">1471.5</td>
     </tr>
+  </tbody>
+</table></div>
+
+<details class="note">
+  <summary>Baselines (3)</summary>
+  <p class="muted">Random players, kept to show what no skill looks like. They played few games, so their ratings are noisy.</p>
+  <div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
+  <tbody>
     <tr>
-      <td class="rank">4</td>
+      <td class="rank">1</td>
+      <td><span class="pid">random</span></td>
+      <td class="num lead"><span>11.19</span><i class="bar" style="--w:100%"></i></td>
+      <td class="num">8</td>
+      <td class="num">6.0</td>
+      <td class="num">–</td>
+      <td class="num quiet">31.33 ± 20.13</td>
+      <td class="num quiet">1663.7 ± 338.0</td>
+      <td class="num quiet">1556.0</td>
+    </tr>
+    <tr>
+      <td class="rank">2</td>
       <td><span class="pid">random3</span></td>
-      <td class="num lead"><span>6.08</span><i class="bar" style="--w:52%"></i></td>
+      <td class="num lead"><span>6.08</span><i class="bar" style="--w:54%"></i></td>
       <td class="num">8</td>
       <td class="num">4.0</td>
       <td class="num">–</td>
@@ -419,7 +468,7 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
       <td class="num quiet">1508.8</td>
     </tr>
     <tr>
-      <td class="rank">5</td>
+      <td class="rank">3</td>
       <td><span class="pid">random2</span></td>
       <td class="num lead"><span>-3.51</span><i class="bar" style="--w:0%"></i></td>
       <td class="num">8</td>
@@ -431,6 +480,8 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
   </tbody>
 </table></div>
+
+</details>
 </section>
 <section class="board g-liars_dice">
 <h2 id="liars_dice"><span class="game-tag g-liars_dice"></span>Liar&#39;s Dice</h2>
@@ -461,28 +512,6 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
     <tr>
       <td class="rank">3</td>
-      <td><span class="pid">random3</span></td>
-      <td class="num lead"><span>7.28</span><i class="bar" style="--w:39%"></i></td>
-      <td class="num">2</td>
-      <td class="num">2.0</td>
-      <td class="num">–</td>
-      <td class="num quiet">30.63 ± 23.34</td>
-      <td class="num quiet">1847.7 ± 494.2</td>
-      <td class="num quiet">1533.2</td>
-    </tr>
-    <tr>
-      <td class="rank">4</td>
-      <td><span class="pid">random</span></td>
-      <td class="num lead"><span>2.49</span><i class="bar" style="--w:13%"></i></td>
-      <td class="num">4</td>
-      <td class="num">2.0</td>
-      <td class="num">–</td>
-      <td class="num quiet">24.67 ± 22.17</td>
-      <td class="num quiet">1509.8 ± 430.4</td>
-      <td class="num quiet">1497.3</td>
-    </tr>
-    <tr>
-      <td class="rank">5</td>
       <td><span class="pid">haiku-5.5<span>/ld-v1</span></span></td>
       <td class="num lead"><span>2.34</span><i class="bar" style="--w:13%"></i></td>
       <td class="num">20</td>
@@ -492,8 +521,39 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
       <td class="num quiet">1365.5 ± 211.8</td>
       <td class="num quiet">1422.0</td>
     </tr>
+  </tbody>
+</table></div>
+
+<details class="note">
+  <summary>Baselines (3)</summary>
+  <p class="muted">Random players, kept to show what no skill looks like. They played few games, so their ratings are noisy.</p>
+  <div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
+  <tbody>
     <tr>
-      <td class="rank">6</td>
+      <td class="rank">1</td>
+      <td><span class="pid">random3</span></td>
+      <td class="num lead"><span>7.28</span><i class="bar" style="--w:100%"></i></td>
+      <td class="num">2</td>
+      <td class="num">2.0</td>
+      <td class="num">–</td>
+      <td class="num quiet">30.63 ± 23.34</td>
+      <td class="num quiet">1847.7 ± 494.2</td>
+      <td class="num quiet">1533.2</td>
+    </tr>
+    <tr>
+      <td class="rank">2</td>
+      <td><span class="pid">random</span></td>
+      <td class="num lead"><span>2.49</span><i class="bar" style="--w:34%"></i></td>
+      <td class="num">4</td>
+      <td class="num">2.0</td>
+      <td class="num">–</td>
+      <td class="num quiet">24.67 ± 22.17</td>
+      <td class="num quiet">1509.8 ± 430.4</td>
+      <td class="num quiet">1497.3</td>
+    </tr>
+    <tr>
+      <td class="rank">3</td>
       <td><span class="pid">random2</span></td>
       <td class="num lead"><span>-3.12</span><i class="bar" style="--w:0%"></i></td>
       <td class="num">2</td>
@@ -505,6 +565,8 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
   </tbody>
 </table></div>
+
+</details>
 </section>
 <section class="board g-werewolf">
 <h2 id="werewolf"><span class="game-tag g-werewolf"></span>Werewolf</h2>
@@ -678,6 +740,7 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
   </tbody>
 </table></div>
+
 </section>
 <section class="board g-werewolf_dayfirst">
 <h2 id="werewolf_dayfirst"><span class="game-tag g-werewolf_dayfirst"></span>Werewolf (day-first)</h2>
@@ -774,6 +837,7 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
     </tr>
   </tbody>
 </table></div>
+
 </section>
 <h2 id="roles">Werewolf roles</h2>
 <p class="muted">Roles shape results, so read ratings beside win rate by role. Claims are literal matches only: paraphrases are missed.</p>

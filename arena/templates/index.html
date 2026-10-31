@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 {% from "_macros.html" import link, player, waffle %}
 {% set active = "index" %}
+{% macro board_table(rows) %}
+<div class="wrap"><table>
+  <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+    <tr>
+      <td class="rank">{{ loop.index }}</td>
+      <td>{{ player(r.player_id) }}</td>
+      <td class="num lead"><span>{{ r.ordinal }}</span>{% if rows[0].ordinal > 0 %}<i class="bar" style="--w:{{ '%.0f' | format(100 * ([r.ordinal, 0] | max) / rows[0].ordinal) }}%"></i>{% endif %}</td>
+      <td class="num">{{ r.games }}</td>
+      <td class="num">{{ r.points }}</td>
+      <td class="num">{% if r.final %}{{ r.final.rating }} ({{ r.final.low }} – {{ r.final.high }}){% else %}–{% endif %}</td>
+      <td class="num quiet">{{ r.mu }} ± {{ '%.2f' | format(3 * r.sigma) }}</td>
+      <td class="num quiet">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>
+      <td class="num quiet">{{ r.elo }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endmacro %}
 {% block content %}
 <section class="hero">
   <h1>LLM Arena</h1>
@@ -26,7 +46,7 @@
     <div class="banner g-{{ game }}">
       <h2>{{ game | game_name }}</h2>
       <p>{{ game | game_blurb }}</p>
-      {% if rows %}<p class="lead-line">Leads: {{ rows[0].player_id }}</p>{% else %}<p class="lead-line">No rated matches yet.</p>{% endif %}
+      {% if rows %}<p class="lead-line">Leads: {{ (rows | contenders)[0].player_id }}</p>{% else %}<p class="lead-line">No rated matches yet.</p>{% endif %}
     </div>
   </a>
   {% endfor %}
@@ -55,24 +75,15 @@
 <h2 id="{{ game }}"><span class="game-tag g-{{ game }}"></span>{{ game | game_name }}</h2>
 {% if rows %}
 {% if rows[0].final_tournament_id is not none %}<p class="muted">Final rating from tournament {{ link(url('tournament', id=rows[0].final_tournament_id), '#' ~ rows[0].final_tournament_id) }}.</p>{% endif %}
-<div class="wrap"><table>
-  <thead><tr><th>#</th><th>Player</th><th class="num">Live ordinal</th><th class="num">Games</th><th class="num">Points</th><th class="num">Final rating (95%)</th><th class="num quiet">Live μ ± 3σ</th><th class="num quiet">Live Glicko-2 ± 2·RD</th><th class="num quiet">Live Elo</th></tr></thead>
-  <tbody>
-  {% for r in rows %}
-    <tr>
-      <td class="rank">{{ loop.index }}</td>
-      <td>{{ player(r.player_id) }}</td>
-      <td class="num lead"><span>{{ r.ordinal }}</span>{% if rows[0].ordinal > 0 %}<i class="bar" style="--w:{{ '%.0f' | format(100 * ([r.ordinal, 0] | max) / rows[0].ordinal) }}%"></i>{% endif %}</td>
-      <td class="num">{{ r.games }}</td>
-      <td class="num">{{ r.points }}</td>
-      <td class="num">{% if r.final %}{{ r.final.rating }} ({{ r.final.low }} – {{ r.final.high }}){% else %}–{% endif %}</td>
-      <td class="num quiet">{{ r.mu }} ± {{ '%.2f' | format(3 * r.sigma) }}</td>
-      <td class="num quiet">{{ r.rating }} ± {{ '%.1f' | format(2 * r.rd) }}</td>
-      <td class="num quiet">{{ r.elo }}</td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table></div>
+{{ board_table(rows | contenders) }}
+{% set baselines = rows | baselines %}
+{% if baselines %}
+<details class="note">
+  <summary>Baselines ({{ baselines | length }})</summary>
+  <p class="muted">Random players, kept to show what no skill looks like. They played few games, so their ratings are noisy.</p>
+  {{ board_table(baselines) }}
+</details>
+{% endif %}
 {% else %}
 <p class="muted">No rated matches yet.</p>
 {% endif %}

@@ -425,6 +425,14 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   a colour and a pure-CSS pattern (`.banner.g-<game>::before`), so a new game needs one, plus
   `web.GAME_BLURBS`; tests check both. Text in `GAME_BLURBS` and the home page's rule-change
   section is hand-written, while its numbers are live.
+- Page wallpaper: `body::before` masks a game's motif tile (`--tile-<game>`, SVG data URIs in
+  `site.css`) over its colour; home mixes all four. A new game needs a tile and a body rule.
+- `read.match_detail` puts `claims` on each Werewolf turn for the reveal's truth overlay.
+  That's spectator data: `blindSteps` must never read it, and a test feeds it false claims to
+  prove it can't reach the blind view. A false claim is a bluff from a wolf or about the
+  speaker's own seat; a villager's false accusation is shown as wrong, not as a lie.
+- `web.baselines` folds players named `random` or `random<n>` under each leaderboard. They
+  stay on the page and in the JSON, and everyone else is still ranked by the same numbers.
 - Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
   drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
 - Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in

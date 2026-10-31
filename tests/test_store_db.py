@@ -941,6 +941,8 @@ async def test_a_day_first_tournament_runs_rates_apart_and_keeps_its_role_metric
     detail = await read.match_detail(pool, mid)
     assert detail["frames"][0]["phase"] == "discussion" and len(detail["frames"][0]["alive"]) == 7
     assert "says:" in await web.match_page(pool, web.Urls(), mid)
+    said = [t for t in detail["turns"] if t["claims"]]
+    assert said and all(c["kind"] in ("true", "false", "leak") for t in said for c in t["claims"])
     home = await web.index_page(pool, web.Urls())
     assert f'href="/matches/{mid + 7}#blind"' in home  # newest
     assert "One rule change" not in home  # only one ruleset has been played

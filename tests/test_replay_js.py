@@ -329,6 +329,100 @@ def test_day_first_opens_with_everyone_alive_and_the_original_with_a_death():
     assert len(night["alive"]) == 6 and night["dead"][0]["cause"] == "night"
 
 
+TRUTH = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => {
+  const p = JSON.parse(input);
+  console.log(JSON.stringify(R.renderBlindEnd(p.frames, p.turns, {}, p.seats)));
+});
+"""
+
+
+def _say(no, seat, text, claims):
+    return {
+        "turn_no": no,
+        "seat": seat,
+        "action": {"action": "say", "message": text},
+        "claims": claims,
+    }
+
+
+def _truth(turns):
+    roles = ["wolf", "wolf", "seer", "villager", "villager", "villager", "villager"]
+    final = {"roles": roles, "deaths": [], "winner": "wolves", "day": 1}
+    frames = [{"day": 1, "roles": roles}] * len(turns) + [final]
+    return node(TRUTH, {"frames": frames, "turns": turns, "seats": SEATS})
+
+
+def test_a_wolf_lying_is_a_bluff_and_a_villager_being_wrong_is_not():
+    html = _truth(
+        [
+            _say(0, 0, "I am a villager", [{"seat": 0, "role": "villager", "kind": "false"}]),
+            _say(1, 3, "Player 4 is a wolf", [{"seat": 4, "role": "wolf", "kind": "false"}]),
+            _say(2, 5, "Good morning", []),
+        ]
+    )
+    assert "Bluff: claims to be a villager" in html and "Wrong: calls Player 4 a wolf" in html
+    assert "1 bluff marked" in html and "paraphrased lies slip through" in html
+    assert 'class="said bluff"' in html and 'class="said wrong"' in html
+    assert html.count('class="said"') == 1  # the honest message isn't marked
+
+
+def test_a_true_claim_is_not_marked_and_a_leak_is():
+    html = _truth(
+        [
+            _say(0, 3, "I am a villager", [{"seat": 3, "role": "villager", "kind": "true"}]),
+            _say(1, 0, "Player 1 is a wolf", [{"seat": 1, "role": "wolf", "kind": "leak"}]),
+        ]
+    )
+    assert html.count('class="tell"') == 1
+    assert "Gave the wolves away" in html
+
+
+def test_truth_text_from_a_model_is_escaped():
+    html = _truth([_say(0, 3, EVIL, [])])
+    assert "<b>evil</b>" not in html and "&lt;b&gt;evil&lt;/b&gt;" in html
+
+
+ROUND = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => console.log(JSON.stringify(R.roundTable(JSON.parse(input)))));
+"""
+
+
+def test_the_round_table_draws_a_seat_each_and_an_arrow_per_vote():
+    votes = [{"seat": 0, "target": 3}, {"seat": 1, "target": 3}, {"seat": 3, "target": 0}]
+    html = node(ROUND, {"seats": 7, "dead": [5], "votes": votes, "out": 3})
+    assert html.count("<circle") == 7 and html.count("<line") == 3
+    assert 'class="dead"' in html and 'class="out"' in html
+    assert "Player 1 votes Player 3" in html  # the same votes, for a screen reader
+
+
+def test_the_round_table_only_colours_roles_when_it_is_told_them():
+    args = {"seats": 7, "dead": [], "votes": [{"seat": 0, "target": 1}]}
+    assert 'class="wolf"' not in node(ROUND, args)
+    assert 'class="wolf"' in node(ROUND, args | {"roles": ["wolf"] + ["villager"] * 6})
+
+
+def test_a_blind_result_shows_the_table_without_any_living_role():
+    frames, turns = played(WerewolfDayFirst(), 1)
+    seen = node(BLIND, {"frames": frames, "turns": turns})
+    results = [h for h, k in zip(seen["html"], seen["kinds"], strict=False) if k == "result"]
+    assert results and all('class="round"' in h and 'class="wolf"' not in h for h in results)
+
+
+def test_claims_on_turns_cannot_reach_the_blind_view():
+    frames, turns = played(WerewolfDayFirst(), 2)
+    marked = [t | {"claims": [{"seat": 0, "role": "wolf", "kind": "leak"}]} for t in turns]
+    assert node(BLIND, {"frames": frames, "turns": turns}) == node(
+        BLIND, {"frames": frames, "turns": marked}
+    )
+
+
 SCORE = """
 const R = require(process.env.REPLAY_JS);
 let input = "";
