@@ -102,6 +102,21 @@ def contenders(rows: list[dict]) -> list[dict]:
     return [r for r in rows if not _is_baseline(r)] or rows
 
 
+def clear_leader(rows: list[dict]) -> str | None:
+    """Who leads, only if the numbers can tell the top two apart. Finals decide when both have
+    one, since they compare only within one tournament; otherwise the live ordinal gap must
+    exceed both sigmas. Always the top two: skipping a rival with no final could invent a lead."""
+    field = contenders(rows)
+    if len(field) < 2:
+        return None
+    top, second = field[:2]
+    if top["final"] and second["final"]:
+        clear = top["final"]["low"] > second["final"]["high"]
+    else:
+        clear = top["ordinal"] - second["ordinal"] > max(top["sigma"], second["sigma"])
+    return top["player_id"] if clear else None
+
+
 def baselines(rows: list[dict]) -> list[dict]:
     field = contenders(rows)
     return [r for r in rows if r not in field]
@@ -268,6 +283,7 @@ env.filters["result_counts"] = result_counts
 env.filters["compact"] = compact
 env.filters["game_blurb"] = game_blurb
 env.filters["contenders"] = contenders
+env.filters["clear_leader"] = clear_leader
 env.filters["baselines"] = baselines
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.

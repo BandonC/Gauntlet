@@ -46,7 +46,7 @@
     <div class="banner g-{{ game }}">
       <h2>{{ game | game_name }}</h2>
       <p>{{ game | game_blurb }}</p>
-      {% if rows %}<p class="lead-line">Leads: {{ (rows | contenders)[0].player_id }}</p>{% else %}<p class="lead-line">No rated matches yet.</p>{% endif %}
+      {% if rows %}{% set leader = rows | clear_leader %}<p class="lead-line">{% if leader %}Leads: {{ leader }}{% else %}No clear leader yet{% endif %}</p>{% else %}<p class="lead-line">No rated matches yet.</p>{% endif %}
     </div>
   </a>
   {% endfor %}
