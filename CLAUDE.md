@@ -494,12 +494,14 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   the first player won 16 of 20, so seat order drowns out most model differences. Connect 4
   needs hundreds of games to separate similar models; 20 only proves the pipeline. Haiku
   4.5 doesn't cache at this prompt length (0 cache reads or writes in 196 calls) while
-  Haiku 5.5 hit 64%, so with its 10x prices it cost 19x as much. All 56 rejected attempts
+  Haiku 5.5 hit 64%. Haiku 4.5 cost 19x as much: its 10x list price, roughly doubled by the
+  missing cache hits. All 56 rejected attempts
   were "column 3 is full", though the prompt lists legal columns. `max_tokens = 256` was
   enough: every recorded reply had a tool call.
 - First real Liar's Dice run (tournament 4, 30 matches, $0.2833): the probability bot went
   16-4, and the Haikus finished level at 7-13 (5-5 head to head, 2-8 each against the bot).
-  No illegal moves in 351 attempts. Haiku 5.5 hit 71% cache, Haiku 4.5 0%, 22x the cost.
+  No illegal moves in 351 attempts. Haiku 5.5 hit 71% cache, Haiku 4.5 0%. Haiku 4.5 cost 22x:
+  its 10x list price, roughly doubled by the missing cache hits.
   From the turn log, Haiku 5.5 / Haiku 4.5 / the bot: bids impossible given their own dice
   1 of 100 / 0 of 102 / 0 of 95; challenges of a bid their own dice already proved true
   15 of 68 (22%) / 12 of 81 (15%) / 0 of 63; challenges won 18% / 14% / 35%. Losing
@@ -514,8 +516,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   seat voted out that day, as in match 67. `render_view` lists a vote-out above that day's
   discussion. The 300-character line worked: 2 of 676 messages truncated (6 of 12 in match
   67), mean 194 characters. The API accepts `maxLength` on a non-strict tool. Threshold never
-  reached (largest estimate 1,974 tokens). Haiku 4.5 cost 10x Haiku 5.5 ($1.34 vs $0.14) with
-  no cache hits.
+  reached (largest estimate 1,974 tokens). Haiku 4.5 cost 10x Haiku 5.5 ($1.34 vs $0.14), mainly
+  its 10x list price. Missing cache hits add to it: Haiku 5.5 would have cost $0.16 uncached.
   Claims: 167 true, 52 false (49 wolves posing as villagers, none claiming seer), 2 leaks, and
   neither is deliberate: a hypothetical in match 96 and seat 2 accusing "Player 2" in match
   102. 111 of the 167 are Haiku 5.5 villagers' "Player N here, villager" habit, so true-claim
@@ -536,6 +538,10 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   8 of 35 overall (p = 0.003), last on ordinal both times (-0.41, -1.06). Cautious led
   aggressive 59% to 34% in tournament 7 but didn't stand out in tournament 6 (39%). Haiku 5.5
   against Haiku 4.5 is unproven: 51% to 43% (p = 0.23), teammates sharing results.
+- Haiku cost gap, Haiku 4.5 over Haiku 5.5, as billed / with Haiku 5.5 repriced as if nothing
+  cached: tournament 3 19.0 / 9.9, 4 21.8 / 10.7, 6 9.7 / 8.2, 7 10.1 / 8.6. List price is the
+  main cause everywhere, and missing cache hits add to it. Haiku 4.5 never caches here because
+  its minimum is 4,096 tokens; Haiku 5.5's is 512.
 - Simulator caveat: its 41.4% matched for partly the wrong reason. It assumed p = 0.54 every
   day and a wolf out on 46% of first votes; tournament 7 had 36.5% and 30%, with later days
   making up the difference. Fixed p got the total and missed the path, so don't trust it for
