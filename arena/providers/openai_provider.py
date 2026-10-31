@@ -71,6 +71,13 @@ class OpenAIProvider:
             except (json.JSONDecodeError, AttributeError):
                 tool_input = None
         raw = msg.tool_calls[0].function.arguments if msg.tool_calls else (msg.content or "")
+        blocks = []
+        if msg.content:
+            blocks.append({"type": "text", "chars": len(msg.content), "text": msg.content})
+        blocks += [
+            {"type": "tool_use", "chars": len(call.function.arguments or "")}
+            for call in msg.tool_calls or []
+        ]
 
         u = resp.usage
         details = getattr(u, "prompt_tokens_details", None)
@@ -85,6 +92,7 @@ class OpenAIProvider:
             raw_text=raw,
             usage=usage,
             stop_reason=resp.choices[0].finish_reason,
+            blocks=blocks,
         )
 
 

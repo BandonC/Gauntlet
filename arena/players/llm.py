@@ -108,4 +108,5 @@ class LLMPlayer:
             usage=completion.usage,
             latency_ms=latency_ms,
             stop_reason=completion.stop_reason,
+            blocks=completion.blocks,
         )
