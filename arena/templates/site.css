@@ -71,6 +71,7 @@ p, dd, li { max-width: 62ch; text-wrap: pretty; }
 h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
 h2 { font-size: 17px; margin: 36px 0 8px; }
 h3 { font-size: 13px; color: var(--muted); margin: 16px 0 4px; }
+[id] { scroll-margin-top: 28px; } /* a jump lands clear of the top edge, without moving layout */
 code { font: 13px ui-monospace, monospace; }
 small, .muted { color: var(--muted); }
 .bad { color: var(--bad); }
@@ -158,7 +159,7 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
       color-mix(in srgb, var(--g-df) 26%, var(--surface)));
 }
 .hero h1 { font-size: 40px; }
-.hero p { margin: 8px 0 0; font-size: 17px; }
+.hero p { margin: 8px 0 0; font-size: 17px; max-width: none; }
 .tiles { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 20px 0 0; }
 .tiles dt { font-size: 13px; color: var(--muted); }
 .tiles dd { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.2; }
