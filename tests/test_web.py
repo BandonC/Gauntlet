@@ -14,6 +14,7 @@ from arena.web import (
     SITE_CSS,
     Urls,
     baselines,
+    clear_leader,
     compact,
     contenders,
     game_name,
@@ -588,7 +589,8 @@ def test_the_home_page_leads_with_the_headlines_and_a_card_for_each_game():
     totals = {"games": 131, "tokens": 7_700_217, "cost_usd": 4.5124}
     html = render("index.html", URLS, boards=boards, role_stats=[], totals=totals)
     assert "<dd>131</dd>" in html and "<dd>7.7M</dd>" in html and "<dd>$4.51</dd>" in html
-    assert "Leads: haiku-5.5/c4-v1" in html and 'href="#liars_dice"' in html
+    assert "No clear leader yet" in html and 'href="#liars_dice"' in html
+    assert "No rated matches yet." in html
 
 
 def test_the_rule_change_story_needs_both_rulesets():
@@ -638,10 +640,68 @@ def test_a_board_of_only_baselines_still_shows_them():
 
 
 def test_baselines_stay_on_the_page_folded_and_out_of_the_lead():
-    boards = {"connect4": [lb_row("random"), lb_row("haiku-5.5/c4-v1")]}
+    boards = {"connect4": [lb_row("random"), ranked("a", 20.0), ranked("b", 5.0)]}
     html = render("index.html", URLS, boards=boards, role_stats=[])
     assert "<summary>Baselines (1)</summary>" in html and ">random<" in html
-    assert "Leads: haiku-5.5/c4-v1" in html
+    assert "Leads: a<" in html and "No clear leader" not in html
+
+
+def ranked(pid, ordinal, sigma=5.0, final=None):
+    row = lb_row(pid) | {"ordinal": ordinal, "sigma": sigma}
+    if final:
+        row["final"] = {"rating": sum(final) / 2, "low": final[0], "high": final[1]}
+    return row
+
+
+@pytest.mark.parametrize(
+    ("top", "second", "clear"),
+    [
+        ((1600, 1700), (1400, 1500), True),  # apart
+        ((1500, 1700), (1400, 1500), False),  # touching counts as overlap
+        ((1450, 1700), (1400, 1500), False),  # overlap
+        ((1400, 1500), (1600, 1700), False),  # apart, but the ordinal's top is the worse one
+    ],
+)
+def test_a_leader_needs_a_final_interval_clear_of_the_second(top, second, clear):
+    rows = [ranked("a", 20.0, final=top), ranked("b", 1.0, final=second)]
+    assert clear_leader(rows) == ("a" if clear else None)
+
+
+def test_finals_decide_even_when_the_ordinal_gap_says_otherwise():
+    rows = [ranked("a", 5.1, final=(1600, 1700)), ranked("b", 5.0, final=(1400, 1500))]
+    assert clear_leader(rows) == "a"
+
+
+@pytest.mark.parametrize(
+    ("gap", "sigmas", "clear"),
+    [
+        (7.3, (7.0, 7.2), True),
+        (7.2, (7.0, 7.2), False),  # must exceed, not equal
+        (7.1, (7.0, 7.2), False),  # beats only the smaller sigma
+        (7.1, (7.2, 7.0), False),
+    ],
+)
+def test_with_no_finals_the_ordinal_gap_must_exceed_both_sigmas(gap, sigmas, clear):
+    rows = [ranked("a", 10.0 + gap, sigmas[0]), ranked("b", 10.0, sigmas[1])]
+    assert clear_leader(rows) == ("a" if clear else None)
+
+
+def test_a_rival_without_a_final_is_not_skipped_to_find_a_lead():
+    # Liar's Dice after tournament 9: the bot's final is clear of the leader's, but the real
+    # rival played a different tournament and has none.
+    rows = [
+        ranked("sonnet-5", 24.43, 3.46, final=(1533.3, 1657.6)),
+        ranked("sonnet-5.5", 23.82, 3.65),
+        ranked("bot", 19.31, 2.76, final=(1342.4, 1466.7)),
+    ]
+    assert clear_leader(rows) is None
+
+
+def test_nobody_leads_alone_and_baselines_are_not_rivals():
+    assert clear_leader([ranked("a", 20.0)]) is None
+    assert clear_leader([ranked("a", 20.0), lb_row("random") | {"ordinal": 1.0}]) is None
+    rows = [lb_row("random") | {"ordinal": 30.0}, ranked("a", 20.0), ranked("b", 5.0)]
+    assert clear_leader(rows) == "a"
 
 
 def test_the_theme_is_applied_before_the_stylesheet_paints():
