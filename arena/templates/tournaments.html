@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "_macros.html" import game_tag %}
+{% set active = "tournaments" %}
 {% block title %}Tournaments · LLM Arena{% endblock %}
 {% block content %}
 <div class="page-head"><h1>Tournaments</h1></div>
@@ -9,7 +11,7 @@
   {% for t in tournaments %}
     <tr>
       <td><a href="{{ url('tournament', id=t.id) }}">#{{ t.id }}</a></td>
-      <td>{{ t.game | game_name }}</td>
+      <td>{{ game_tag(t.game) }}</td>
       <td>{{ t.format }}</td>
       <td>{{ t.status }}{% if t.last_error %} <span class="bad" title="{{ t.last_error }}">⚠</span>{% endif %}</td>
       <td>{{ '%d / %d' | format(t.current_round, t.rounds) if t.rounds else '' }}</td>

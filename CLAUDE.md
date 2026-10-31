@@ -416,10 +416,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   same-origin iframe. Impeccable is run this way only; it isn't installed in the repo.
 - Themes: light parchment, dark moonlit, following the system until the nav toggle saves a
   choice. `site.css` has two identical dark blocks (system, toggle) because CSS can't share
-  one; tests fail if they differ, or if any token drops below WCAG AA (4.5:1) on `bg` or
-  `surface`. The theme is set in `<head>` before paint, and switching never animates. The
-  only 3D is the Play blind reveal: plain CSS `rotateY`, no library, a fade under reduced
-  motion. Replay stepping stays instant.
+  one; tests fail if they differ, or if any text token drops below WCAG AA (4.5:1) on `bg`
+  or `surface`. The theme is set in `<head>` before paint, and switching never animates.
+  Replay stepping stays instant. No 3D anywhere: the user removed it, and a test holds that.
+- Colour by job: `--g-*` and `--mark-*` are chart marks, separate from text tokens, checked
+  with the dataviz skill's `validate_palette.js` against `surface` in both themes; re-run it
+  if one changes. Words stay in text colours, with a coloured dot beside them. Each game has
+  a colour and a pure-CSS pattern (`.banner.g-<game>::before`), so a new game needs one, plus
+  `web.GAME_BLURBS`; tests check both. Text in `GAME_BLURBS` and the home page's rule-change
+  section is hand-written, while its numbers are live.
 - Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
   drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
 - Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in

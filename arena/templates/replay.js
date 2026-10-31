@@ -321,9 +321,8 @@ function renderBlindEnd(frames, turns, picks, seats) {
     .map((role, i) => {
       const d = fates.get(i);
       const fate = d ? `${how[d.cause]}, day ${Number(d.day)}` : "survived";
-      const front = `<div class="face front" aria-hidden="true">${player(i)}</div>`;
-      const back = `<div class="face back"><small>${player(i)}</small><b>${esc(role)}</b><span class="pid">${name(seats, i)}</span><small>${fate}</small></div>`;
-      return `<div class="card${role === "wolf" || role === "seer" ? ` ${esc(role)}` : ""}" style="--i:${i}">${front}${back}</div>`;
+      const tone = role === "wolf" || role === "seer" ? ` ${esc(role)}` : "";
+      return `<div class="card${tone}" style="--i:${i}"><small>${player(i)}</small><b>${esc(role)}</b><span class="pid">${name(seats, i)}</span><small>${fate}</small></div>`;
     })
     .join("");
   const score = blindScore(frames, turns, picks)

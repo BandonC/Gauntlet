@@ -656,8 +656,8 @@ async def test_every_page_renders_from_a_real_tournament(pool):
     urls = web.Urls()
 
     index = await web.index_page(pool, urls)
-    assert '<h2 id="connect4">Connect 4</h2>' in index and "r1" in index and "r2" in index
-    assert '<h2 id="liars_dice">Liar&#39;s Dice</h2>' in index
+    assert '<h2 id="connect4">' in index and "r1" in index and "r2" in index
+    assert '<h2 id="liars_dice">' in index and "Liar&#39;s Dice" in index
     assert "No rated matches yet." in index
 
     ids = [m["id"] for m in await read.list_matches(pool, tid)]
@@ -941,7 +941,10 @@ async def test_a_day_first_tournament_runs_rates_apart_and_keeps_its_role_metric
     detail = await read.match_detail(pool, mid)
     assert detail["frames"][0]["phase"] == "discussion" and len(detail["frames"][0]["alive"]) == 7
     assert "says:" in await web.match_page(pool, web.Urls(), mid)
-    assert f'href="/matches/{mid + 7}#blind"' in await web.index_page(pool, web.Urls())  # newest
+    home = await web.index_page(pool, web.Urls())
+    assert f'href="/matches/{mid + 7}#blind"' in home  # newest
+    assert "One rule change" not in home  # only one ruleset has been played
+    assert (await read.totals(pool))["games"] == 0  # bots cost nothing, so no real games yet
 
 
 async def test_a_single_werewolf_table_seats_all_seven_and_finishes_the_tournament(pool):

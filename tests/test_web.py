@@ -7,15 +7,19 @@ from jinja2 import UndefinedError
 from arena.games.registry import list_games
 from arena.live import format_event, resume_point
 from arena.web import (
+    GAME_BLURBS,
     GAME_NAMES,
+    REPLAY_JS,
     SERVER_ROUTES,
     SITE_CSS,
     Urls,
+    compact,
     game_name,
     match_html,
     match_result,
     move_label,
     render,
+    result_cells,
     result_tally,
 )
 
@@ -411,7 +415,7 @@ def _palettes():
 
 
 def _tokens(block):
-    return dict(re.findall(r"--([a-z-]+):\s*(#[0-9a-f]{6})", block))
+    return dict(re.findall(r"--([a-z0-9-]+):\s*(#[0-9a-f]{6})", block))
 
 
 def _luminance(colour):
@@ -427,7 +431,7 @@ def _contrast(a, b):
 
 def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
     _, system, toggled = _palettes()
-    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 11
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 17
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
@@ -442,6 +446,93 @@ def test_every_palette_stays_readable(index, text, on):
 def test_primary_buttons_stay_readable(index):
     t = _tokens(_palettes()[index])
     assert _contrast(t["on-accent"], t["accent"]) >= 4.5
+
+
+@pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])
+@pytest.mark.parametrize("mark", ["g-c4", "g-dice", "g-ww", "g-df", "mark-wolf", "mark-village"])
+def test_chart_marks_stand_out_from_the_surface(index, mark):
+    t = _tokens(_palettes()[index])
+    assert _contrast(t[mark], t["surface"]) >= 3
+
+
+def test_the_site_has_no_3d():
+    css = SITE_CSS.read_text("utf-8")
+    assert not re.search(r"rotate[XYZ3]|perspective|preserve-3d|backface", css)
+    js = REPLAY_JS.read_text("utf-8")
+    assert "unmask" not in js and "face front" not in js
+
+
+def test_the_theme_button_is_a_sun_and_a_moon():
+    html = render("matches.html", URLS, matches=[])
+    assert 'class="sun"' in html and 'class="moon"' in html
+
+
+@pytest.mark.parametrize(
+    ("template", "context", "current"),
+    [
+        ("index.html", {"boards": {}, "role_stats": []}, "Leaderboards"),
+        ("tournaments.html", {"tournaments": []}, "Tournaments"),
+        ("matches.html", {"matches": []}, "Matches"),
+    ],
+)
+def test_the_nav_marks_the_current_page(template, context, current):
+    html = render(template, URLS, **context)
+    assert html.count('aria-current="page">') == 1
+    assert f'aria-current="page">{current}</a>' in html
+
+
+def test_the_waffle_groups_results_and_links_only_what_exists():
+    seven = list("abcdefg")
+    v = list_row(id=1, game="werewolf", seats=seven, scores=[0, 0, 1, 1, 1, 1, 1])
+    w = list_row(id=2, game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    live = list_row(id=3, game="werewolf", seats=seven, status="running")
+    assert [c["side"] for c in result_cells([v, w, live])] == ["wolves", "village"]
+    assert result_cells([list_row(scores=[1.0, 0.0])]) == []
+    html = render("tournament.html", URLS, t=tournament(), matches=[v, w], final=None)
+    assert 'class="cell wolves" href="/matches/2"' in html and "Wolves 1" in html
+    assert 'title="#1: Village"' in html
+    assert 'class="waffle"' not in render(
+        "tournament.html", URLS, t=tournament(), matches=[list_row()], final=None
+    )
+
+
+def test_a_result_chip_carries_its_mark_beside_plain_text():
+    seven = list("abcdefg")
+    row = list_row(game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    html = render("matches.html", URLS, matches=[row])
+    assert '<span class="chip wolves">Wolves</span>' in html
+
+
+@pytest.mark.parametrize(
+    ("n", "text"), [(0, "0"), (999, "999"), (1500, "1.5K"), (7_700_217, "7.7M")]
+)
+def test_headline_numbers_are_compact(n, text):
+    assert compact(n) == text
+
+
+def test_every_game_has_a_blurb_and_a_pattern():
+    css = SITE_CSS.read_text("utf-8")
+    for game in list_games():
+        assert game in GAME_BLURBS
+        assert f".g-{game} " in css and f".banner.g-{game}::before" in css
+
+
+def test_the_home_page_leads_with_the_headlines_and_a_card_for_each_game():
+    boards = {"connect4": [lb_row("haiku-5.5/c4-v1")], "liars_dice": []}
+    totals = {"games": 131, "tokens": 7_700_217, "cost_usd": 4.5124}
+    html = render("index.html", URLS, boards=boards, role_stats=[], totals=totals)
+    assert "<dd>131</dd>" in html and "<dd>7.7M</dd>" in html and "<dd>$4.51</dd>" in html
+    assert "Leads: haiku-5.5/c4-v1" in html and 'href="#liars_dice"' in html
+
+
+def test_the_rule_change_story_needs_both_rulesets():
+    seven = list("abcdefg")
+    row = list_row(game="werewolf", seats=seven, scores=[1, 1, 0, 0, 0, 0, 0])
+    both = [{"game": "werewolf", "matches": [row]}, {"game": "werewolf_dayfirst", "matches": [row]}]
+    assert "One rule change" in render("index.html", URLS, boards={}, role_stats=[], stories=both)
+    assert "One rule change" not in render(
+        "index.html", URLS, boards={}, role_stats=[], stories=both[:1]
+    )
 
 
 def test_the_theme_is_applied_before_the_stylesheet_paints():
@@ -518,7 +609,8 @@ def test_replay_data_carries_the_same_labels_as_the_turn_table():
 def test_match_list_shows_game_and_tournament_round():
     rows = [list_row(id=4, game="liars_dice", round=2), list_row(id=5, tournament_id=None)]
     html = render("matches.html", URLS, matches=rows)
-    assert "<td>Liar&#39;s Dice</td>" in html and "<td>Connect 4</td>" in html
+    assert '<span class="game-tag g-liars_dice">Liar&#39;s Dice</span>' in html
+    assert '<span class="game-tag g-connect4">Connect 4</span>' in html
     assert '<a href="/tournaments/7">#7</a>, round 2' in html
 
 

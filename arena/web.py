@@ -65,6 +65,16 @@ GAME_NAMES = {
     "werewolf_dayfirst": "Werewolf (day-first)",
 }
 BLIND_GAMES = ("werewolf", "werewolf_dayfirst")
+GAME_BLURBS = {
+    "connect4": "Four in a row. Simple rules, and the first move decides most games.",
+    "liars_dice": "Hidden dice and bold bids. A short probability bot sets the bar.",
+    "werewolf": "Seven seats, two wolves, a night kill to open. Bluffing in plain text.",
+    "werewolf_dayfirst": "The same game opening by day, with everyone still alive.",
+}
+
+
+def game_blurb(game: str) -> str:
+    return GAME_BLURBS.get(game, "")
 
 
 def game_name(game: str) -> str:
@@ -83,12 +93,37 @@ def match_result(m: dict) -> str | None:
     return f"{winners[0]} won" if len(winners) == 1 else "Draw"
 
 
+def result_class(m: dict) -> str:
+    """The side's colour class in Werewolf. Other games name a player, so they get none."""
+    word = match_result(m)
+    return word.lower() if word and m["game"] in BLIND_GAMES else ""
+
+
+def result_cells(matches: list[dict]) -> list[dict]:
+    """One cell per finished Werewolf match, wolves first and oldest first within a side."""
+    cells = [
+        {"id": m["id"], "word": match_result(m), "side": result_class(m)}
+        for m in matches
+        if result_class(m)
+    ]
+    return sorted(cells, key=lambda c: (c["side"] != "wolves", c["id"]))
+
+
+def result_counts(matches: list[dict]) -> list[tuple[str, int]]:
+    return Counter(c["word"] for c in result_cells(matches)).most_common()
+
+
+def compact(n: int) -> str:
+    """7700217 reads as 7.7M: a headline number doesn't need its last digits."""
+    for limit, suffix in ((1_000_000, "M"), (1_000, "K")):
+        if n >= limit:
+            return f"{n / limit:.1f}{suffix}"
+    return str(n)
+
+
 def result_tally(matches: list[dict]) -> str | None:
     """Wolves 23, Village 17. Only Werewolf: elsewhere the leaderboard says this per player."""
-    results = Counter(
-        match_result(m) for m in matches if m["game"] in BLIND_GAMES and match_result(m)
-    )
-    return ", ".join(f"{side} {n}" for side, n in results.most_common()) or None
+    return ", ".join(f"{side} {n}" for side, n in result_counts(matches)) or None
 
 
 def _werewolf_move(a: dict) -> str | None:
@@ -133,6 +168,11 @@ env.filters["with_labels"] = with_labels
 env.filters["game_name"] = game_name
 env.filters["match_result"] = match_result
 env.filters["result_tally"] = result_tally
+env.filters["result_class"] = result_class
+env.filters["result_cells"] = result_cells
+env.filters["result_counts"] = result_counts
+env.filters["compact"] = compact
+env.filters["game_blurb"] = game_blurb
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.
 REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"
@@ -154,7 +194,28 @@ async def index_page(pool: asyncpg.Pool, urls: Urls) -> str:
         if m["game"] in BLIND_GAMES and m["status"] == "completed"
     ]
     blind_url = next((f"{href}#blind" for href in finished if href), None)
-    return render("index.html", urls, boards=boards, role_stats=role_stats, blind_url=blind_url)
+    return render(
+        "index.html",
+        urls,
+        boards=boards,
+        role_stats=role_stats,
+        blind_url=blind_url,
+        totals=await read.totals(pool),
+        stories=await _rule_change_stories(pool),
+    )
+
+
+async def _rule_change_stories(pool: asyncpg.Pool) -> list[dict]:
+    """Each Werewolf ruleset's biggest tournament, to set their results side by side."""
+    stories = []
+    tournaments = await read.list_tournaments(pool)
+    for game in BLIND_GAMES:
+        played = [t for t in tournaments if t["game"] == game and t["completed"] > 1]
+        if played:
+            biggest = max(played, key=lambda t: t["completed"])
+            matches = await read.list_matches(pool, biggest["id"], limit=500)
+            stories.append({"game": game, "matches": matches})
+    return stories
 
 
 async def tournaments_page(

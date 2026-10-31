@@ -1,12 +1,13 @@
 {% extends "base.html" %}
-{% from "_macros.html" import link, player %}
+{% from "_macros.html" import link, player, result %}
+{% set active = "matches" %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
 {% block head %}
 <script>if (location.hash === "#blind") document.documentElement.classList.add("blind");</script>
 {% endblock %}
 {% block content %}
 {% set can_blind = m.game in ('werewolf', 'werewolf_dayfirst') and m.status == 'completed' %}
-<div class="page-head">
+<div class="page-head banner g-{{ m.game }}">
   <h1>Match #{{ m.id }}</h1>
   <p>{{ m.game | game_name }}{% if m.tournament_id is not none %} · tournament {{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</p>
 </div>
@@ -29,8 +30,7 @@
 {% endif %}
 <dl class="stats">
   <div><dt>Status</dt><dd>{{ m.status }}</dd></div>
-  {% set result = m | match_result %}
-  {% if result %}<div><dt>Result</dt><dd>{{ result }}</dd></div>{% endif %}
+  {% if m | match_result %}<div><dt>Result</dt><dd>{{ result(m) }}</dd></div>{% endif %}
   {% if m.last_error %}<div><dt>Last error</dt><dd class="bad">{{ m.last_error }}</dd></div>{% endif %}
 </dl>
 <div class="wrap"><table>
