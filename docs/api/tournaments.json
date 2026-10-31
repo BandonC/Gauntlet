@@ -1,5 +1,33 @@
 [
  {
+  "id": 9,
+  "game": "liars_dice",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 2.0,
+  "spent_usd": 1.18142,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
+  "id": 8,
+  "game": "liars_dice",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 2.0,
+  "spent_usd": 1.23539,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
   "id": 7,
   "game": "werewolf_dayfirst",
   "format": "tables",

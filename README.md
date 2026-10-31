@@ -1,8 +1,9 @@
 # LLM Arena
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
-priced, and every game replayable. The total real spend behind everything below is **$4.51**,
-across 131 games and 7.7 million tokens.
+priced, and every game replayable. The total real spend behind everything below is about
+**$7.08**: $6.93 across 211 recorded games and 8.7 million tokens, plus $0.15 on four in-memory
+test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
 [village win](https://bandonc.github.io/Gauntlet/match-142.html) and one
@@ -11,7 +12,7 @@ across 131 games and 7.7 million tokens.
 Or [play one blind](https://bandonc.github.io/Gauntlet/match-116.html#blind): sit in as a
 villager, read the models arguing, name the wolves, and see how you did against them.
 
-These are small samples of two cheap models, so the point here is what they show and how
+These are small samples of a few models, so the point here is what they show and how
 far each result can be trusted. Intervals are 95% Wilson intervals, and p-values are Fisher
 exact tests.
 
@@ -88,6 +89,45 @@ The bids were fine. The models lost dice by challenging, sometimes against a bid
 showed was true. That's a description of how the games went, and 20 games per player doesn't
 separate the two Haikus from each other.
 
+### Liar's Dice again: two Sonnets beat the bot, with a large caveat
+
+Two stronger models then played 40 games each against the same bot:
+
+| Against the bot | Wins | Interval | Thinking tokens per turn | Cost |
+|---|---:|---:|---:|---:|
+| Sonnet 5.5 with reasoning | 28 of 40, 70% | 54.6-81.9% | 200.6 | $1.2354 |
+| Sonnet 5 without | 30 of 40, 75% | 59.8-85.8% | 0 | $1.1814 |
+| Both Haikus, from above | 4 of 20, 20% | 8.1-41.6% | 0 | |
+
+Each Sonnet did better than the Haikus (p = 0.0003 and 0.0001). **Sonnet 5.5 against Sonnet 5 is
+inconclusive (p = 0.80) and confounded:** the model and the reasoning changed together, so this
+can't say what reasoning adds. The two tournaments also used different dice seeds.
+
+**"Beats the bot" partly reflects the bot's policy.** It challenged on 40-51% of its turns and
+lost most of those challenges: 145 of 166 against Sonnet 5.5 and 176 of 262 against Sonnet 5. The
+Sonnets got there in very different ways, too. Sonnet 5.5's bids were true 92% of the time and
+Sonnet 5's 75% (p < 0.001), and Sonnet 5 challenged on only 11 of its 355 turns. A bot that
+challenged less might well score differently, so these numbers rank players against this bot
+only.
+
+| | Sonnet 5.5 | Sonnet 5 | Bot vs Sonnet 5.5 | Bot vs Sonnet 5 |
+|---|---:|---:|---:|---:|
+| Bids impossible given own dice | 0 of 248 | 2 of 344 | 0 of 245 | 0 of 251 |
+| Challenges of a bid their own dice already proved true | 14 of 118 (12%) | 0 of 11 | 0 of 166 | 0 of 262 |
+| Challenges won | 22% | 27% | 13% | 33% |
+
+Reasoning didn't remove the blunder. All 14 of Sonnet 5.5's challenges against a bid its own dice
+proved true had a legal raise available, so each one gave up a die for certain; in match 148 it
+held 4, 4, 6 and challenged "1×4". That 12% is below the Haikus' 15-22%, but the drop is unproven
+(p = 0.18 against both Haikus together), and a different model made it.
+
+Sonnet 5.5 has no true off switch for reasoning. `disabled` is rejected, and its lowest setting,
+`between_tools`, reported zero thinking tokens in two test games while averaging 252 and 211 output
+tokens per call, against 282 with default thinking and 76 for Sonnet 5. In the second game, which
+recorded every reply, each one opened with reasoning in visible text, and that text's length
+explained the extra output (r = 0.995). The setting moves the reasoning rather than removing it,
+which is why the comparison above uses Sonnet 5.
+
 ### Connect 4: the illegal-move gap
 
 In 20 games, **Haiku 5.5 made 41 illegal attempts in 220 (18.6%) and Haiku 4.5 made 15 in 196
@@ -107,13 +147,21 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Werewolf, first test game | 1 | 55,417 | $0.0351 |
 | Werewolf | 40 | 2,547,754 | $1.4761 |
 | Werewolf, day-first | 40 | 4,268,976 | $2.4901 |
-| **Total** | **131** | **7,700,217** | **$4.51** |
+| Liar's Dice, Sonnet 5.5 with reasoning | 40 | 502,812 | $1.2354 |
+| Liar's Dice, Sonnet 5 | 40 | 483,262 | $1.1814 |
+| **Total** | **211** | **8,686,291** | **$6.93** |
+
+Four in-memory test games cost another $0.15. They never reach the turn log, so the project total
+is about $7.08.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
 5.5 did, which took the gap to 19 and 22 times in Connect 4 and Liar's Dice, where most of each
 prompt was cached. In Werewolf it stayed near 10 times, with caching adding under a fifth. Skill
 didn't follow price: the two were never clearly separated overall.
+
+The two Sonnets cost about the same for different reasons. Thinking was 59% of Sonnet 5.5's bill,
+offset by cached prompts, while Sonnet 5 had no cache reads at all.
 
 ## Crash recovery in practice
 
@@ -155,5 +203,5 @@ arena migrate
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
 arena serve                                          # http://localhost:8000
-arena export --out docs --tournaments 6,7 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # the static site
 ```
