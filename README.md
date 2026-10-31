@@ -109,9 +109,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Werewolf, day-first | 40 | 4,268,976 | $2.4901 |
 | **Total** | **131** | **7,700,217** | **$4.51** |
 
-At listed prices Haiku 5.5 costs a tenth of Haiku 4.5. In every game here the real gap was 10 to
-22 times, because Haiku 4.5 never cached at these prompt lengths and Haiku 5.5 did. Skill didn't
-follow price: the two were never clearly separated overall.
+Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
+higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
+5.5 did, which took the gap to 19 and 22 times in Connect 4 and Liar's Dice, where most of each
+prompt was cached. In Werewolf it stayed near 10 times, with caching adding under a fifth. Skill
+didn't follow price: the two were never clearly separated overall.
 
 ## Crash recovery in practice
 
