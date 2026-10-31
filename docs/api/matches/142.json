@@ -1,0 +1,4133 @@
+{
+ "id": 142,
+ "tournament_id": 7,
+ "round": null,
+ "game": "werewolf_dayfirst",
+ "status": "completed",
+ "scores": [
+  0.0,
+  1.0,
+  0.0,
+  1.0,
+  1.0,
+  1.0,
+  1.0
+ ],
+ "placements": [
+  6,
+  1,
+  6,
+  1,
+  1,
+  1,
+  1
+ ],
+ "last_error": null,
+ "seats": [
+  "haiku-4.5/wwdf-v1-plain",
+  "haiku-5.5/wwdf-v1-aggressive",
+  "haiku-4.5/wwdf-v1-aggressive",
+  "haiku-5.5/wwdf-v1-plain",
+  "haiku-4.5/wwdf-v1-analytical",
+  "haiku-4.5/wwdf-v1-cautious",
+  "haiku-5.5/wwdf-v1-cautious"
+ ],
+ "turns": [
+  {
+   "turn_no": 0,
+   "seat": 0,
+   "action": {
+    "action": "say",
+    "message": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.001614,
+   "latency_ms": 2591,
+   "tokens": {
+    "input_tokens": 1199,
+    "output_tokens": 83,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 1,
+   "seat": 1,
+   "action": {
+    "action": "say",
+    "message": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000105,
+   "latency_ms": 2352,
+   "tokens": {
+    "input_tokens": 337,
+    "output_tokens": 125,
+    "cache_read_tokens": 919,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 2,
+   "seat": 2,
+   "action": {
+    "action": "say",
+    "message": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.001755,
+   "latency_ms": 2565,
+   "tokens": {
+    "input_tokens": 1305,
+    "output_tokens": 90,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 3,
+   "seat": 3,
+   "action": {
+    "action": "say",
+    "message": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000122,
+   "latency_ms": 2152,
+   "tokens": {
+    "input_tokens": 493,
+    "output_tokens": 127,
+    "cache_read_tokens": 916,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 4,
+   "seat": 4,
+   "action": {
+    "action": "say",
+    "message": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.001916,
+   "latency_ms": 2762,
+   "tokens": {
+    "input_tokens": 1421,
+    "output_tokens": 99,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 5,
+   "seat": 5,
+   "action": {
+    "action": "say",
+    "message": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.001915,
+   "latency_ms": 2127,
+   "tokens": {
+    "input_tokens": 1480,
+    "output_tokens": 87,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 6,
+   "seat": 6,
+   "action": {
+    "action": "say",
+    "message": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000135,
+   "latency_ms": 2062,
+   "tokens": {
+    "input_tokens": 718,
+    "output_tokens": 108,
+    "cache_read_tokens": 920,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 7,
+   "seat": 1,
+   "action": {
+    "action": "say",
+    "message": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000157,
+   "latency_ms": 2587,
+   "tokens": {
+    "input_tokens": 785,
+    "output_tokens": 138,
+    "cache_read_tokens": 919,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 8,
+   "seat": 2,
+   "action": {
+    "action": "say",
+    "message": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002162,
+   "latency_ms": 2653,
+   "tokens": {
+    "input_tokens": 1667,
+    "output_tokens": 99,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 9,
+   "seat": 3,
+   "action": {
+    "action": "say",
+    "message": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000177,
+   "latency_ms": 3210,
+   "tokens": {
+    "input_tokens": 963,
+    "output_tokens": 144,
+    "cache_read_tokens": 916,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 10,
+   "seat": 4,
+   "action": {
+    "action": "say",
+    "message": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002275,
+   "latency_ms": 2671,
+   "tokens": {
+    "input_tokens": 1805,
+    "output_tokens": 94,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 11,
+   "seat": 5,
+   "action": {
+    "action": "say",
+    "message": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002299,
+   "latency_ms": 2379,
+   "tokens": {
+    "input_tokens": 1859,
+    "output_tokens": 88,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 12,
+   "seat": 6,
+   "action": {
+    "action": "say",
+    "message": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000193,
+   "latency_ms": 2026,
+   "tokens": {
+    "input_tokens": 1207,
+    "output_tokens": 127,
+    "cache_read_tokens": 920,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 13,
+   "seat": 0,
+   "action": {
+    "action": "say",
+    "message": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002444,
+   "latency_ms": 2747,
+   "tokens": {
+    "input_tokens": 1984,
+    "output_tokens": 92,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 14,
+   "seat": 0,
+   "action": {
+    "action": "vote",
+    "target": 2
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002304,
+   "latency_ms": 1616,
+   "tokens": {
+    "input_tokens": 2054,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 15,
+   "seat": 1,
+   "action": {
+    "action": "vote",
+    "target": 2
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000281,
+   "latency_ms": 3104,
+   "tokens": {
+    "input_tokens": 1374,
+    "output_tokens": 54,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 932
+   }
+  },
+  {
+   "turn_no": 16,
+   "seat": 2,
+   "action": {
+    "action": "vote",
+    "target": 1
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.0023,
+   "latency_ms": 1854,
+   "tokens": {
+    "input_tokens": 2050,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 17,
+   "seat": 3,
+   "action": {
+    "action": "vote",
+    "target": 2
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000174,
+   "latency_ms": 2529,
+   "tokens": {
+    "input_tokens": 1374,
+    "output_tokens": 54,
+    "cache_read_tokens": 929,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 18,
+   "seat": 4,
+   "action": {
+    "action": "vote",
+    "target": 2
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002298,
+   "latency_ms": 2283,
+   "tokens": {
+    "input_tokens": 2048,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 19,
+   "seat": 5,
+   "action": {
+    "action": "vote",
+    "target": 3
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002296,
+   "latency_ms": 2295,
+   "tokens": {
+    "input_tokens": 2046,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 20,
+   "seat": 6,
+   "action": {
+    "action": "vote",
+    "target": 2
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000174,
+   "latency_ms": 2385,
+   "tokens": {
+    "input_tokens": 1374,
+    "output_tokens": 54,
+    "cache_read_tokens": 933,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 21,
+   "seat": 0,
+   "action": {
+    "action": "kill",
+    "target": 4
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002374,
+   "latency_ms": 2482,
+   "tokens": {
+    "input_tokens": 2124,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 22,
+   "seat": 6,
+   "action": {
+    "action": "inspect",
+    "target": 1
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.00029,
+   "latency_ms": 2338,
+   "tokens": {
+    "input_tokens": 1460,
+    "output_tokens": 55,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 932
+   }
+  },
+  {
+   "turn_no": 23,
+   "seat": 3,
+   "action": {
+    "action": "say",
+    "message": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000232,
+   "latency_ms": 2703,
+   "tokens": {
+    "input_tokens": 1467,
+    "output_tokens": 153,
+    "cache_read_tokens": 916,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 24,
+   "seat": 5,
+   "action": {
+    "action": "say",
+    "message": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002674,
+   "latency_ms": 2574,
+   "tokens": {
+    "input_tokens": 2209,
+    "output_tokens": 93,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 25,
+   "seat": 6,
+   "action": {
+    "action": "say",
+    "message": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000241,
+   "latency_ms": 1959,
+   "tokens": {
+    "input_tokens": 1678,
+    "output_tokens": 129,
+    "cache_read_tokens": 920,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 26,
+   "seat": 0,
+   "action": {
+    "action": "say",
+    "message": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.002892,
+   "latency_ms": 2912,
+   "tokens": {
+    "input_tokens": 2357,
+    "output_tokens": 107,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 27,
+   "seat": 1,
+   "action": {
+    "action": "say",
+    "message": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000272,
+   "latency_ms": 2245,
+   "tokens": {
+    "input_tokens": 1835,
+    "output_tokens": 158,
+    "cache_read_tokens": 919,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 28,
+   "seat": 5,
+   "action": {
+    "action": "say",
+    "message": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.00302,
+   "latency_ms": 2455,
+   "tokens": {
+    "input_tokens": 2495,
+    "output_tokens": 105,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 29,
+   "seat": 6,
+   "action": {
+    "action": "say",
+    "message": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000282,
+   "latency_ms": 2195,
+   "tokens": {
+    "input_tokens": 2059,
+    "output_tokens": 134,
+    "cache_read_tokens": 920,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 30,
+   "seat": 0,
+   "action": {
+    "action": "say",
+    "message": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.003237,
+   "latency_ms": 2762,
+   "tokens": {
+    "input_tokens": 2657,
+    "output_tokens": 116,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 31,
+   "seat": 1,
+   "action": {
+    "action": "say",
+    "message": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000307,
+   "latency_ms": 2095,
+   "tokens": {
+    "input_tokens": 2232,
+    "output_tokens": 149,
+    "cache_read_tokens": 919,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 32,
+   "seat": 3,
+   "action": {
+    "action": "say",
+    "message": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000321,
+   "latency_ms": 2306,
+   "tokens": {
+    "input_tokens": 2340,
+    "output_tokens": 156,
+    "cache_read_tokens": 916,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 33,
+   "seat": 0,
+   "action": {
+    "action": "vote",
+    "target": 1
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.003165,
+   "latency_ms": 1915,
+   "tokens": {
+    "input_tokens": 2915,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 34,
+   "seat": 1,
+   "action": {
+    "action": "vote",
+    "target": 0
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000389,
+   "latency_ms": 2350,
+   "tokens": {
+    "input_tokens": 2460,
+    "output_tokens": 54,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 926
+   }
+  },
+  {
+   "turn_no": 35,
+   "seat": 3,
+   "action": {
+    "action": "vote",
+    "target": 0
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000388,
+   "latency_ms": 2288,
+   "tokens": {
+    "input_tokens": 2460,
+    "output_tokens": 54,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 923
+   }
+  },
+  {
+   "turn_no": 36,
+   "seat": 5,
+   "action": {
+    "action": "vote",
+    "target": 0
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.003142,
+   "latency_ms": 2319,
+   "tokens": {
+    "input_tokens": 2892,
+    "output_tokens": 50,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 0
+   }
+  },
+  {
+   "turn_no": 37,
+   "seat": 6,
+   "action": {
+    "action": "vote",
+    "target": 0
+   },
+   "forfeited": false,
+   "truncated": false,
+   "attempts": 1,
+   "error": null,
+   "rejections": [],
+   "cost_usd": 0.000391,
+   "latency_ms": 2494,
+   "tokens": {
+    "input_tokens": 2480,
+    "output_tokens": 54,
+    "cache_read_tokens": 0,
+    "cache_write_tokens": 927
+   }
+  }
+ ],
+ "frames": [
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 2,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 4,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 1,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 2,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 4,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 2,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 1,
+     "target": 2
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 1,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 2,
+     "target": 1
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 4,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 1,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 2,
+     "target": 1
+    },
+    {
+     "day": 1,
+     "seat": 3,
+     "target": 2
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 1,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 2,
+     "target": 1
+    },
+    {
+     "day": 1,
+     "seat": 3,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 4,
+     "target": 2
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 1,
+   "discussion_round": 2,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Hey everyone, let's stay calm and logical today. We should start by listening to each other and avoid rushing to judgment. What does everyone think we should focus on?"
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 0, \"stay calm\" is vague. Who has actually said anything suspicious so far? I want everyone to name one player they distrust and why, so we can push toward a real vote instead of stalling."
+    },
+    {
+     "round": 1,
+     "seat": 2,
+     "text": "Player 1's right\u2014let's cut the fluff. Player 0's \"stay calm\" sounds defensive. I'm suspicious of anyone who stalls. Who wants to commit and name names?"
+    },
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Day 1 is thin on info, so I won't force a name yet. Player 2, you're pushing hard for commitment; what's your basis for calling Player 0 defensive? Let's hear more before voting."
+    },
+    {
+     "round": 1,
+     "seat": 4,
+     "text": "Players 1 and 2 pushing hard to force names on day 1 worries me. That's a common wolf stall tactic. Player 3's measured response makes sense\u2014we should gather info first, not panic vote."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "I agree with Player 4\u2014pushing hard for instant names on day 1 is premature. Let's think before we vote. Player 0's openness seems reasonable to me."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here, villager. Agree with Player 3 and 4: no need to force names on day 1. Let's gather more reads in round 2 before anyone commits a vote."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1 here, villager. Player 4 and 5, you're both defending the stallers and dismissing pushes for names. Player 5, you backed Player 0 right away with no reasoning. I want Player 5 and Player 0 to explain their reads now before we vote."
+    },
+    {
+     "round": 2,
+     "seat": 2,
+     "text": "Player 1, you're being too aggressive pushing for instant accusations on day 1. That's exactly how to spook villagers. I'm voting you out\u2014you're either wolf rushing or sloppy village. Who's with me?"
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 2, you're now pushing to vote out Player 1 right away, which is the same rush you criticized. Player 1 and Player 2 both pushed hard early, so I'm not sure yet. I'd rather not vote on day 1 without more evidence."
+    },
+    {
+     "round": 2,
+     "seat": 4,
+     "text": "Player 2's flip is the tell here\u2014pushed hard for names, then immediately voted Player 1 when pressured. That's classic wolf misdirection. I'm sticking with caution: no vote today."
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 4 makes a fair point\u2014Player 2 shifted fast when challenged. I'm not ready to vote day 1 either. Let's see what night reveals before committing."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6 here, seer, but I'll keep that quiet for now. Player 2 flipping from pushing names to voting Player 1 looks off, but one day of evidence is thin. I'm not voting today; let's see what night brings."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 4's reading of Player 2 is solid\u2014that flip from pushing names to voting Player 1 looks calculated. I'm with caution today: no vote. Let's let night play out."
+    }
+   ],
+   "votes": [
+    {
+     "day": 1,
+     "seat": 0,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 1,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 2,
+     "target": 1
+    },
+    {
+     "day": 1,
+     "seat": 3,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 4,
+     "target": 2
+    },
+    {
+     "day": 1,
+     "seat": 5,
+     "target": 3
+    }
+   ],
+   "deaths": [],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "night",
+   "day": 2,
+   "discussion_round": 0,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [],
+   "inspections": [],
+   "messages": [],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "night",
+   "day": 2,
+   "discussion_round": 0,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    4,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [],
+   "messages": [],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 1,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 1,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 1,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 1,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 1,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "discussion",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 0,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 1,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 1
+    }
+   ],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 3,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 1
+    },
+    {
+     "day": 2,
+     "seat": 1,
+     "target": 0
+    }
+   ],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 5,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 1
+    },
+    {
+     "day": 2,
+     "seat": 1,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 3,
+     "target": 0
+    }
+   ],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "vote",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": 6,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    0,
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 1
+    },
+    {
+     "day": 2,
+     "seat": 1,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 3,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 5,
+     "target": 0
+    }
+   ],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    }
+   ],
+   "forfeited": [],
+   "winner": null
+  },
+  {
+   "phase": "over",
+   "day": 2,
+   "discussion_round": 2,
+   "to_move": null,
+   "roles": [
+    "wolf",
+    "villager",
+    "wolf",
+    "villager",
+    "villager",
+    "villager",
+    "seer"
+   ],
+   "alive": [
+    1,
+    3,
+    5,
+    6
+   ],
+   "wolf_votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 4
+    }
+   ],
+   "inspections": [
+    {
+     "night": 2,
+     "seat": 1,
+     "wolf": false
+    }
+   ],
+   "messages": [
+    {
+     "round": 1,
+     "seat": 3,
+     "text": "Player 3 here, villager. Player 4 died overnight, so a wolf is likely among 0, 1, 5, 6. Player 6 claimed seer in round 2 of day 1 \u2014 I want to hear more from them. Player 1 and Player 0 both pushed my buttons early; let's compare notes this round."
+    },
+    {
+     "round": 1,
+     "seat": 5,
+     "text": "Player 4 was solid yesterday\u2014cautious and reading Player 2's flip well. I'm suspicious of who killed them. Player 6's seer claim needs verification soon. Let's pressure them for intel."
+    },
+    {
+     "round": 1,
+     "seat": 6,
+     "text": "Player 6 here. Yes, I'm the seer. Night 2 I inspected Player 1: not a wolf. Player 2 was a wolf, so one wolf remains among 0, 3, 5. I'll share more checks as they come."
+    },
+    {
+     "round": 1,
+     "seat": 0,
+     "text": "Player 6's seer claim checks out\u2014Player 2 was the wolf we voted. Player 1's cleared. That leaves one wolf among 0, 3, 5. Player 4 was solid; we need to figure out who benefited from removing them."
+    },
+    {
+     "round": 1,
+     "seat": 1,
+     "text": "Player 1, villager. Player 6's seer claim fits the facts, and I'm backing it. Player 0, you pushed \"stay calm\" on day 1 and now you're echoing the seer claim fast. Player 5, you defended Player 0 without reasons. Who among 0 and 5 can explain why they trust Player 6?"
+    },
+    {
+     "round": 2,
+     "seat": 5,
+     "text": "Player 6's seer info is solid\u2014Player 2 was wolf, Player 1 cleared. The remaining wolf is among 0, 3, or 5. Player 4 was killed for being observant yesterday. I need more reads before voting."
+    },
+    {
+     "round": 2,
+     "seat": 6,
+     "text": "Player 6, seer. Player 1 is cleared (not wolf), and Player 2 was a wolf. Remaining wolf is among 0, 3, 5. Next night I'll check one of them; let's watch who pushes votes hard today before we commit."
+    },
+    {
+     "round": 2,
+     "seat": 0,
+     "text": "Player 6's seer claim is solid\u2014Player 2 was confirmed wolf. One wolf among 0, 3, 5. Player 4 was a strong villager, so they were killed for reading accurately. I think we should press Player 0 harder today on their defensive play from day 1."
+    },
+    {
+     "round": 2,
+     "seat": 1,
+     "text": "Player 1, villager. Player 0, you just said \"press Player 0\" in your own message, which is odd. I trust seer Player 6 and want a vote on a wolf today. Player 0 and Player 5 both backed the stall on day 1, so I'm leaning toward Player 0 as the wolf."
+    },
+    {
+     "round": 2,
+     "seat": 3,
+     "text": "Player 3, villager. Player 6's seer claim fits the facts so far, and I'd like to hear Player 6's next check plan. Player 0 has been oddly eager on both days, and Player 1 has been pressing consistently. I'm leaning toward voting Player 0 today unless someone gives a strong reason not to."
+    }
+   ],
+   "votes": [
+    {
+     "day": 2,
+     "seat": 0,
+     "target": 1
+    },
+    {
+     "day": 2,
+     "seat": 1,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 3,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 5,
+     "target": 0
+    },
+    {
+     "day": 2,
+     "seat": 6,
+     "target": 0
+    }
+   ],
+   "deaths": [
+    {
+     "day": 1,
+     "seat": 2,
+     "role": "wolf",
+     "cause": "vote"
+    },
+    {
+     "day": 2,
+     "seat": 4,
+     "role": "villager",
+     "cause": "night"
+    },
+    {
+     "day": 2,
+     "seat": 0,
+     "role": "wolf",
+     "cause": "vote"
+    }
+   ],
+   "forfeited": [],
+   "winner": "village"
+  }
+ ]
+}

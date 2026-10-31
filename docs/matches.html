@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matches · LLM Arena</title>
+<style>
+  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; --bad:#f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 16px 16px 64px; }
+  nav { display:flex; gap:16px; align-items:baseline; padding-bottom:12px;
+        border-bottom:1px solid var(--line); margin-bottom:8px; }
+  nav .brand { font-weight:700; margin-right:auto; }
+  a { color: inherit; } nav a { text-decoration:none; } nav a:hover { text-decoration:underline; }
+  h1 { font-size: 20px; margin: 16px 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
+  .muted { color: var(--muted); } .bad { color: var(--bad); }
+  table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align: top; }
+  th { font-weight:600; font-size:13px; color:var(--muted); }
+  td.num, th.num { text-align:right; }
+  code { font: 13px ui-monospace, monospace; }
+  .wrap { overflow-x: auto; }
+  dl { display:grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 8px 0; }
+  dt { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <nav>
+    <a class="brand" href="index.html">LLM Arena</a>
+    <a href="index.html">Leaderboards</a>
+    <a href="tournaments.html">Tournaments</a>
+    <a href="matches.html">Matches</a>
+  </nav>
+<h1>Recent matches</h1>
+<div class="wrap"><table>
+  <thead><tr><th>ID</th><th>Game</th><th>Players</th><th>Tournament</th><th>Status</th><th>Scores</th><th class="num">Cost</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="match-142.html">#142</a></td>
+      <td>werewolf_dayfirst</td>
+      <td>haiku-4.5/wwdf-v1-plain vs haiku-5.5/wwdf-v1-aggressive vs haiku-4.5/wwdf-v1-aggressive vs haiku-5.5/wwdf-v1-plain vs haiku-4.5/wwdf-v1-analytical vs haiku-4.5/wwdf-v1-cautious vs haiku-5.5/wwdf-v1-cautious</td>
+      <td><a href="tournament-7.html">#7</a></td>
+      <td>completed</td>
+      <td>0.0 – 1.0 – 0.0 – 1.0 – 1.0 – 1.0 – 1.0</td>
+      <td class="num">$0.0507</td>
+    </tr>
+    <tr>
+      <td><a href="match-116.html">#116</a></td>
+      <td>werewolf_dayfirst</td>
+      <td>haiku-4.5/wwdf-v1-cautious vs haiku-5.5/wwdf-v1-plain vs haiku-5.5/wwdf-v1-cautious vs haiku-5.5/wwdf-v1-aggressive vs haiku-4.5/wwdf-v1-aggressive vs haiku-5.5/wwdf-v1-analytical vs haiku-4.5/wwdf-v1-plain</td>
+      <td><a href="tournament-7.html">#7</a></td>
+      <td>completed</td>
+      <td>0.0 – 0.0 – 0.0 – 1.0 – 0.0 – 1.0 – 0.0</td>
+      <td class="num">$0.0467</td>
+    </tr>
+  </tbody>
+</table></div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+[
+ {
+  "player_id": "haiku-4.5/c4-v1",
+  "turns": 181,
+  "attempts": 196,
+  "illegal_attempts": 15,
+  "illegal_move_rate": 0.0765,
+  "forfeits": 0,
+  "latency_p50_ms": 1003.0,
+  "latency_p95_ms": 1723.0,
+  "completed_games": 20,
+  "cost_per_game_usd": 0.010818,
+  "cache_hit_rate": 0.0
+ },
+ {
+  "player_id": "haiku-5.5/c4-v1",
+  "turns": 181,
+  "attempts": 220,
+  "illegal_attempts": 41,
+  "illegal_move_rate": 0.1864,
+  "forfeits": 2,
+  "latency_p50_ms": 1417.0,
+  "latency_p95_ms": 3104.0,
+  "completed_games": 20,
+  "cost_per_game_usd": 0.000569,
+  "cache_hit_rate": 0.6359
+ },
+ {
+  "player_id": "random",
+  "turns": 80,
+  "attempts": 80,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 8,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "random2",
+  "turns": 76,
+  "attempts": 76,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 8,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "random3",
+  "turns": 84,
+  "attempts": 84,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 8,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ }
+]

@@ -1,0 +1,74 @@
+[
+ {
+  "id": 142,
+  "tournament_id": 7,
+  "round": null,
+  "game": "werewolf_dayfirst",
+  "status": "completed",
+  "scores": [
+   0.0,
+   1.0,
+   0.0,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "placements": [
+   6,
+   1,
+   6,
+   1,
+   1,
+   1,
+   1
+  ],
+  "run_attempts": 1,
+  "seats": [
+   "haiku-4.5/wwdf-v1-plain",
+   "haiku-5.5/wwdf-v1-aggressive",
+   "haiku-4.5/wwdf-v1-aggressive",
+   "haiku-5.5/wwdf-v1-plain",
+   "haiku-4.5/wwdf-v1-analytical",
+   "haiku-4.5/wwdf-v1-cautious",
+   "haiku-5.5/wwdf-v1-cautious"
+  ],
+  "cost_usd": 0.050713
+ },
+ {
+  "id": 116,
+  "tournament_id": 7,
+  "round": null,
+  "game": "werewolf_dayfirst",
+  "status": "completed",
+  "scores": [
+   0.0,
+   0.0,
+   0.0,
+   1.0,
+   0.0,
+   1.0,
+   0.0
+  ],
+  "placements": [
+   3,
+   3,
+   3,
+   1,
+   3,
+   1,
+   3
+  ],
+  "run_attempts": 1,
+  "seats": [
+   "haiku-4.5/wwdf-v1-cautious",
+   "haiku-5.5/wwdf-v1-plain",
+   "haiku-5.5/wwdf-v1-cautious",
+   "haiku-5.5/wwdf-v1-aggressive",
+   "haiku-4.5/wwdf-v1-aggressive",
+   "haiku-5.5/wwdf-v1-analytical",
+   "haiku-4.5/wwdf-v1-plain"
+  ],
+  "cost_usd": 0.046714
+ }
+]
