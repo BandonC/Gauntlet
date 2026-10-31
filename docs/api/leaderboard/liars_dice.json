@@ -1,22 +1,56 @@
 [
  {
-  "player_id": "liars-dice-bot",
-  "rating": 1691.9,
-  "rd": 96.2,
-  "low": 1499.6,
-  "high": 1884.2,
-  "ordinal": 18.6,
-  "mu": 33.93,
-  "sigma": 5.11,
-  "elo": 1606.1,
-  "games": 20,
-  "points": 16.0,
+  "player_id": "sonnet-5/ld-v1",
+  "rating": 1796.2,
+  "rd": 73.7,
+  "low": 1648.8,
+  "high": 1943.6,
+  "ordinal": 24.43,
+  "mu": 34.81,
+  "sigma": 3.46,
+  "elo": 1576.7,
+  "games": 40,
+  "points": 30.0,
   "final": {
-   "rating": 1660.5,
-   "low": 1533.7,
-   "high": 1787.4
+   "rating": 1595.4,
+   "low": 1533.3,
+   "high": 1657.6
   },
-  "final_tournament_id": 4
+  "final_tournament_id": 9
+ },
+ {
+  "player_id": "sonnet-5.5/ld-v1-think",
+  "rating": 1767.9,
+  "rd": 72.2,
+  "low": 1623.5,
+  "high": 1912.2,
+  "ordinal": 23.82,
+  "mu": 34.78,
+  "sigma": 3.65,
+  "elo": 1609.4,
+  "games": 40,
+  "points": 28.0,
+  "final": null,
+  "final_tournament_id": 9
+ },
+ {
+  "player_id": "liars-dice-bot",
+  "rating": 1625.7,
+  "rd": 66.0,
+  "low": 1493.8,
+  "high": 1757.7,
+  "ordinal": 19.31,
+  "mu": 27.59,
+  "sigma": 2.76,
+  "elo": 1420.0,
+  "games": 100,
+  "points": 38.0,
+  "final": {
+   "rating": 1404.6,
+   "low": 1342.4,
+   "high": 1466.7
+  },
+  "final_tournament_id": 9
  },
  {
   "player_id": "haiku-4.5/ld-v1",
@@ -30,12 +64,8 @@
   "elo": 1471.9,
   "games": 20,
   "points": 7.0,
-  "final": {
-   "rating": 1419.7,
-   "low": 1306.6,
-   "high": 1532.9
-  },
-  "final_tournament_id": 4
+  "final": null,
+  "final_tournament_id": 9
  },
  {
   "player_id": "random3",
@@ -50,7 +80,7 @@
   "games": 2,
   "points": 2.0,
   "final": null,
-  "final_tournament_id": 4
+  "final_tournament_id": 9
  },
  {
   "player_id": "random",
@@ -65,7 +95,7 @@
   "games": 4,
   "points": 2.0,
   "final": null,
-  "final_tournament_id": 4
+  "final_tournament_id": 9
  },
  {
   "player_id": "haiku-5.5/ld-v1",
@@ -79,12 +109,8 @@
   "elo": 1422.0,
   "games": 20,
   "points": 7.0,
-  "final": {
-   "rating": 1419.7,
-   "low": 1306.6,
-   "high": 1532.9
-  },
-  "final_tournament_id": 4
+  "final": null,
+  "final_tournament_id": 9
  },
  {
   "player_id": "random2",
@@ -99,6 +125,6 @@
   "games": 2,
   "points": 0.0,
   "final": null,
-  "final_tournament_id": 4
+  "final_tournament_id": 9
  }
 ]
