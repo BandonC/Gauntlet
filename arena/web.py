@@ -70,6 +70,7 @@ MOVE_LABELS = {
     "connect4": _connect4_move,
     "liars_dice": _liars_dice_move,
     "werewolf": _werewolf_move,
+    "werewolf_dayfirst": _werewolf_move,
 }
 
 

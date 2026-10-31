@@ -21,6 +21,9 @@ Messages over MAX_MESSAGE_CHARS are valid: normalize_action truncates them and t
 runner flags the turn. The log keeps full text unless a seat's prompt would pass
 context_token_limit (estimated at 4 characters a token); then player_view reduces the
 oldest finished days to their votes and deaths. Reduction only changes views, never state.
+
+WerewolfDayFirst (`werewolf_dayfirst`) is the same game opening on day 1 with all seven alive:
+there is no night 1, so the first kill and the seer's first inspection come on night 2.
 """
 
 from __future__ import annotations
@@ -64,6 +67,7 @@ The game alternates night and day, starting with night 1.
 
 Every dead player's role is revealed. The village wins when no wolf is alive. The wolves
 win when living wolves are at least as many as all other living players. Lying is allowed."""
+DAY_FIRST_RULES = RULES.replace("starting with night 1", "starting with day 1")
 
 Phase = Literal["night", "discussion", "vote", "over"]
 
@@ -294,7 +298,7 @@ class Werewolf(Game):
         """Reduce the oldest finished days, one at a time, until the prompt fits."""
         days = view["days"]
         for i in range(len(days) - 1):  # the current day always stays in full
-            if _estimate_tokens(RULES + self.render_view(view)) <= limit:
+            if _estimate_tokens(self.rules_text() + self.render_view(view)) <= limit:
                 break
             days[i] = days[i] | {"messages": [], "reduced": True}
         return view
@@ -464,6 +468,16 @@ class Werewolf(Game):
             raise ValueError("scores() called on a non-terminal state")
         wolves_won = state.winner == WOLVES_WIN
         return [1.0 if (r == WOLF) == wolves_won else 0.0 for r in state.roles]
+
+
+class WerewolfDayFirst(Werewolf):
+    name = "werewolf_dayfirst"
+
+    def rules_text(self) -> str:
+        return DAY_FIRST_RULES
+
+    def initial_state(self, num_players: int, seed: int, options: JSON | None = None) -> WWState:
+        return _start_discussion(super().initial_state(num_players, seed, options), 1)
 
 
 def _vote_json(v: Vote) -> JSON:
