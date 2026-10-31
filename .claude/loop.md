@@ -5,8 +5,10 @@ Each iteration:
    revert it before starting anything new.
 2. `git checkout main`. Pick the first unchecked roadmap item in CLAUDE.md not
    tagged `[human]`. Create `claude/<short-item-name>` from main.
-3. Implement it with tests. Run ruff, `pytest`, and `pytest -m db`
-   (DATABASE_URL=postgresql://arena:arena@localhost:5433/arena_test).
+3. Implement it with tests. Run `ruff format arena tests`, then
+   `DATABASE_URL=postgresql://arena:arena@localhost:5433/arena_test scripts/check.sh`.
+   Always use scripts/check.sh, and never pipe test output through tail or head
+   without `set -o pipefail`.
 4. When everything passes: tick the checkbox and commit on the branch. Then STOP
    the loop (don't schedule another iteration) and post: the branch name, a short
    summary, how it was tested, and "Reply 'approved' to merge". Never merge or
