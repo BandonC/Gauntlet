@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}LLM Arena{% endblock %}</title>
 <style>
-  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c; }
+  :root { --bg:#f7f7f5; --fg:#1c1c1a; --muted:#6b6b66; --line:#deded8; --x:#c2410c; --o:#1d4ed8; --bad:#b91c1c;
+          --ease-out:cubic-bezier(0.23, 1, 0.32, 1); }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#161615; --fg:#ececea; --muted:#9a9a94; --line:#2e2e2b; --x:#fb923c; --o:#60a5fa; --bad:#f87171; }
   }
@@ -16,7 +17,12 @@
   nav { display:flex; gap:16px; align-items:baseline; padding-bottom:12px;
         border-bottom:1px solid var(--line); margin-bottom:8px; }
   nav .brand { font-weight:700; margin-right:auto; }
-  a { color: inherit; } nav a { text-decoration:none; } nav a:hover { text-decoration:underline; }
+  a { color: inherit; } nav a { text-decoration:none; }
+  @media (hover: hover) and (pointer: fine) { nav a:hover { text-decoration:underline; } }
+  button { transition: transform 120ms var(--ease-out); }
+  button:active:not(:disabled) { transform: scale(0.97); }
+  @media (prefers-reduced-motion: reduce) { button:active:not(:disabled) { transform: none; } }
+  p, dd, li { max-width: 62ch; text-wrap: pretty; }
   h1 { font-size: 20px; margin: 16px 0 4px; } h2 { font-size: 15px; margin: 28px 0 8px; }
   .muted { color: var(--muted); } .bad { color: var(--bad); }
   table { width:100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }

@@ -179,7 +179,212 @@ function initReplay(doc) {
   if (data.events && typeof EventSource !== "undefined") follow();
 }
 
-if (typeof document !== "undefined") initReplay(document);
-RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+// Play blind (Werewolf): the game as a villager sees it. Spectator frames hold every role,
+// so blindSteps copies out only public facts, and renderBlind sees nothing else until the
+// end. Seats are "Player N" because that's what the models call each other, and because
+// the page's model names shouldn't carry over. The data is in the page, so this keeps a
+// game honest for a player, not secret from someone reading the source.
+const STARTING_WOLVES = 2;
+const player = (seat) => `Player ${Number(seat)}`;
 
-if (typeof module !== "undefined") module.exports = { RENDERERS, renderFrame, describeTurn, esc, initReplay };
+function blindSteps(frames, turns) {
+  const final = frames[frames.length - 1];
+  const steps = [];
+  let past = [];
+  let seen = -1;
+  let votedOn = 0;
+  const publicFacts = (f) => ({
+    day: f.day,
+    alive: [...f.alive],
+    dead: f.deaths.map(({ seat, role, cause, day }) => ({ seat, role, cause, day })),
+  });
+  const said = (f) => f.messages.map(({ seat, text }) => ({ day: f.day, seat, text }));
+  frames.forEach((f, i) => {
+    if (f.winner || f.phase === "night") return;
+    if (f.phase === "discussion") {
+      const key = f.day * 1000 + f.messages.length;
+      if (key === seen) return; // a forfeited turn says nothing, so there's nothing to step to
+      seen = key;
+      steps.push({ kind: "talk", ...publicFacts(f), messages: [...past, ...said(f)] });
+    } else if (f.day !== votedOn) {
+      votedOn = f.day;
+      past = [...past, ...said(f)];
+      const facts = publicFacts(f);
+      steps.push({ kind: "vote", ...facts, messages: past });
+      const votes = turns
+        .filter((t) => t.action?.action === "vote" && frames[t.turn_no].day === f.day)
+        .map((t) => ({ seat: t.seat, target: t.action.target }));
+      const out = final.deaths.find((d) => d.day === f.day && d.cause === "vote") ?? null;
+      steps.push({
+        kind: "result",
+        day: f.day,
+        alive: out ? facts.alive.filter((s) => s !== out.seat) : facts.alive,
+        dead: out ? [...facts.dead, { seat: out.seat, role: out.role, cause: "vote", day: f.day }] : facts.dead,
+        messages: past,
+        votes,
+        out: out && { seat: out.seat, role: out.role },
+      });
+    }
+  });
+  steps.push({ kind: "end" });
+  return steps;
+}
+
+const wolvesLeft = (step) => STARTING_WOLVES - step.dead.filter((d) => d.role === "wolf").length;
+
+function renderSeats(step, chosen) {
+  const fate = new Map(step.dead.map((d) => [d.seat, d]));
+  const seats = [...step.alive, ...step.dead.map((d) => d.seat)].sort((a, b) => a - b);
+  return seats
+    .map((seat) => {
+      const d = fate.get(seat);
+      if (d) return `<span class="seat dead">${player(seat)} <small>${esc(d.role)}</small></span>`;
+      if (step.kind !== "vote") return `<span class="seat">${player(seat)}</span>`;
+      const on = chosen.has(seat);
+      return `<button class="seat${on ? " on" : ""}" data-pick="${Number(seat)}" aria-pressed="${on}">${player(seat)}</button>`;
+    })
+    .join("");
+}
+
+function renderTranscript(messages) {
+  let day = 0;
+  return messages
+    .map((m) => {
+      const head = m.day === day ? "" : `<h3>Day ${Number(m.day)}</h3>`;
+      day = m.day;
+      return `${head}<p class="said"><b>${player(m.seat)}</b> ${esc(m.text)}</p>`;
+    })
+    .join("");
+}
+
+function renderBlind(step, chosen = new Set()) {
+  const head = (lines) =>
+    `<div class="blind-head">${lines}<div class="seats">${renderSeats(step, chosen)}</div></div>`;
+  const log = `<div class="transcript">${renderTranscript(step.messages)}</div>`;
+  if (step.kind === "talk") {
+    const killed = step.dead
+      .filter((d) => d.day === step.day && d.cause === "night")
+      .map((d) => `${player(d.seat)} was killed in the night: a ${esc(d.role)}.`);
+    const opening = step.messages.length ? [] : ["Two wolves are at this table. Nobody has spoken yet."];
+    const note = [...killed, ...opening].map((line) => `<p>${line}</p>`).join("");
+    return head(`<p class="status">Day ${Number(step.day)}</p>${note}`) + log;
+  }
+  if (step.kind === "vote") {
+    const n = wolvesLeft(step);
+    const ask = `Day ${Number(step.day)} vote: who ${n === 1 ? "is the wolf" : `are the ${n} wolves`}?`;
+    return head(`<p class="status">${ask}</p>`) + log;
+  }
+  const votes = step.votes.map((v) => `${player(v.seat)} → ${player(v.target)}`).join(", ");
+  const out = step.out
+    ? `${player(step.out.seat)} is voted out: a ${esc(step.out.role)}.`
+    : "A tied vote: nobody goes.";
+  return head(`<p class="status">${out}</p><p class="ld-bids">Votes: ${votes || "none"}</p>`) + log;
+}
+
+// Per day: how many of your picks were wolves, and how the village's own votes did.
+function blindScore(frames, turns, picks) {
+  const roles = frames[frames.length - 1].roles;
+  return Object.keys(picks)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .map((day) => {
+      const chosen = [...picks[day]];
+      const votes = turns.filter(
+        (t) => t.action?.action === "vote" && frames[t.turn_no].day === day && roles[t.seat] !== "wolf",
+      );
+      return {
+        day,
+        hits: chosen.filter((s) => roles[s] === "wolf").length,
+        picked: chosen.length,
+        villageHits: votes.filter((t) => roles[t.action.target] === "wolf").length,
+        villageVotes: votes.length,
+      };
+    });
+}
+
+function renderBlindEnd(frames, turns, picks, seats) {
+  const final = frames[frames.length - 1];
+  const fates = new Map(final.deaths.map((d) => [d.seat, d]));
+  const how = { night: "killed at night", vote: "voted out" };
+  const rows = final.roles
+    .map((role, i) => {
+      const d = fates.get(i);
+      const fate = d ? `${how[d.cause]}, day ${Number(d.day)}` : "survived";
+      return `<tr class="unmask${role === "wolf" ? " wolf" : ""}" style="--i:${i}"><td>${player(i)}</td><td>${esc(role)}</td><td>${name(seats, i)}</td><td>${fate}</td></tr>`;
+    })
+    .join("");
+  const score = blindScore(frames, turns, picks)
+    .map((s) => {
+      const you = `${s.hits} of your ${s.picked} picks were wolves`;
+      const them = `the village put ${s.villageHits} of ${s.villageVotes} votes on a wolf`;
+      return `<li>Day ${s.day}: ${you}, and ${them}.</li>`;
+    })
+    .join("");
+  return (
+    `<p class="status">The ${esc(final.winner)} win${final.winner === "wolves" ? "" : "s"}.</p>` +
+    (score ? `<ul>${score}</ul>` : "") +
+    `<div class="wrap"><table class="ld"><thead><tr><th>Seat</th><th>Role</th><th>Model</th><th>Fate</th></tr></thead><tbody>${rows}</tbody></table></div>`
+  );
+}
+
+function initBlind(doc, data) {
+  const start = doc.getElementById("blind-start");
+  if (!start) return;
+  const $ = (id) => doc.getElementById(id);
+  const steps = blindSteps(data.frames, data.turns);
+  const picks = {};
+  let at = 0;
+
+  function draw() {
+    const step = steps[at];
+    const end = step.kind === "end";
+    const chosen = (picks[step.day] ??= new Set());
+    if (step.kind !== "vote" && !chosen.size) delete picks[step.day];
+    $("blind-view").innerHTML = end
+      ? renderBlindEnd(data.frames, data.turns, picks, data.seats)
+      : renderBlind(step, chosen);
+    const next = $("blind-next");
+    next.hidden = end;
+    next.disabled = step.kind === "vote" && chosen.size !== wolvesLeft(step);
+    next.textContent = step.kind === "vote" ? "Lock in" : "Next";
+    $("blind-skip").hidden = step.kind !== "talk";
+    const scroll = end ? 0 : doc.documentElement.scrollHeight; // the newest message, instantly
+    doc.defaultView?.scrollTo(0, scroll);
+  }
+  function enter() {
+    doc.documentElement.classList.add("blind");
+    at = 0;
+    for (const day of Object.keys(picks)) delete picks[day];
+    draw();
+  }
+  function advance(i) {
+    at = Math.min(i, steps.length - 1);
+    draw();
+  }
+  start.onclick = enter;
+  $("blind-exit").onclick = () => doc.documentElement.classList.remove("blind");
+  $("blind-next").onclick = () => advance(at + 1);
+  $("blind-skip").onclick = () => advance(steps.findIndex((s, i) => i > at && s.kind !== "talk"));
+  $("blind-view").onclick = (e) => {
+    const seat = e.target.closest?.("[data-pick]")?.dataset.pick;
+    if (seat === undefined) return;
+    const step = steps[at];
+    const chosen = picks[step.day];
+    const n = Number(seat);
+    if (chosen.has(n)) chosen.delete(n);
+    else if (chosen.size < wolvesLeft(step)) chosen.add(n);
+    draw();
+  };
+  if (doc.documentElement.classList.contains("blind")) enter();
+}
+
+RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+if (typeof document !== "undefined") {
+  initReplay(document);
+  initBlind(document, JSON.parse(document.getElementById("replay-data").textContent));
+}
+
+if (typeof module !== "undefined") module.exports = {
+  RENDERERS, renderFrame, describeTurn, esc, initReplay,
+  blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind,
+};

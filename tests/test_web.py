@@ -4,7 +4,7 @@ import pytest
 from jinja2 import UndefinedError
 
 from arena.live import format_event, resume_point
-from arena.web import SERVER_ROUTES, Urls, move_label, render
+from arena.web import SERVER_ROUTES, Urls, match_html, move_label, render
 
 URLS = Urls()
 
@@ -279,6 +279,29 @@ def _embedded(html):
         '<script id="replay-data" type="application/json">'
     )
     return html[start : html.index("</script>", start)]
+
+
+@pytest.mark.parametrize(
+    ("game", "status", "offered"),
+    [
+        ("werewolf", "completed", True),
+        ("werewolf_dayfirst", "completed", True),
+        ("werewolf_dayfirst", "running", False),
+        ("connect4", "completed", False),
+        ("liars_dice", "completed", False),
+    ],
+)
+def test_play_blind_is_only_offered_on_finished_werewolf_games(game, status, offered):
+    html = match_html(URLS, match(game=game, status=status))
+    assert ('id="blind-start"' in html) is offered
+    assert ('id="blind-view"' in html) is offered
+
+
+def test_the_spoilers_are_all_inside_what_play_blind_hides():
+    html = match_html(URLS, match(game="werewolf_dayfirst", status="completed"))
+    hidden = html[html.index('<div class="spoiler">') :]
+    for part in ("<dl>", 'id="replay-frame"', "<h2>Turns</h2>"):
+        assert part in hidden
 
 
 def test_match_page_embeds_replay_data_and_rows_jump_to_frames():

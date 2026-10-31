@@ -2,6 +2,7 @@
 {% from "_macros.html" import link %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
 {% block head %}
+<script>if (location.hash === "#blind") document.documentElement.classList.add("blind");</script>
 <style>
   .controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin: 8px 0; }
   .controls button { font: inherit; padding: 2px 10px; }
@@ -17,10 +18,46 @@
   .ld-bids .die, .reveal .die { font-size: 22px; line-height: 1; vertical-align: -3px; }
   .status { font-weight: 600; }
   tr[data-frame] { cursor: pointer; } tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
+  /* Play blind. Stepping is instant on purpose: only press feedback and the final unmasking move. */
+  #blind { display: none; }
+  .blind #blind { display: block; }
+  .blind .spoiler { display: none; }
+  .blind-head { position: sticky; top: 0; background: var(--bg); padding: 4px 0;
+                border-bottom: 1px solid var(--line); }
+  .blind-head p { margin: 6px 0; }
+  .blind-foot { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; margin: 0;
+                border-top: 1px solid var(--line); }
+  .seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .seat { font: inherit; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: none; color: inherit; }
+  button.seat { cursor: pointer; }
+  .seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+  .seat.dead { color: var(--muted); text-decoration: line-through; }
+  .seat.dead small { display: inline-block; }
+  .transcript h3 { font-size: 13px; color: var(--muted); margin: 16px 0 4px; }
+  .said { margin: 4px 0; }
+  tr.wolf td { color: var(--bad); font-weight: 600; }
+  tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms); }
+  @keyframes unmask { from { opacity: 0; transform: translateY(4px); } }
+  @media (prefers-reduced-motion: reduce) {
+    @keyframes unmask { from { opacity: 0; } }
+  }
 </style>
 {% endblock %}
 {% block content %}
 <h1>Match #{{ m.id }}</h1>
+{% set can_blind = m.game in ('werewolf', 'werewolf_dayfirst') and m.status == 'completed' %}
+{% if can_blind %}
+<section id="blind">
+  <div id="blind-view"></div>
+  <div class="controls blind-foot">
+    <button id="blind-next">Next</button>
+    <button id="blind-skip">Skip to the vote</button>
+    <button id="blind-exit">Full replay</button>
+  </div>
+</section>
+{% endif %}
+<div class="spoiler">
+{% if can_blind %}<p><button id="blind-start">Play blind</button> <span class="muted">Sit in as a villager and find the wolves before the roles are shown.</span></p>{% endif %}
 <dl>
   <dt>Game</dt><dd>{{ m.game }}</dd>
   {% if m.tournament_id is not none %}
@@ -71,4 +108,5 @@
 {% else %}
 <p class="muted">No turns played yet.</p>
 {% endif %}
+</div>
 {% endblock %}
