@@ -64,6 +64,7 @@ class TurnRecord:
     truncated: bool = False  # the engine shortened this action (Game.normalize_action)
     rejections: list[JSON] = field(default_factory=list)  # {attempt, action, reason}, in order
     stop_reasons: list[str | None] = field(default_factory=list)  # one per attempt, in order
+    reply_blocks: list[list[JSON]] = field(default_factory=list)  # one list per attempt, in order
 
 
 @dataclass(frozen=True)
@@ -191,6 +192,7 @@ class MatchRunner:
         error: str | None = None
         rejections: list[JSON] = []
         stop_reasons: list[str | None] = []
+        reply_blocks: list[list[JSON]] = []
         raw: str | None = None
 
         for attempt in range(1, self.max_attempts + 1):
@@ -210,6 +212,7 @@ class MatchRunner:
             latency += decision.latency_ms
             raw = decision.raw
             stop_reasons.append(decision.stop_reason)
+            reply_blocks.append(decision.blocks)
             if decision.action is None:
                 error = "no move was returned; call the tool with a legal move"
             else:
@@ -230,6 +233,7 @@ class MatchRunner:
                     truncated=action != decision.action,
                     rejections=rejections,
                     stop_reasons=stop_reasons,
+                    reply_blocks=reply_blocks,
                 )
                 return record, self.game.apply(state, seat, action)
             rejections.append({"attempt": attempt, "action": decision.action, "reason": error})
@@ -247,6 +251,7 @@ class MatchRunner:
             latency,
             rejections=rejections,
             stop_reasons=stop_reasons,
+            reply_blocks=reply_blocks,
         )
         return record, self.game.forfeit(state, seat)
 
@@ -264,6 +269,7 @@ class MatchRunner:
         truncated: bool = False,
         rejections: list[JSON] | None = None,
         stop_reasons: list[str | None] | None = None,
+        reply_blocks: list[list[JSON]] | None = None,
     ) -> TurnRecord:
         return TurnRecord(
             turn_no=turn_no,
@@ -279,6 +285,7 @@ class MatchRunner:
             truncated=truncated,
             rejections=rejections or [],
             stop_reasons=stop_reasons or [],
+            reply_blocks=reply_blocks or [],
         )
 
     def _outcome(self, spec: MatchSpec, state: State, turns: list[TurnRecord]) -> MatchOutcome:
