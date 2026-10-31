@@ -1,15 +1,18 @@
 {% extends "base.html" %}
-{% from "_macros.html" import match_table %}
+{% from "_macros.html" import match_table, player %}
 {% block title %}Tournament #{{ t.id }} · LLM Arena{% endblock %}
 {% block content %}
-<h1>Tournament #{{ t.id }}</h1>
-<dl>
-  <dt>Game</dt><dd>{{ t.game }}</dd>
-  <dt>Format</dt><dd>{{ t.format }}{% if t.rounds %}, round {{ t.current_round }} of {{ t.rounds }}{% endif %}</dd>
-  <dt>Status</dt><dd>{{ t.status }}</dd>
-  {% if t.last_error %}<dt>Paused because</dt><dd class="bad">{{ t.last_error }}</dd>{% endif %}
-  <dt>Progress</dt><dd>{{ t.completed }}/{{ t.total }} completed{% if t.failed %}, <span class="bad">{{ t.failed }} failed</span>{% endif %}</dd>
-  <dt>Spent</dt><dd>{{ t.spent_usd | usd }}{% if t.budget_usd is not none %} of {{ t.budget_usd | usd(2) }} budget{% endif %}</dd>
+<div class="page-head">
+  <h1>Tournament #{{ t.id }}</h1>
+  <p>{{ t.game | game_name }} · {{ t.format }}{% if t.rounds %}, round {{ t.current_round }} of {{ t.rounds }}{% endif %}</p>
+</div>
+<dl class="stats">
+  <div><dt>Status</dt><dd>{{ t.status }}</dd></div>
+  <div><dt>Progress</dt><dd>{{ t.completed }}/{{ t.total }} completed{% if t.failed %}, <span class="bad">{{ t.failed }} failed</span>{% endif %}</dd></div>
+  <div><dt>Spent</dt><dd>{{ t.spent_usd | usd }}{% if t.budget_usd is not none %} of {{ t.budget_usd | usd(2) }} budget{% endif %}</dd></div>
+  {% set tally = matches | result_tally %}
+  {% if tally %}<div><dt>Results</dt><dd>{{ tally }}</dd></div>{% endif %}
+  {% if t.last_error %}<div><dt>Paused because</dt><dd class="bad">{{ t.last_error }}</dd></div>{% endif %}
 </dl>
 {% if final %}
 <h2>Final ratings</h2>
@@ -17,10 +20,10 @@
 <div class="wrap"><table>
   <thead><tr><th>#</th><th>Player</th><th class="num">Final rating</th><th class="num">95% interval</th></tr></thead>
   <tbody>
-  {% for player, r in final.items() %}
+  {% for pid, r in final.items() %}
     <tr>
       <td>{{ loop.index }}</td>
-      <td>{{ player }}</td>
+      <td>{{ player(pid) }}</td>
       <td class="num">{{ r.rating }}</td>
       <td class="num">{{ r.low }} – {{ r.high }}</td>
     </tr>
@@ -29,5 +32,5 @@
 </table></div>
 {% endif %}
 <h2>Matches</h2>
-{{ match_table(matches, url) }}
+{{ match_table(matches, url, within_tournament=True) }}
 {% endblock %}

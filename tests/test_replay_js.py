@@ -241,6 +241,27 @@ process.stdin.on("end", () => {
 SEATS = [f"model-{i}" for i in range(7)]
 
 
+HOLD = """
+const R = require(process.env.REPLAY_JS);
+let input = "";
+process.stdin.on("data", (d) => (input += d));
+process.stdin.on("end", () => console.log(JSON.stringify(JSON.parse(input).map(R.holdFor))));
+"""
+
+
+def test_autoplay_holds_a_message_long_enough_to_read_it():
+    vote, short, long, huge = node(
+        HOLD,
+        [
+            {"action": {"action": "vote", "target": 1}},
+            {"action": {"action": "say", "message": "hi"}},
+            {"action": {"action": "say", "message": "x" * 300}},
+            {"action": {"action": "say", "message": "x" * 5000}},
+        ],
+    )
+    assert vote == 700 and vote < short < long == huge == 6000
+
+
 def played(game, seed):
     rng = random.Random(seed)
     s = game.initial_state(7, seed)

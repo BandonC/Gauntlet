@@ -81,12 +81,13 @@ const RENDERERS = {
     else if (f.phase === "vote") status = `Day ${f.day} vote: ${name(seats, f.to_move)} to vote`;
     else status = `Day ${f.day}, discussion round ${f.discussion_round}: ${name(seats, f.to_move)} to speak`;
     return (
-      `<table class="ld"><thead><tr><th>Player</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>` +
-      (said ? `<ul>${said}</ul>` : "") +
+      `<p class="status">${status}</p>` +
+      `<div class="ww"><div class="wrap"><table class="ld"><thead><tr><th>Player</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>` +
+      `<div>${said ? `<ul>${said}</ul>` : ""}` +
       line("Wolf votes tonight", f.wolf_votes.map(pick)) +
       line("Day votes", f.votes.map(pick)) +
       line("Seer", found) +
-      `<p class="status">${status}</p>`
+      "</div></div>"
     );
   },
 };
@@ -107,6 +108,12 @@ function describeTurn(t, seats) {
     if (t.truncated) move += " (truncated)";
   }
   return `Turn ${t.turn_no}: ${name(seats, t.seat)} → ${esc(move)}`;
+}
+
+// Autoplay gives a move a beat, and a message long enough to actually read it.
+function holdFor(turn) {
+  const text = turn?.action?.message ?? "";
+  return Math.min(6000, 700 + text.length * 30);
 }
 
 function initReplay(doc) {
@@ -132,7 +139,7 @@ function initReplay(doc) {
     if (idx === last) stop();
   }
   function stop() {
-    clearInterval(timer);
+    clearTimeout(timer);
     timer = null;
     $("replay-play").textContent = "▶ Play";
   }
@@ -140,7 +147,11 @@ function initReplay(doc) {
     if (timer) return stop();
     if (idx === last) show(0);
     $("replay-play").textContent = "❚❚ Pause";
-    timer = setInterval(() => show(idx + 1), 700);
+    const tick = () => {
+      show(idx + 1);
+      if (timer !== null) timer = setTimeout(tick, holdFor(data.turns[idx - 1]));
+    };
+    timer = setTimeout(tick, holdFor(data.turns[idx - 1]));
   }
 
   $("replay-first").onclick = () => { stop(); show(0); };
@@ -385,6 +396,6 @@ if (typeof document !== "undefined") {
 }
 
 if (typeof module !== "undefined") module.exports = {
-  RENDERERS, renderFrame, describeTurn, esc, initReplay,
+  RENDERERS, renderFrame, describeTurn, esc, initReplay, holdFor,
   blindSteps, renderBlind, renderBlindEnd, blindScore, wolvesLeft, initBlind,
 };

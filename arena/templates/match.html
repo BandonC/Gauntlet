@@ -1,72 +1,51 @@
 {% extends "base.html" %}
-{% from "_macros.html" import link %}
+{% from "_macros.html" import link, player %}
 {% block title %}Match #{{ m.id }} · LLM Arena{% endblock %}
 {% block head %}
 <script>if (location.hash === "#blind") document.documentElement.classList.add("blind");</script>
-<style>
-  .controls { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin: 8px 0; }
-  .controls button { font: inherit; padding: 2px 10px; }
-  .controls input[type=range] { flex: 1; min-width: 120px; }
-  #replay-info { min-height: 1.5em; }
-  .c4 { display:grid; grid-template-columns: repeat(7, 34px); gap: 4px; padding: 8px;
-        background: color-mix(in srgb, var(--o) 18%, transparent); border-radius: 8px; width: max-content; }
-  .c4 .cell { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); }
-  .c4 .disc.X { background: var(--x); } .c4 .disc.O { background: var(--o); }
-  .ld { width: auto; } .ld .dice { font-size: 26px; line-height: 1; letter-spacing: 2px; }
-  .ld tr.turn td { font-weight: 600; } .die.hit { color: var(--x); }
-  .ld .dice .muted { font-size: 15px; letter-spacing: 0; }
-  .ld-bids .die, .reveal .die { font-size: 22px; line-height: 1; vertical-align: -3px; }
-  .status { font-weight: 600; }
-  tr[data-frame] { cursor: pointer; } tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
-  /* Play blind. Stepping is instant on purpose: only press feedback and the final unmasking move. */
-  #blind { display: none; }
-  .blind #blind { display: block; }
-  .blind .spoiler { display: none; }
-  .blind-head { position: sticky; top: 0; background: var(--bg); padding: 4px 0;
-                border-bottom: 1px solid var(--line); }
-  .blind-head p { margin: 6px 0; }
-  .blind-foot { position: sticky; bottom: 0; background: var(--bg); padding: 8px 0; margin: 0;
-                border-top: 1px solid var(--line); }
-  .seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-  .seat { font: inherit; padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; background: none; color: inherit; }
-  button.seat { cursor: pointer; }
-  .seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
-  .seat.dead { color: var(--muted); text-decoration: line-through; }
-  .seat.dead small { display: inline-block; }
-  .transcript h3 { font-size: 13px; color: var(--muted); margin: 16px 0 4px; }
-  .said { margin: 4px 0; }
-  tr.wolf td { color: var(--bad); font-weight: 600; }
-  tr.unmask { animation: unmask 240ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms); }
-  @keyframes unmask { from { opacity: 0; transform: translateY(4px); } }
-  @media (prefers-reduced-motion: reduce) {
-    @keyframes unmask { from { opacity: 0; } }
-  }
-</style>
 {% endblock %}
 {% block content %}
-<h1>Match #{{ m.id }}</h1>
 {% set can_blind = m.game in ('werewolf', 'werewolf_dayfirst') and m.status == 'completed' %}
+<div class="page-head">
+  <h1>Match #{{ m.id }}</h1>
+  <p>{{ m.game | game_name }}{% if m.tournament_id is not none %} · tournament {{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}{% endif %}</p>
+</div>
 {% if can_blind %}
 <section id="blind">
   <div id="blind-view"></div>
   <div class="controls blind-foot">
-    <button id="blind-next">Next</button>
+    <button id="blind-next" class="primary">Next</button>
     <button id="blind-skip">Skip to the vote</button>
     <button id="blind-exit">Full replay</button>
   </div>
 </section>
 {% endif %}
 <div class="spoiler">
-{% if can_blind %}<p><button id="blind-start">Play blind</button> <span class="muted">Sit in as a villager and find the wolves before the roles are shown.</span></p>{% endif %}
-<dl>
-  <dt>Game</dt><dd>{{ m.game }}</dd>
-  {% if m.tournament_id is not none %}
-  <dt>Tournament</dt><dd>{{ link(url('tournament', id=m.tournament_id), '#' ~ m.tournament_id) }}{% if m.round %}, round {{ m.round }}{% endif %}</dd>
-  {% endif %}
-  <dt>Players</dt><dd>{% for p in m.seats %}seat {{ loop.index0 }}: {{ p }}{% if m.scores %} ({{ m.scores[loop.index0] }}{% if m.placements %}, place {{ m.placements[loop.index0] }}{% endif %}){% endif %}{{ '; ' if not loop.last }}{% endfor %}</dd>
-  <dt>Status</dt><dd>{{ m.status }}</dd>
-  {% if m.last_error %}<dt>Last error</dt><dd class="bad">{{ m.last_error }}</dd>{% endif %}
+{% if can_blind %}
+<div class="callout">
+  <p><strong>Play this game blind.</strong> <span class="muted">Sit in as a villager and find the wolves before the roles are shown. The rest of this page gives the game away.</span></p>
+  <button id="blind-start" class="primary">Play blind</button>
+</div>
+{% endif %}
+<dl class="stats">
+  <div><dt>Status</dt><dd>{{ m.status }}</dd></div>
+  {% set result = m | match_result %}
+  {% if result %}<div><dt>Result</dt><dd>{{ result }}</dd></div>{% endif %}
+  {% if m.last_error %}<div><dt>Last error</dt><dd class="bad">{{ m.last_error }}</dd></div>{% endif %}
 </dl>
+<div class="wrap"><table>
+  <thead><tr><th>Seat</th><th>Player</th>{% if m.scores %}<th class="num">Score</th>{% endif %}{% if m.placements %}<th class="num">Place</th>{% endif %}</tr></thead>
+  <tbody>
+  {% for p in m.seats %}
+    <tr>
+      <td>{{ loop.index0 }}</td>
+      <td>{{ player(p) }}</td>
+      {% if m.scores %}<td class="num">{{ m.scores[loop.index0] }}</td>{% endif %}
+      {% if m.placements %}<td class="num">{{ m.placements[loop.index0] }}</td>{% endif %}
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
 <h2>Replay</h2>
 <div class="controls">
   <button id="replay-first" title="Start">⏮</button>
@@ -86,7 +65,8 @@
 {{ replay_js }}
 </script>
 
-<h2>Turns</h2>
+<details class="fold">
+<summary>Turns ({{ turns | length }})</summary>
 {% if turns %}
 <div class="wrap"><table>
   <thead><tr><th>#</th><th>Player</th><th>Move</th><th class="num">Attempts</th><th class="num">Tokens in / out / cached</th><th class="num">Latency</th><th class="num">Cost</th></tr></thead>
@@ -108,5 +88,6 @@
 {% else %}
 <p class="muted">No turns played yet.</p>
 {% endif %}
+</details>
 </div>
 {% endblock %}

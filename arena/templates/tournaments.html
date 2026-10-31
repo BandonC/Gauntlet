@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Tournaments · LLM Arena{% endblock %}
 {% block content %}
-<h1>Tournaments</h1>
+<div class="page-head"><h1>Tournaments</h1></div>
 {% if tournaments %}
 <div class="wrap"><table>
   <thead><tr><th>ID</th><th>Game</th><th>Format</th><th>Status</th><th>Round</th><th>Progress</th><th class="num">Spent</th></tr></thead>
@@ -9,7 +9,7 @@
   {% for t in tournaments %}
     <tr>
       <td><a href="{{ url('tournament', id=t.id) }}">#{{ t.id }}</a></td>
-      <td>{{ t.game }}</td>
+      <td>{{ t.game | game_name }}</td>
       <td>{{ t.format }}</td>
       <td>{{ t.status }}{% if t.last_error %} <span class="bad" title="{{ t.last_error }}">⚠</span>{% endif %}</td>
       <td>{{ '%d / %d' | format(t.current_round, t.rounds) if t.rounds else '' }}</td>

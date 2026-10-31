@@ -8,6 +8,7 @@ Data comes from the same functions as the JSON API (store/read.py, the leaderboa
 from __future__ import annotations
 
 import json
+from collections import Counter
 from collections.abc import Collection
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -57,6 +58,39 @@ def _liars_dice_move(a: dict) -> str | None:
     return None
 
 
+GAME_NAMES = {
+    "connect4": "Connect 4",
+    "liars_dice": "Liar's Dice",
+    "werewolf": "Werewolf",
+    "werewolf_dayfirst": "Werewolf (day-first)",
+}
+BLIND_GAMES = ("werewolf", "werewolf_dayfirst")
+
+
+def game_name(game: str) -> str:
+    return GAME_NAMES.get(game, game)
+
+
+def match_result(m: dict) -> str | None:
+    """Who won, in words: a match's scores alone mean little to a reader."""
+    scores = m.get("scores")
+    if m.get("status") != "completed" or not scores or not m.get("seats"):
+        return None
+    if m["game"] in BLIND_GAMES:
+        return "Wolves" if sum(scores) == 2 else "Village"
+    best = max(scores)
+    winners = [m["seats"][seat] for seat, score in enumerate(scores) if score == best]
+    return f"{winners[0]} won" if len(winners) == 1 else "Draw"
+
+
+def result_tally(matches: list[dict]) -> str | None:
+    """Wolves 23, Village 17. Only Werewolf: elsewhere the leaderboard says this per player."""
+    results = Counter(
+        match_result(m) for m in matches if m["game"] in BLIND_GAMES and match_result(m)
+    )
+    return ", ".join(f"{side} {n}" for side, n in results.most_common()) or None
+
+
 def _werewolf_move(a: dict) -> str | None:
     if a.get("action") == "say" and "message" in a:
         return f"says: {a['message']}"
@@ -96,10 +130,15 @@ env = Environment(
 )
 env.filters["usd"] = _usd
 env.filters["with_labels"] = with_labels
+env.filters["game_name"] = game_name
+env.filters["match_result"] = match_result
+env.filters["result_tally"] = result_tally
 # Inlined into the match page (not {% include %}d: JS braces would clash with Jinja), so
 # the page works as a single file in a static export. Tests load it in Node directly.
 REPLAY_JS = Path(__file__).parent / "templates" / "replay.js"
 env.globals["replay_js"] = Markup(REPLAY_JS.read_text(encoding="utf-8"))
+SITE_CSS = Path(__file__).parent / "templates" / "site.css"
+env.globals["site_css"] = Markup(SITE_CSS.read_text(encoding="utf-8"))
 
 
 def render(template: str, urls: Urls, **context: object) -> str:
@@ -109,7 +148,13 @@ def render(template: str, urls: Urls, **context: object) -> str:
 async def index_page(pool: asyncpg.Pool, urls: Urls) -> str:
     boards = {g: await leaderboard(pool, g) for g in list_games()}
     role_stats = await metrics.werewolf_metrics(pool)
-    return render("index.html", urls, boards=boards, role_stats=role_stats)
+    finished = [
+        urls("match", id=m["id"])
+        for m in await read.list_matches(pool, limit=500)
+        if m["game"] in BLIND_GAMES and m["status"] == "completed"
+    ]
+    blind_url = next((f"{href}#blind" for href in finished if href), None)
+    return render("index.html", urls, boards=boards, role_stats=role_stats, blind_url=blind_url)
 
 
 async def tournaments_page(
