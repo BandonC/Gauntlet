@@ -31,6 +31,8 @@ class CompletionRequest:
     cache_system: bool = True
     tool_choice: str = "forced"  # "auto" for models that reject forced tool use
     thinking_budget: int | None = None  # manual thinking, Anthropic only
+    thinking_mode: str = "default"  # "between_tools": no up-front thinking, Anthropic only
+    effort: str | None = None  # output_config.effort, Anthropic only
 
 
 @dataclass(frozen=True)
@@ -38,6 +40,7 @@ class Completion:
     tool_input: Action | None
     raw_text: str
     usage: Usage
+    stop_reason: str | None = None  # the provider's word: tool_use, max_tokens, stop, length...
 
 
 class ProviderError(Exception):

@@ -64,7 +64,9 @@ price_output_per_mtok = 5.00    # verify
 # Claude Sonnet 5.5, Opus 5.5 and Fable 5.1 reject forced tool use, so they need
 # tool_choice = "auto" (default "forced"). A reply with no tool call is an invalid attempt.
 # thinking_budget sets manual thinking (needs "auto", 1024 or more, below max_tokens). Only
-# older models accept it: see the thinking gotcha in CLAUDE.md. Either setting makes a new player.
+# older models accept it: see the thinking gotcha in CLAUDE.md. thinking_mode = "between_tools"
+# turns off up-front thinking on Sonnet 5.5 (needs "auto"). effort sets output_config.effort.
+# Any of these settings makes a new player.
 
 # [[players]]
 # id = "sonnet/c4-v1"
