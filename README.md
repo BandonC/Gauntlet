@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$14.08**: $13.49 across 251 recorded games and 13.6 million tokens, plus $0.59 on six in-memory
+**$18.56**: $17.92 across 341 recorded games and 15.4 million tokens, plus $0.64 on seven in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -174,8 +174,32 @@ earlier results stay comparable.
 
 **v2 beat v1 in 940 of 1,000 games (94.0%, interval 92.4-95.3%)**, on seeds tuning never used. A
 threshold of 0.05 did as well against v1, but 0.10 beat it head to head and every other
-threshold too, and it also beat four bluffing bots. That says it's strong against this family of
-bots, not against a good human or a model, which real games will have to show.
+threshold too, and it also beat four bluffing bots.
+
+### The tuned bot then beat both Sonnets
+
+I expected the Sonnets to play v2 about evenly. They didn't, over a 30-game-per-pair round-robin:
+
+| Pairing | Result | Share (interval) | p, even match |
+|---|---:|---:|---:|
+| v2 over Sonnet 5.5 with reasoning | 21-9 | 70.0% (52.1-83.3%) | 0.04 |
+| v2 over Sonnet 5 | 26-4 | 86.7% (70.3-94.7%) | under 0.0001 |
+| Sonnet 5 over Sonnet 5.5 with reasoning | 22-8 | 73.3% (55.6-85.8%) | 0.02 |
+
+**This confirms the caveat on the earlier result: much of "the Sonnets beat the bot" was the bot's
+over-challenging.** The same two models that went 28-12 and 30-10 against v1 won 9 of 30 and 4 of
+30 against a bot that differs only in when it challenges (p = 0.002 and under 0.0001). Sonnet 5's
+bluffing suffered most. Only 56% of its bids against v2 were true, and v2 won 77% of its challenges
+on them, up from v1's 33%.
+
+Sonnet 5 beating Sonnet 5.5 comes from one 30-game pairing, and the model and the reasoning changed
+together, so it can't credit or blame reasoning. Sonnet 5.5 challenged 198 times in that pairing and
+won 34%. Challenges against a bid its own dice proved true fell to 7 of 359 (2%) from 12%, across
+two different opponent mixes.
+
+A simple probability rule with one tuned number beat both models here. That's a result about this
+two-player game with its rules, and v2 was tuned on free games beforehand, while the models played
+it cold on a generic prompt.
 
 ### Connect 4: the illegal-move gap
 
@@ -199,10 +223,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Liar's Dice, Sonnet 5.5 with reasoning | 40 | 502,812 | $1.2354 |
 | Liar's Dice, Sonnet 5 | 40 | 483,262 | $1.1814 |
 | Werewolf, day-first, Sonnets and Haiku | 40 | 4,918,635 | $6.5573 |
-| **Total** | **251** | **13,604,926** | **$13.49** |
+| Liar's Dice, Sonnets and v2 round-robin | 90 | 1,827,762 | $4.4364 |
+| **Total** | **341** | **15,432,688** | **$17.92** |
 
-Six in-memory test games cost another $0.59. They never reach the turn log, so the project total
-is about $14.08.
+Seven in-memory test games cost another $0.64. They never reach the turn log, so the project total
+is about $18.56.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -276,5 +301,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # the static site
 ```
