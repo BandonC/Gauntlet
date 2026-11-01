@@ -309,8 +309,9 @@ made-up money, because free bots would have made that check 0 = 0. The checker i
 kinds of deliberate damage each have to be caught.
 
 Graceful stops have a shorter test. With only stops, matches changed worker mid-game with no lease
-expiry and no extra claims, and breaking the release made that test fail. A full-size run mixing
-stops with kills was itself killed for low memory, so that mix is proven at 120 matches, not 2,000.
+expiry and no extra claims, and breaking the release made that test fail. A 2,000-match run mixing
+stops in was itself killed for low memory. The largest finished mix is 500 matches on a faster
+in-memory database: 12 kills, 2 freezes and 7 graceful stops, with every invariant held.
 
 ### Tracing
 
