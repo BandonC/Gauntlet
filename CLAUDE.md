@@ -275,10 +275,14 @@ runs (loops, scheduled tasks) skip them.
 - [x] Werewolf (werewolf_dayfirst) with stronger models: players as in Stage 2
       (roster.toml already has them). Run a fresh 7-seat test game (--budget 0.50) to
       confirm the fix on real calls, then 40 tables. Budget: $12.
+- [ ] Liar's Dice round-robin: sonnet-5.5/ld-v1-think, sonnet-5/ld-v1, liars-dice-bot-v2,
+      30 games per pair. Test game first: Sonnet 5.5 vs v2. Budget: $5.
 
 ### Phase 7: Scale and reliability (bots only, no API spend)
 New dependencies pre-approved for this phase: opentelemetry-api, opentelemetry-sdk,
 opentelemetry-exporter-otlp, prometheus-client.
+- [ ] Verify the README quick start from the real GitHub URL: clone into a scratch dir,
+      run the keyless bot tournament, check the pages load. Fix anything that breaks.
 - [ ] `arena bench`: queue N bot matches and run M worker processes; report throughput
       (matches/s, turns/s), queue wait and claim latency p50/p95/p99, and DB connections
       used. Produce a scaling table for M = 1, 2, 4, 8 at N = 5,000. Bot matches only.
@@ -641,6 +645,14 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   literal phrases the classifier needs. Sonnet 5 had no cache reads again.
   Killed for low memory at 37 of 40 tables; 3 matches resumed 42 minutes later on run attempt 2.
   Recordings equal the log at 1,745 attempts. In-memory test games: $0.30473 and $0.13083.
+  Every model went 70-90% as a wolf and 21-26% on the village side, which is suggestive: more
+  capable players may help the deceiving side more than the detecting side. That was noticed after
+  seeing the data, and wolves winning most tables gives every model that shape anyway. The
+  comparisons that test it are unproven: Sonnet wolves 34/40 against Haiku 28/40 (p = 0.18), village
+  side 24/100 against 21/100 (p = 0.74), wolves 31/40 tables here against 23/40 in tournament 7
+  (p = 0.09).
+- Known issue: future Sonnet 5.5 Werewolf runs should use `max_tokens` 2048 (new player ids).
+  Tournament 10 hit 1024 on 6 of 439 attempts. They recovered on retry, so it was left alone.
 - Village votes on a wolf, by day, tournament 6 / tournament 7: day 1 86/160 (54%) / 73/200
   (36.5%); day 2 34/63 (54%) / 66/133 (49.6%); day 3 5/6 (83%) / 28/36 (77.8%). Chance on day 1
   is 40% / 33%, so a day-first first vote is close to chance, with nobody dead and nothing
