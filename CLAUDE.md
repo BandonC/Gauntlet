@@ -56,6 +56,7 @@ arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
 arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # only those pages
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
+python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 ```
 
 `tests/test_store_db.py` DROPS the public schema. Only ever point it at `testdb` (:5433)
@@ -261,6 +262,7 @@ runs (loops, scheduled tasks) skip them.
 - [x] Werewolf engine + scripted bots (flagship): 7 seats, multi-phase turns (night →
       discussion → vote), per-seat views, discussion log in state reduced only past a token
       limit, scheduled role balance, role-claim metric, `bot` roster provider.
+- [x] `liars-dice-bot-v2`: same rule as v1, tuned threshold, chosen with `arena.dice_sim`.
 - [x] `[human]` First real Liar's Dice and Werewolf tournaments (2026-10-30): Liar's Dice
       tournament 4, 30 matches, $0.2833; Werewolf tournament 6, 40 tables, 8 players, $1.4761.
 
@@ -533,6 +535,14 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   1 of 100 / 0 of 102 / 0 of 95; challenges of a bid their own dice already proved true
   15 of 68 (22%) / 12 of 81 (15%) / 0 of 63; challenges won 18% / 14% / 35%. Losing
   challenges, not wild bids, are where the models give up dice.
+- `liars-dice-bot-v2` is `LiarsDiceBot` with `challenge_below = 0.1`. It's roster
+  `model = "liars_dice_v2"`, so v1 keeps its identity and its 0.5. v1 already picked the most
+  likely legal raise, since a face's minimal raise is its likeliest, so the threshold is the only
+  difference. `arena.dice_sim`: against v1, 0.05 and 0.10 both win about 94% on tuning seeds, and
+  0.20 to 0.30 (no game plays differently) 81%. The field test chose 0.10: it beat every other
+  threshold (59% against 0.05) and averaged 76.5% over 7 thresholds and 4 bluffers. On 1,000 fresh
+  seeds v2 beat v1 940 times (94.0%, 92.4-95.3%). Nothing here tests it against a real bidder, and
+  a raise can be less likely than the bid it answers, which a sharper opponent may punish.
 - Sonnet Liar's Dice runs (2026-10-31, 40 games each against the bot, 0 rejected attempts, 0
   forfeits, every `stop_reason` `tool_use`, spend reconciled with recordings): tournament 8,
   `sonnet-5.5/ld-v1-think`, 28-12, 70% (interval 54.6-81.9%), $1.2354, 200.6 thinking tokens a

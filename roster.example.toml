@@ -30,6 +30,19 @@ provider = "bot"
 model = "werewolf"
 seed = 1
 
+# Liar's Dice bots. v2 challenges less: see arena/dice_sim.py.
+[[players]]
+id = "liars-dice-bot"
+provider = "bot"
+model = "liars_dice"
+seed = 1
+
+[[players]]
+id = "liars-dice-bot-v2"
+provider = "bot"
+model = "liars_dice_v2"
+seed = 1
+
 [[players]]
 id = "haiku-5.5/c4-v1"
 provider = "anthropic"

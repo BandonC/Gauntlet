@@ -128,6 +128,17 @@ recorded every reply, each one opened with reasoning in visible text, and that t
 explained the extra output (r = 0.995). The setting moves the reasoning rather than removing it,
 which is why the comparison above uses Sonnet 5.
 
+### A stronger bot, tuned for free
+
+The bot's weakness above suggested a simple change, so `liars-dice-bot-v2` keeps its rule and
+challenges only when the current bid is under 10% likely, not 50%. v1 stays as it was, so
+earlier results stay comparable.
+
+**v2 beat v1 in 940 of 1,000 games (94.0%, interval 92.4-95.3%)**, on seeds tuning never used. A
+threshold of 0.05 did as well against v1, but 0.10 beat it head to head and every other
+threshold too, and it also beat four bluffing bots. That says it's strong against this family of
+bots, not against a good human or a model, which real games will have to show.
+
 ### Connect 4: the illegal-move gap
 
 In 20 games, **Haiku 5.5 made 41 illegal attempts in 220 (18.6%) and Haiku 4.5 made 15 in 196
@@ -188,20 +199,38 @@ turn writes are fenced by those leases, provider calls share a rate limiter with
 backoff, and tournaments have budget caps. Game engines are pure and deterministic. Live ratings
 use Weng-Lin, with Bradley-Terry final ratings for heads-up tournaments.
 
+All real runs used Anthropic models. The OpenAI adapter exists, but it's tested against canned
+responses only and has never made a real call.
+
 [CLAUDE.md](CLAUDE.md) has the full architecture, the invariants, the roadmap and every result
 above in more detail.
 
-## Quick start
+## Quick start: a free tournament, no API key
+
+You need git, Python 3.12+ and Docker. Bots play here, so nothing is billed.
 
 ```bash
-pip install -e ".[dev]"
-docker compose up -d db
+git clone https://github.com/BandonC/Gauntlet.git && cd Gauntlet
+python -m venv .venv && source .venv/bin/activate   # Git Bash on Windows: .venv/Scripts/activate
+pip install -e .
 cp .env.example .env && cp roster.example.toml roster.toml
+docker compose up -d --wait db
 
-arena play connect4 --p1 random:1 --p2 random:2      # free, no setup needed
 arena migrate
+arena tournament --game liars_dice --players liars-dice-bot,liars-dice-bot-v2 --games-per-pair 20
+arena worker --exit-when-idle
+arena serve
+```
+
+Open http://localhost:8000/matches and pick a match to step through its replay, or see the
+leaderboard at http://localhost:8000.
+
+## With real models
+
+Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
+
+```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena serve                                          # http://localhost:8000
 arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # the static site
 ```
