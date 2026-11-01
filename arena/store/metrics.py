@@ -4,6 +4,7 @@ Definitions (all per player, for one game, optionally one tournament):
 - illegal_move_rate: invalid attempts / all attempts. A turn that succeeded on attempt k
   had k-1 invalid attempts; a forfeited turn's attempts were all invalid.
 - forfeits: forfeited turns.
+- auto_fills: turns the engine completed (Game.fill_action). Legal, so not illegal attempts.
 - latency_p50_ms / latency_p95_ms: per turn, including retries within the turn.
 - cost_per_game_usd: spend in completed matches / completed matches. Turns of matches
   still running count towards everything else.
@@ -34,7 +35,7 @@ METRICS_SQL = """
 WITH t AS (
     SELECT s.player_id, t.match_id, m.status AS match_status, t.attempts, t.forfeited,
            t.latency_ms, t.cost_usd, t.input_tokens, t.cache_read_tokens,
-           t.cache_write_tokens
+           t.cache_write_tokens, t.auto_filled
     FROM turns t
     JOIN matches m ON m.id = t.match_id
     JOIN match_seats s ON s.match_id = t.match_id AND s.seat = t.seat
@@ -45,6 +46,7 @@ SELECT player_id,
        sum(attempts) AS attempts,
        sum(attempts) - count(*) FILTER (WHERE NOT forfeited) AS illegal_attempts,
        count(*) FILTER (WHERE forfeited) AS forfeits,
+       count(*) FILTER (WHERE auto_filled) AS auto_fills,
        percentile_cont(0.5) WITHIN GROUP (ORDER BY latency_ms) AS latency_p50_ms,
        percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms) AS latency_p95_ms,
        count(DISTINCT match_id) FILTER (WHERE match_status = 'completed') AS completed_games,
@@ -103,6 +105,7 @@ async def player_metrics(
                 "illegal_attempts": r["illegal_attempts"],
                 "illegal_move_rate": _ratio(r["illegal_attempts"], r["attempts"]),
                 "forfeits": r["forfeits"],
+                "auto_fills": r["auto_fills"],
                 "latency_p50_ms": round(r["latency_p50_ms"], 1),
                 "latency_p95_ms": round(r["latency_p95_ms"], 1),
                 "completed_games": r["completed_games"],

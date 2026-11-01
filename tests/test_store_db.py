@@ -399,6 +399,7 @@ async def test_player_metrics_from_turn_log(pool):
         "turns": 2,
         "attempts": 5,
         "illegal_attempts": 4,
+        "auto_fills": 0,
         "illegal_move_rate": 0.8,
         "forfeits": 1,
         "latency_p50_ms": 200.0,
@@ -692,6 +693,22 @@ async def test_reply_blocks_survive_the_turn_log_but_stay_out_of_match_data(pool
     assert (await store.load_turns(str(m.id)))[0].reply_blocks == blocks
     detail = await read.match_detail(pool, m.id)
     assert "reply_blocks" not in detail["turns"][0] and "private" not in json.dumps(detail)
+
+
+async def test_auto_fills_survive_the_turn_log_and_are_counted_per_player(pool):
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    (m,) = await _claim_all(pool, 1)
+    store = PostgresTurnStore(pool, "w0")
+    plain = TurnRecord(0, 0, {"column": 3}, False, 1, None, None, Usage(), 0.0, 5)
+    filled = TurnRecord(
+        1, 1, {"column": 3}, False, 1, None, None, Usage(), 0.0, 5, auto_filled=True
+    )
+    await store.append_turn(str(m.id), plain)
+    await store.append_turn(str(m.id), filled)
+    loaded = await store.load_turns(str(m.id))
+    assert [t.auto_filled for t in loaded] == [False, True]
+    rows = {r["player_id"]: r["auto_fills"] for r in await player_metrics(pool, "connect4")}
+    assert sorted(rows.values()) == [0, 1]
 
 
 async def test_stop_reasons_survive_the_turn_log_one_per_attempt(pool):

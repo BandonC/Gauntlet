@@ -86,10 +86,11 @@ async def _play(args: argparse.Namespace) -> None:
         else:  # hidden-info games: the omniscient frame, compact
             print(json.dumps(game.spectator_view(state), separators=(",", ":")))
 
+    store = InMemoryTurnStore()
     runner = MatchRunner(
         game,
         [p for p, _ in built],
-        InMemoryTurnStore(),
+        store,
         pricing=[pr for _, pr in built],
         budget=Budget(args.budget),
         on_turn=show,
@@ -98,9 +99,14 @@ async def _play(args: argparse.Namespace) -> None:
     print(f"\nscores: {dict(zip(seats, out.scores, strict=True))}")
     print(f"placements: {dict(zip(seats, out.placements, strict=True))}")
     print(f"turns: {out.num_turns}  forfeits: {out.forfeits}  cost: ${out.cost_usd:.5f}")
-    for name, u in zip(seats, out.usage_by_seat, strict=True):
+    turns = store.turns["cli"]
+    for seat, (name, u) in enumerate(zip(seats, out.usage_by_seat, strict=True)):
+        mine = [t for t in turns if t.seat == seat]
+        illegal = sum(len(t.rejections) for t in mine)
+        filled = sum(t.auto_filled for t in mine)
         print(
-            f"  {name}: in={u.input_tokens} out={u.output_tokens} cache_read={u.cache_read_tokens}"
+            f"  {name}: in={u.input_tokens} out={u.output_tokens} "
+            f"cache_read={u.cache_read_tokens} illegal={illegal} auto_filled={filled}"
         )
 
 
