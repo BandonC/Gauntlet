@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     arena_lease_seconds: float = 60.0
     arena_heartbeat_seconds: float = 20.0  # must be well under the lease
     arena_max_run_attempts: int = 5  # infra failures before a match is marked failed
+    otel_exporter_otlp_endpoint: str | None = None  # traces are off without it
 
 
 @lru_cache
