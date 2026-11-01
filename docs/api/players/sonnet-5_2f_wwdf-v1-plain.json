@@ -1,0 +1,295 @@
+{
+ "player_id": "sonnet-5/wwdf-v1-plain",
+ "model": "sonnet-5",
+ "overall": {
+  "games": 35,
+  "won": 18,
+  "drew": 0,
+  "lost": 17,
+  "win_rate": 0.5142857142857142,
+  "cost_usd": 1.491698,
+  "cost_per_game": 0.04261994285714286,
+  "illegal_rate": 0.0,
+  "cache_hit": 0.0,
+  "latency_ms": 4313.495652173913
+ },
+ "games": [
+  {
+   "game": "werewolf_dayfirst",
+   "place": 2,
+   "field": 12,
+   "ordinal": 7.86,
+   "games": 35,
+   "won": 18,
+   "drew": 0,
+   "lost": 17,
+   "win_rate": 0.5142857142857142,
+   "cost_usd": 1.491698,
+   "cost_per_game": 0.04261994285714286,
+   "illegal_rate": 0.0,
+   "cache_hit": 0.0,
+   "latency_ms": 4313.495652173913
+  }
+ ],
+ "roles": {
+  "player_id": "sonnet-5/wwdf-v1-plain",
+  "wolf_games": 10,
+  "wolf_win_rate": 1.0,
+  "seer_games": 5,
+  "seer_win_rate": 0.6,
+  "villager_games": 20,
+  "villager_win_rate": 0.25,
+  "true_claims": 15,
+  "false_claims": 2,
+  "leaks": 0,
+  "truncated_messages": 7,
+  "forfeits": 0
+ },
+ "recent": [
+  {
+   "id": 267,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "won",
+   "cost_usd": 0.038174
+  },
+  {
+   "id": 266,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.041888
+  },
+  {
+   "id": 265,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.044942
+  },
+  {
+   "id": 264,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.043908
+  },
+  {
+   "id": 263,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.043356
+  },
+  {
+   "id": 261,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.054388
+  },
+  {
+   "id": 260,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.046218
+  },
+  {
+   "id": 258,
+   "game": "werewolf_dayfirst",
+   "role": "seer",
+   "outcome": "won",
+   "cost_usd": 0.019358
+  },
+  {
+   "id": 257,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.038032
+  },
+  {
+   "id": 256,
+   "game": "werewolf_dayfirst",
+   "role": "seer",
+   "outcome": "lost",
+   "cost_usd": 0.04388
+  },
+  {
+   "id": 255,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.038352
+  },
+  {
+   "id": 254,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.065718
+  },
+  {
+   "id": 253,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.037886
+  },
+  {
+   "id": 252,
+   "game": "werewolf_dayfirst",
+   "role": "seer",
+   "outcome": "won",
+   "cost_usd": 0.044304
+  },
+  {
+   "id": 250,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.044448
+  },
+  {
+   "id": 249,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.037016
+  },
+  {
+   "id": 248,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "won",
+   "cost_usd": 0.01456
+  },
+  {
+   "id": 247,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.04529
+  },
+  {
+   "id": 246,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.066758
+  },
+  {
+   "id": 245,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.045228
+  },
+  {
+   "id": 244,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.038374
+  },
+  {
+   "id": 243,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.069378
+  },
+  {
+   "id": 242,
+   "game": "werewolf_dayfirst",
+   "role": "seer",
+   "outcome": "won",
+   "cost_usd": 0.051284
+  },
+  {
+   "id": 241,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.037972
+  },
+  {
+   "id": 240,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.038784
+  },
+  {
+   "id": 239,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.037974
+  },
+  {
+   "id": 238,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.015742
+  },
+  {
+   "id": 237,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.065288
+  },
+  {
+   "id": 235,
+   "game": "werewolf_dayfirst",
+   "role": "wolf",
+   "outcome": "won",
+   "cost_usd": 0.044552
+  },
+  {
+   "id": 234,
+   "game": "werewolf_dayfirst",
+   "role": "seer",
+   "outcome": "lost",
+   "cost_usd": 0.043622
+  },
+  {
+   "id": 232,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.036886
+  },
+  {
+   "id": 231,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "won",
+   "cost_usd": 0.040246
+  },
+  {
+   "id": 230,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "lost",
+   "cost_usd": 0.065206
+  },
+  {
+   "id": 229,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "won",
+   "cost_usd": 0.0143
+  },
+  {
+   "id": 228,
+   "game": "werewolf_dayfirst",
+   "role": "villager",
+   "outcome": "won",
+   "cost_usd": 0.038386
+  }
+ ]
+}
