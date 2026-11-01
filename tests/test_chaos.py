@@ -33,7 +33,7 @@ FIRST_MATCH = "(SELECT min(id) FROM matches)"
 
 
 def report(violations):
-    return ChaosReport(10, 200, 3, 1, 2.5, 0, 3, 0.3, violations)
+    return ChaosReport(10, 200, 3, 1, 2.5, 2, 0, 3, 4, 0.3, violations)
 
 
 def test_report_says_when_invariants_held():
@@ -178,3 +178,30 @@ async def test_short_chaos_run_holds_every_invariant():
     )
     assert result.violations == [], format_report(result)
     assert result.reclaimed >= 1
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
+@pytest.mark.skipif(shutil.which("docker") is None, reason="needs docker")
+async def test_graceful_stops_hand_matches_over_without_waiting_for_a_lease():
+    """Only graceful stops. Every stop must exit cleanly, a match stopped mid-game must
+    carry on under another worker, and no stop may cost a run attempt: an unreleased
+    lease would expire and be re-claimed, which `reclaimed` would show."""
+    result = await asyncio.wait_for(
+        run_chaos(
+            os.environ["DATABASE_URL"],
+            matches=60,
+            workers=2,
+            players=4,
+            mean_gap=0.4,
+            pause_chance=0.0,
+            stop_chance=1.0,
+            time_limit=120.0,
+        ),
+        timeout=150.0,
+    )
+    assert result.violations == [], format_report(result)
+    assert result.stops >= 1
+    assert result.kills == 0
+    assert result.handed_over >= 1
+    assert result.reclaimed == 0

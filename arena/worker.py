@@ -179,7 +179,7 @@ async def run_worker(
 
 
 def install_stop_signals(stop: asyncio.Event) -> Callable[[], None]:
-    """Set `stop` on the first SIGTERM or SIGINT, then put the previous handlers back so
+    """Set `stop` on the first SIGTERM, SIGINT or SIGBREAK, then put the previous handlers back so
     a second signal stops the process the usual way. Returns a function that restores
     the previous handlers. Call from the event loop thread.
 
@@ -187,6 +187,8 @@ def install_stop_signals(stop: asyncio.Event) -> Callable[[], None]:
     """
     loop = asyncio.get_running_loop()
     sigs = [signal.SIGINT, signal.SIGTERM]
+    if hasattr(signal, "SIGBREAK"):  # Windows: the only stop another process can send
+        sigs.append(signal.SIGBREAK)
     previous = {s: signal.getsignal(s) for s in sigs}
 
     def restore() -> None:

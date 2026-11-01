@@ -297,7 +297,7 @@ opentelemetry-exporter-otlp, prometheus-client.
       exactly once, turn logs continuous with no duplicates, no match rated twice,
       tournament spend equals the sum of turn costs. Exit non-zero on any violation.
       Add a short version as a slow test.
-- [ ] Graceful SIGTERM in the worker, if not already done: stop claiming, finish
+- [x] Graceful SIGTERM in the worker, if not already done: stop claiming, finish
       persisting the current turn, release the lease, exit. Test it under chaos.
 - [ ] Observability: OpenTelemetry traces (match → turn → provider call) and a
       Prometheus /metrics endpoint (matches claimed/completed/failed, turn latency,
@@ -745,8 +745,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   except tournament 3, restored once from its recording.
 - Graceful stop: the first SIGTERM/Ctrl-C lets in-flight turns persist, then hands each
   match back via `queue.release_on_shutdown` (queued now, run attempt refunded). A second
-  signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess);
-  only Ctrl-C there is graceful.
+  signal is a hard stop. On Windows an external SIGTERM is a hard kill (TerminateProcess), so
+  only Ctrl-C and Ctrl-Break are graceful, and another process can send only Ctrl-Break, to a
+  child started with CREATE_NEW_PROCESS_GROUP. `arena chaos` does that, and waits for "ready"
+  because Ctrl-Break ends a worker that hasn't installed its handlers yet. `pytest -m slow` holds
+  it: with stops alone, matches change worker mid-game with 0 extra claims. Breaking the release
+  in a scratch patch failed that test with 3 extra claims.
 - `/api/metrics/{game}` definitions live in `store/metrics.py`'s docstring. Cost per
   game counts completed matches only; turn-level stats include running matches.
   API endpoints have no HTTP tests: `TestClient` needs `httpx`, which isn't a dependency
@@ -788,4 +792,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   UNIQUE constraint refuses it, and a test holds that. The short run is `pytest -m slow`.
 - Chaos at full size (2026-11-01, seed 0, on `db`): 2,000 matches, 49,448 turns, 53 workers killed,
   15 pauses (60.9 s), 65 matches re-claimed, 22 turn writes fenced, 0 other worker deaths, spend
-  exactly 49,448 x $0.0015 = $74.1720, all invariants held.
+  exactly 49,448 x $0.0015 = $74.1720, all invariants held. That run had no graceful stops. The
+  full-size mix with them was killed by Claude Code for low memory and has no result, so graceful
+  stops are proven at short size only. Chaos workers start in their own process group, so a
+  killed parent can leave them running: look for `arena.chaos` processes afterwards.
