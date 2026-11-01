@@ -190,6 +190,7 @@ async def _tournament(args: argparse.Namespace) -> None:
 async def _worker(args: argparse.Namespace) -> None:
     from arena.store.db import create_pool
     from arena.store.ratelimit import postgres_buckets, seed_rate_limits
+    from arena.telemetry import configure_tracing, serve_metrics
     from arena.worker import WorkerConfig, install_stop_signals, run_worker
 
     s = settings()
@@ -207,6 +208,8 @@ async def _worker(args: argparse.Namespace) -> None:
         factory = factory.with_record_dir(Path(args.record))
     stop = asyncio.Event()
     restore_signals = install_stop_signals(stop)
+    serve_metrics(args.metrics_port)
+    flush_traces = configure_tracing(s.otel_exporter_otlp_endpoint)
     try:
         await run_worker(
             pool,
@@ -218,6 +221,7 @@ async def _worker(args: argparse.Namespace) -> None:
         )
     finally:
         restore_signals()
+        flush_traces()
         await pool.close()
 
 
@@ -353,6 +357,7 @@ def main(argv: list[str] | None = None) -> None:
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)
     w.add_argument("--exit-when-idle", action="store_true")
+    w.add_argument("--metrics-port", type=int, help="serve Prometheus metrics on this port")
     w.add_argument(
         "--record", metavar="DIR", help="append every model completion to DIR/<vendor>-*.jsonl"
     )

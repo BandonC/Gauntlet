@@ -10,6 +10,7 @@ from collections.abc import Awaitable, Callable
 
 from arena.providers.base import Completion, CompletionRequest, Provider, ProviderError
 from arena.providers.ratelimit import RateLimiter
+from arena.telemetry import PROVIDER_ERRORS, PROVIDER_RETRIES, tracer
 
 
 class RetryingProvider:
@@ -38,11 +39,13 @@ class RetryingProvider:
             try:
                 if self._limiter:
                     async with self._limiter.slot():
-                        return await self._inner.complete(req)
-                return await self._inner.complete(req)
+                        return await self._call(req, attempt)
+                return await self._call(req, attempt)
             except ProviderError as e:
+                PROVIDER_ERRORS.labels(self.name, str(e.retryable).lower()).inc()
                 if not e.retryable or attempt == self._max_attempts:
                     raise
+                PROVIDER_RETRIES.labels(self.name).inc()
                 delay = self._rng.uniform(0, min(self._max, self._base * 2 ** (attempt - 1)))
                 if e.retry_after is not None:
                     delay = max(delay, e.retry_after)
@@ -50,3 +53,16 @@ class RetryingProvider:
                         self._limiter.penalize(e.retry_after)
                 await self._sleep(delay)
         raise AssertionError("unreachable")
+
+    async def _call(self, req: CompletionRequest, attempt: int) -> Completion:
+        """One API call in one span, inside the rate limiter so it times only the vendor."""
+        attributes = {
+            "arena.provider": self.name,
+            "arena.model": req.model,
+            "arena.call_attempt": attempt,
+        }
+        with tracer.start_as_current_span("provider.call", attributes=attributes) as span:
+            completion = await self._inner.complete(req)
+            span.set_attribute("arena.input_tokens", completion.usage.input_tokens)
+            span.set_attribute("arena.output_tokens", completion.usage.output_tokens)
+            return completion
