@@ -96,7 +96,7 @@ def bench_roster(players: int) -> Roster:
     return Roster(players={c.id: c for c in configs}, limits={})
 
 
-async def _drop_database(admin_dsn: str) -> None:
+async def drop_database(admin_dsn: str) -> None:
     conn = await asyncpg.connect(admin_dsn)
     try:
         await conn.execute(f"DROP DATABASE IF EXISTS {BENCH_DB} WITH (FORCE)")
@@ -105,7 +105,7 @@ async def _drop_database(admin_dsn: str) -> None:
 
 
 async def reset_database(admin_dsn: str) -> None:
-    await _drop_database(admin_dsn)
+    await drop_database(admin_dsn)
     conn = await asyncpg.connect(admin_dsn)
     try:
         await conn.execute(f"CREATE DATABASE {BENCH_DB}")
@@ -262,7 +262,7 @@ async def run_bench(
             results.append(await run_once(admin_dsn, matches, count, players))
             print(format_table(results[-1:], results[0]), flush=True)
     finally:
-        await _drop_database(admin_dsn)
+        await drop_database(admin_dsn)
     return results
 
 

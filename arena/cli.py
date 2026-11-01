@@ -12,6 +12,7 @@ arena serve                                              API + UI on :8000
 arena export --out site                                  static HTML + JSON (GitHub Pages)
 arena export --out docs --tournaments 6,7 --matches 116  only those pages
 arena bench --matches 5000 --workers 1,2,4,8             scaling table, bots, own database
+arena chaos --matches 2000 --workers 4                   kill workers, pause Postgres, verify
 """
 
 from __future__ import annotations
@@ -259,6 +260,26 @@ def _ids(text: str) -> list[int]:
     return [int(part) for part in text.split(",")]
 
 
+async def _chaos(args: argparse.Namespace) -> None:
+    from arena.bench import BenchError
+    from arena.chaos import format_report, run_chaos
+
+    try:
+        report = await run_chaos(
+            settings().database_url,
+            matches=args.matches,
+            workers=args.workers,
+            players=args.players,
+            seed=args.seed,
+            time_limit=args.timeout,
+        )
+    except BenchError as e:
+        sys.exit(f"arena chaos: {e}")
+    print(format_report(report))
+    if report.violations:
+        sys.exit(1)
+
+
 async def _bench(args: argparse.Namespace) -> None:
     from arena.bench import BenchError, format_table, result_json, run_bench
 
@@ -358,6 +379,13 @@ def main(argv: list[str] | None = None) -> None:
     b.add_argument("--players", type=int, default=8, help="bots sharing the rating rows")
     b.add_argument("--json", metavar="PATH", help="also write the results as JSON")
 
+    c = sub.add_parser("chaos", help="kill workers and freeze Postgres, then check invariants")
+    c.add_argument("--matches", type=int, default=2000)
+    c.add_argument("--workers", type=int, default=4)
+    c.add_argument("--players", type=int, default=8)
+    c.add_argument("--seed", type=int, default=0, help="which kills and pauses, not the games")
+    c.add_argument("--timeout", type=float, default=1800.0, help="seconds before giving up")
+
     args = ap.parse_args(argv)
     if args.cmd == "serve":
         import uvicorn
@@ -373,6 +401,7 @@ def main(argv: list[str] | None = None) -> None:
         "ratings": _ratings,
         "export": _export,
         "bench": _bench,
+        "chaos": _chaos,
     }[args.cmd]
     asyncio.run(handler(args))
 
