@@ -4,14 +4,16 @@ from arena.engine import InMemoryTurnStore, MatchRunner, MatchSpec
 from arena.games.connect4 import Connect4
 from arena.players.llm import LLMPlayer
 from arena.players.prompting import load_prompt
-from arena.providers.base import Completion, ProviderError
+from arena.providers.base import Completion, CompletionRequest, ProviderError
 from arena.providers.mock import MockProvider
 from arena.providers.ratelimit import RateLimiter
 from arena.providers.retry import RetryingProvider
-from arena.types import Usage
+from arena.types import ActionSpec, Usage
 
 G = Connect4()
 PROMPT = load_prompt("connect4/v1")
+
+REQUEST = CompletionRequest("m", "s", "u", ActionSpec("t", "d", {}))
 
 
 def move(col: int) -> Completion:
@@ -64,7 +66,7 @@ async def test_retrying_provider_recovers_and_honours_retry_after():
         ]
     )
     p = RetryingProvider(inner, max_attempts=4, sleep=fake_sleep)
-    out = await p.complete(None)  # type: ignore[arg-type]
+    out = await p.complete(REQUEST)
     assert out.tool_input == {"column": 3}
     assert len(sleeps) == 2 and sleeps[1] >= 5.0
 
@@ -72,7 +74,7 @@ async def test_retrying_provider_recovers_and_honours_retry_after():
 async def test_retrying_provider_gives_up_on_non_retryable():
     p = RetryingProvider(MockProvider([ProviderError("bad request", retryable=False)]))
     with pytest.raises(ProviderError):
-        await p.complete(None)  # type: ignore[arg-type]
+        await p.complete(REQUEST)
 
 
 async def test_provider_error_fails_match_instead_of_forfeiting():
