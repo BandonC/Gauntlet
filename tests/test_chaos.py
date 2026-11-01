@@ -166,17 +166,22 @@ async def test_short_chaos_run_holds_every_invariant():
     result = await asyncio.wait_for(
         run_chaos(
             os.environ["DATABASE_URL"],
-            matches=120,
+            matches=500,
             workers=3,
             players=4,
-            mean_gap=0.7,
-            pause_chance=0.3,
+            mean_gap=0.4,
+            pause_chance=0.25,
+            stop_chance=0.25,
             pause_seconds=(1.0, 5.0),
             time_limit=300.0,
         ),
         timeout=360.0,
     )
+    print(format_report(result))
     assert result.violations == [], format_report(result)
+    assert result.kills >= 1
+    assert result.pauses >= 1
+    assert result.stops >= 1
     assert result.reclaimed >= 1
 
 

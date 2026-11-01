@@ -260,6 +260,69 @@ It happened again in the mixed-model tournament: the worker was killed for low m
 with continuous turns and replayed cleanly, and recordings matched the log exactly at 1,745
 attempts.
 
+## Scale & reliability
+
+Those crashes were accidents, so I built tools to cause them on purpose and measure the result.
+Bots play here, so none of this costs anything.
+
+### Scaling: the queue is fine, one row is not
+
+`arena bench` drains 5,000 bot matches with real worker processes, in a database of its own.
+Each row is one run, 123,997 turns, with no re-runs or deadlocks:
+
+| Workers | Matches/s | Turns/s | Speed-up | Claim p50 / p95 / p99 | Peak DB connections |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 4.9 | 121 | 1.00x | 5.8 / 11.5 / 15.5 ms | 3 |
+| 2 | 10.1 | 251 | 2.08x | 6.1 / 9.0 / 11.5 ms | 5 |
+| 4 | 11.3 | 280 | 2.31x | 6.5 / 9.7 / 12.5 ms | 9 |
+| 8 | 10.8 | 267 | 2.20x | 6.8 / 10.1 / 13.6 ms | 17 |
+
+**Throughput stops growing at 2 workers, on a 20-thread machine.** Claiming isn't the cause: `FOR
+UPDATE SKIP LOCKED` stayed under 16 ms at p99 at every size. The limit is the budget cap. Each turn
+adds its cost to one tournament row in the same transaction as the turn, so every worker queues on
+that row through a disk sync. In a smaller run at 8 workers, half the sampled database sessions
+(737 of 1,455) were waiting on row locks, and disabling only that update raised 370 turns/s to 476.
+That isn't the only limit, but it's the main one found.
+
+I left it alone. That update is what makes the budget cap exact, and bot turns are instant. A real
+model takes seconds a turn, so about 270 turns/s is far above anything these tournaments need.
+Sharding spend per match would be the fix if that changed. The machine was busy, with under 1 GB
+of memory free, so treat the shape as the finding rather than the exact figures.
+
+### Chaos: nothing was lost
+
+`arena chaos` drains a queue while killing workers outright and freezing Postgres with `docker
+pause`, past the 4-second lease used for the run, so stalled workers come back to find their
+matches taken. Afterwards it checks what the database kept, and exits non-zero on any violation.
+
+| 2,000 matches, 49,448 turns, 4 workers | |
+|---|---:|
+| Workers killed | 53 |
+| Postgres freezes | 15, totalling 60.9 s |
+| Extra claims after a kill or freeze | 65 |
+| Stale turn writes fenced off | 22 |
+| Invariants violated | **0** |
+
+Every match completed once and was rated once per seat. Every turn log was continuous and replayed
+through the engine to its stored scores. Spend matched the sum of turn costs exactly, at $74.1720 of
+made-up money, because free bots would have made that check 0 = 0. The checker is tested too: 12
+kinds of deliberate damage each have to be caught.
+
+Graceful stops have a shorter test. With only stops, matches changed worker mid-game with no lease
+expiry and no extra claims, and breaking the release made that test fail. A 2,000-match run mixing
+stops in was itself killed for low memory. The largest finished mix is 500 matches on a faster
+in-memory database: 12 kills, 2 freezes and 7 graceful stops, with every invariant held.
+
+### Tracing
+
+Each match is a trace of its turns and provider calls, viewable in Jaeger, and workers serve
+Prometheus metrics. Both are optional:
+
+![Jaeger trace of one match: 44 spans, with turns nested under the match and provider calls under each turn. One provider call shows an error, followed by its retry under the same turn.](docs/trace.png)
+
+That trace came from a real worker with a mock provider and one simulated overload, not a real
+model call.
+
 ## How it works
 
 An event-sourced turn log is the only source of truth, so resuming a match means replaying it.
@@ -293,6 +356,14 @@ arena serve
 
 Open http://localhost:8000/matches and pick a match to step through its replay, or see the
 leaderboard at http://localhost:8000.
+
+Scale and failure tests are free too, and leave your tournaments alone:
+
+```bash
+arena bench --matches 500 --workers 1,2,4
+arena chaos --matches 200 --workers 4
+docker compose --profile observability up -d   # Jaeger on :16686, Prometheus on :9090
+```
 
 ## With real models
 
