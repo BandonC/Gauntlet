@@ -155,6 +155,7 @@ async def match_detail(pool: asyncpg.Pool, match_id: int) -> dict | None:
                 "action": t.action,
                 "forfeited": t.forfeited,
                 "truncated": t.truncated,
+                "auto_filled": t.auto_filled,
                 "attempts": t.attempts,
                 "error": t.error,
                 "rejections": t.rejections,

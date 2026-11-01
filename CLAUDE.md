@@ -267,7 +267,7 @@ runs (loops, scheduled tasks) skip them.
       tournament 4, 30 matches, $0.2833; Werewolf tournament 6, 40 tables, 8 players, $1.4761.
 
 ### Phase 6: Stronger models (paid, pre-approved within budgets)
-- [ ] Werewolf: when `action` is missing and exactly one action is legal, fill it in
+- [x] Werewolf: when `action` is missing and exactly one action is legal, fill it in
       and record the completed action plus `auto_filled: true` on the turn; a present
       but wrong action is still rejected. Count auto-fills per player in reports so the
       quirk stays visible. Old logs must still replay; prompts and identities unchanged.
@@ -417,6 +417,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   Only the night kill draws ties (`Random(f"{seed}:night:{n}")`); a tied day vote
   eliminates nobody, so wolves killing every night is what guarantees the game ends.
   Random players can't play it: discussion is free text, so `legal_actions_hint` is None.
+- `Game.fill_action` runs before validation, and Werewolf uses it to add a missing `action`:
+  every turn allows one kind, and in the Stage 2 test game Sonnet 5.5 left it out on 10 of 19
+  discussion attempts (0 of 6 votes), which cost it a forfeit. The schema lists it as required,
+  but the API doesn't enforce that. The completed action enters the log with `turns.auto_filled`,
+  separate from `truncated`, and `raw_response` keeps what the model sent. `validate_action` stays
+  strict, so replays still check whole actions, and a wrong `action` is still rejected.
+  Auto-fills are legal moves: `auto_fills` in player metrics counts them, apart from illegal ones.
 - `Game.normalize_action` runs after validation and the result is what enters the log;
   if it differs, the turn gets `truncated=true` (the full text stays in `raw_response`).
   Werewolf messages over 300 characters are truncated, never invalid.
