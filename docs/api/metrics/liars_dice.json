@@ -42,6 +42,20 @@
   "cache_hit_rate": null
  },
  {
+  "player_id": "liars-dice-bot-v2",
+  "turns": 710,
+  "attempts": 710,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 60,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
   "player_id": "random",
   "turns": 74,
   "attempts": 74,
@@ -85,30 +99,30 @@
  },
  {
   "player_id": "sonnet-5.5/ld-v1-think",
-  "turns": 366,
-  "attempts": 366,
+  "turns": 1080,
+  "attempts": 1080,
   "illegal_attempts": 0,
   "illegal_move_rate": 0.0,
   "forfeits": 0,
   "auto_fills": 0,
-  "latency_p50_ms": 3183.5,
-  "latency_p95_ms": 6395.2,
-  "completed_games": 40,
-  "cost_per_game_usd": 0.030885,
-  "cache_hit_rate": 0.7851
+  "latency_p50_ms": 3151.5,
+  "latency_p95_ms": 6406.2,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.036029,
+  "cache_hit_rate": 0.7874
  },
  {
   "player_id": "sonnet-5/ld-v1",
-  "turns": 355,
-  "attempts": 355,
+  "turns": 980,
+  "attempts": 980,
   "illegal_attempts": 0,
   "illegal_move_rate": 0.0,
   "forfeits": 0,
   "auto_fills": 0,
-  "latency_p50_ms": 2332.0,
-  "latency_p95_ms": 2642.3,
-  "completed_games": 40,
-  "cost_per_game_usd": 0.029535,
+  "latency_p50_ms": 1992.0,
+  "latency_p95_ms": 2600.2,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.032503,
   "cache_hit_rate": 0.0
  }
 ]
