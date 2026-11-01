@@ -2,7 +2,9 @@
 
 Like `arena bench` this runs in its own database, `arena_bench`, and drops it afterwards.
 Workers die by kill (SIGKILL; TerminateProcess on Windows), with no chance to clean up, and
-are replaced straight away. Postgres is frozen with `docker pause`, usually past the short
+are replaced straight away. Others get a graceful stop (SIGTERM, or Ctrl-Break on Windows,
+where an external SIGTERM is a hard kill) and must exit cleanly. Postgres is frozen with
+`docker pause`, usually past the short
 lease used here, so a stalled worker comes back to find its match taken and its writes
 fenced. A worker that dies by itself is counted and replaced too.
 
@@ -26,6 +28,8 @@ import argparse
 import asyncio
 import os
 import random
+import signal
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, replace
@@ -51,7 +55,7 @@ from arena.roster import PlayerFactory
 from arena.store.db import create_pool
 from arena.store.turns import PostgresTurnStore
 from arena.types import Usage
-from arena.worker import WorkerConfig, run_worker
+from arena.worker import WorkerConfig, install_stop_signals, run_worker
 
 # Made-up, like the usage below: $0.0015 a turn, so spend is exact in NUMERIC(10, 6).
 CHAOS_PRICE = Pricing(1.0, 5.0)
@@ -62,6 +66,7 @@ CHAOS_WORKER = WorkerConfig(
     lease_seconds=4.0, heartbeat_seconds=1.0, max_run_attempts=50, idle_sleep_seconds=0.25
 )
 COMPOSE_SERVICES = ("db", "testdb")
+STOP_SECONDS = 15.0  # time for a graceful stop: one turn and a release
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -89,8 +94,10 @@ class ChaosReport:
     kills: int
     pauses: int
     paused_seconds: float
+    stops: int  # graceful stops, each of which exited cleanly or is a violation
     worker_deaths: int  # workers that died without being killed
-    reclaimed: int  # claims beyond each match's first
+    reclaimed: int  # claims beyond each match's first, refunded by a graceful stop
+    handed_over: int  # matches played by more than one worker
     spend_usd: float
     violations: list[str]
 
@@ -128,16 +135,33 @@ async def _pause(container: str, seconds: float) -> None:
 
 
 async def _spawn(dsn: str, players: int) -> asyncio.subprocess.Process:
+    """Start a worker, returning once it can take a graceful stop: before its signal
+    handlers exist, Ctrl-Break would simply end it."""
     # stderr stays attached: lost leases and fenced writes are worth seeing.
-    return await asyncio.create_subprocess_exec(
+    proc = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
         "arena.chaos",
         "--child",
         str(players),
-        stdout=asyncio.subprocess.DEVNULL,
+        stdout=asyncio.subprocess.PIPE,
         env=os.environ | {DSN_ENV: dsn},
+        creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
     )
+    if (await proc.stdout.readline()).strip() != b"ready":
+        raise BenchError("a worker process died during start-up")
+    return proc
+
+
+async def _stop(proc: asyncio.subprocess.Process) -> bool:
+    """Ask a worker to stop. True if it exited cleanly in time."""
+    proc.send_signal(getattr(signal, "CTRL_BREAK_EVENT", signal.SIGTERM))
+    try:
+        return await asyncio.wait_for(proc.wait(), STOP_SECONDS) == 0
+    except TimeoutError:
+        proc.kill()
+        await proc.wait()
+        return False
 
 
 async def check_invariants(pool: asyncpg.Pool, expected_matches: int) -> list[str]:
@@ -238,6 +262,7 @@ async def run_chaos(
     seed: int = 0,
     mean_gap: float = 2.0,
     pause_chance: float = 0.2,
+    stop_chance: float = 0.2,
     pause_seconds: tuple[float, float] = (2.0, 6.0),
     time_limit: float = 1800.0,
 ) -> ChaosReport:
@@ -247,7 +272,7 @@ async def run_chaos(
     await reset_database(admin_dsn)
     procs: list[asyncio.subprocess.Process] = []
     conn: asyncpg.Connection | None = None
-    kills = pauses = deaths = 0
+    kills = pauses = stops = bad_stops = deaths = 0
     paused = 0.0
     try:
         await queue_matches(dsn, matches, players)
@@ -265,18 +290,22 @@ async def run_chaos(
                 if proc.returncode is not None:
                     deaths += 1
                     procs[i] = await _spawn(dsn, players)
-            if rng.random() < pause_chance:
+            roll = rng.random()
+            if roll < pause_chance:
                 seconds = rng.uniform(*pause_seconds)
                 await _pause(container, seconds)
                 pauses += 1
                 paused += seconds
+                continue
+            i = rng.randrange(len(procs))
+            if roll < pause_chance + stop_chance:
+                stops += 1
+                bad_stops += not await _stop(procs[i])
             else:
-                i = rng.randrange(len(procs))
-                if procs[i].returncode is None:
-                    procs[i].kill()
-                    await procs[i].wait()
-                    kills += 1
-                procs[i] = await _spawn(dsn, players)
+                procs[i].kill()
+                await procs[i].wait()
+                kills += 1
+            procs[i] = await _spawn(dsn, players)
     finally:
         for proc in procs:
             if proc.returncode is None:
@@ -291,21 +320,27 @@ async def run_chaos(
         totals = await pool.fetchrow(
             "SELECT (SELECT count(*) FROM turns) AS turns, "
             "(SELECT COALESCE(sum(run_attempts - 1), 0) FROM matches) AS reclaimed, "
-            "(SELECT COALESCE(sum(spent_usd), 0) FROM tournaments) AS spend"
+            "(SELECT COALESCE(sum(spent_usd), 0) FROM tournaments) AS spend, "
+            "(SELECT count(*) FROM (SELECT match_id FROM turns GROUP BY match_id "
+            "HAVING count(DISTINCT worker_id) > 1) AS x) AS handed_over"
         )
     finally:
         await pool.close()
         await drop_database(admin_dsn)
-    if not kills or not pauses:
-        violations.append(f"nothing tested: {kills} kills, {pauses} pauses")
+    if bad_stops:
+        violations.append(f"{bad_stops} of {stops} graceful stops didn't exit cleanly")
+    if not kills + pauses + stops:
+        violations.append("nothing tested: no kills, pauses or stops")
     return ChaosReport(
         matches=matches,
         turns=totals["turns"],
         kills=kills,
         pauses=pauses,
         paused_seconds=paused,
+        stops=stops,
         worker_deaths=deaths,
         reclaimed=totals["reclaimed"],
+        handed_over=totals["handed_over"],
         spend_usd=float(totals["spend"]),
         violations=violations,
     )
@@ -316,7 +351,8 @@ def format_report(r: ChaosReport) -> str:
     lines = [
         f"{r.matches:,} matches, {r.turns:,} turns, ${r.spend_usd:.4f} of made-up spend",
         f"{r.kills} workers killed, {r.pauses} Postgres pauses ({r.paused_seconds:.1f}s), "
-        f"{r.worker_deaths} other worker deaths, {r.reclaimed} matches re-claimed",
+        f"{r.stops} graceful stops, {r.worker_deaths} other worker deaths",
+        f"{r.reclaimed} extra claims, {r.handed_over} matches played by more than one worker",
         verdict,
     ]
     return "\n".join(lines + r.violations[:50])
@@ -324,7 +360,11 @@ def format_report(r: ChaosReport) -> str:
 
 async def _child(players: int) -> None:
     pool = await create_pool(os.environ[DSN_ENV], max_size=3)
-    await run_worker(pool, ChaosFactory(bench_roster(players), {}), CHAOS_WORKER)
+    stop = asyncio.Event()
+    install_stop_signals(stop)
+    print("ready", flush=True)
+    await run_worker(pool, ChaosFactory(bench_roster(players), {}), CHAOS_WORKER, stop=stop)
+    await pool.close()
 
 
 if __name__ == "__main__":
