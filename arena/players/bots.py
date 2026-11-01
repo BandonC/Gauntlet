@@ -10,6 +10,10 @@ from arena.balance import DEFAULT_P, vote_target
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
+LIARS_DICE_V1_THRESHOLD = 0.5
+# Tuned by `arena.dice_sim`: 0.05 beats v1 by as much, but 0.10 beats every other threshold.
+LIARS_DICE_V2_THRESHOLD = 0.1
+
 
 class RandomPlayer:
     """Picks uniformly from legal_actions_hint. Stateless: the choice is a pure function
@@ -48,10 +52,16 @@ class LiarsDiceBot:
     Challenges when the previous bid is less likely than not to hold, given its own
     dice (each unseen die shows a face with probability 1/6; ones aren't wild).
     Otherwise makes the minimal legal raise on each face and bids the one most likely
-    to be true (ties: lower quantity, then higher face).
+    to be true (ties: lower quantity, then higher face). The minimal raise on a face is
+    that face's most likely legal raise, so this already covers every legal raise.
+
+    `liars-dice-bot-v2` is this same rule with a lower threshold. v1 keeps its 0.5, so tournaments
+    played against it stay comparable.
     """
 
-    def __init__(self, player_id: str = "liars-dice-bot", challenge_below: float = 0.5):
+    def __init__(
+        self, player_id: str = "liars-dice-bot", challenge_below: float = LIARS_DICE_V1_THRESHOLD
+    ):
         self.player_id = player_id
         self.challenge_below = challenge_below
 
@@ -150,7 +160,9 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return WerewolfBot(player_id, seed)
     if kind == "liars_dice":
         return LiarsDiceBot(player_id)
-    raise ValueError(f"unknown bot {kind!r}; known: liars_dice, werewolf")
+    if kind == "liars_dice_v2":
+        return LiarsDiceBot(player_id, LIARS_DICE_V2_THRESHOLD)
+    raise ValueError(f"unknown bot {kind!r}; known: liars_dice, liars_dice_v2, werewolf")
 
 
 def _at_least(k: int, n: int, p: float) -> float:
