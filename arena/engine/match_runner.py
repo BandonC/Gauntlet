@@ -65,6 +65,7 @@ class TurnRecord:
     rejections: list[JSON] = field(default_factory=list)  # {attempt, action, reason}, in order
     stop_reasons: list[str | None] = field(default_factory=list)  # one per attempt, in order
     reply_blocks: list[list[JSON]] = field(default_factory=list)  # one list per attempt, in order
+    auto_filled: bool = False  # the engine completed this action (Game.fill_action)
 
 
 @dataclass(frozen=True)
@@ -216,10 +217,11 @@ class MatchRunner:
             if decision.action is None:
                 error = "no move was returned; call the tool with a legal move"
             else:
-                error = self.game.validate_action(state, seat, decision.action)
+                filled = self.game.fill_action(state, seat, decision.action)
+                error = self.game.validate_action(state, seat, filled)
             if error is None:
                 last_rejection = rejections[-1]["reason"] if rejections else None
-                action = self.game.normalize_action(state, seat, decision.action)
+                action = self.game.normalize_action(state, seat, filled)
                 record = self._record(
                     turn_no,
                     seat,
@@ -230,7 +232,8 @@ class MatchRunner:
                     last_rejection,
                     usage,
                     latency,
-                    truncated=action != decision.action,
+                    truncated=action != filled,
+                    auto_filled=filled != decision.action,
                     rejections=rejections,
                     stop_reasons=stop_reasons,
                     reply_blocks=reply_blocks,
@@ -267,6 +270,7 @@ class MatchRunner:
         usage: Usage,
         latency_ms: int,
         truncated: bool = False,
+        auto_filled: bool = False,
         rejections: list[JSON] | None = None,
         stop_reasons: list[str | None] | None = None,
         reply_blocks: list[list[JSON]] | None = None,
@@ -283,6 +287,7 @@ class MatchRunner:
             cost_usd=self.pricing[seat].cost(usage),
             latency_ms=latency_ms,
             truncated=truncated,
+            auto_filled=auto_filled,
             rejections=rejections or [],
             stop_reasons=stop_reasons or [],
             reply_blocks=reply_blocks or [],
