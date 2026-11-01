@@ -281,8 +281,10 @@ runs (loops, scheduled tasks) skip them.
 ### Phase 7: Scale and reliability (bots only, no API spend)
 New dependencies pre-approved for this phase: opentelemetry-api, opentelemetry-sdk,
 opentelemetry-exporter-otlp, prometheus-client.
-- [ ] Verify the README quick start from the real GitHub URL: clone into a scratch dir,
+- [x] Verify the README quick start from the real GitHub URL: clone into a scratch dir,
       run the keyless bot tournament, check the pages load. Fix anything that breaks.
+      Passed 2026-11-01 at `9b6119a` with no credentials: 20 games, five local pages 200,
+      nothing to fix. GitHub Pages wasn't enabled then, so the README's site links were 404.
 - [ ] `arena bench`: queue N bot matches and run M worker processes; report throughput
       (matches/s, turns/s), queue wait and claim latency p50/p95/p99, and DB connections
       used. Produce a scaling table for M = 1, 2, 4, 8 at N = 5,000. Bot matches only.
