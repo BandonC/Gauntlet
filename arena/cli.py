@@ -39,13 +39,20 @@ def _factory(roster_path: str | None):
 
 
 def _build_player(factory, spec: str):
-    """'random', 'random:SEED', 'liars-dice-bot', 'werewolf-bot' and 'werewolf-bot:SEED'
-    are built in; anything else is a roster id."""
+    """'random', 'random:SEED', 'liars-dice-bot', 'liars-dice-bot-v2', 'werewolf-bot' and
+    'werewolf-bot:SEED' are built in; anything else is a roster id."""
     from arena.costs import FREE
-    from arena.players.bots import LiarsDiceBot, RandomPlayer, WerewolfBot
+    from arena.players.bots import (
+        LIARS_DICE_V2_THRESHOLD,
+        LiarsDiceBot,
+        RandomPlayer,
+        WerewolfBot,
+    )
 
     if spec == "liars-dice-bot":
         return LiarsDiceBot(spec), FREE
+    if spec == "liars-dice-bot-v2":
+        return LiarsDiceBot(spec, LIARS_DICE_V2_THRESHOLD), FREE
     if spec == "werewolf-bot" or spec.startswith("werewolf-bot:"):
         seed = int(spec.split(":", 1)[1]) if ":" in spec else 0
         return WerewolfBot(spec, seed), FREE
