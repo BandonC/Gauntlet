@@ -435,39 +435,39 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
   <div class="panel">
     <h2>sonnet-5.5</h2>
     <dl class="stats">
-      <div><dt>Games</dt><dd>40</dd></div>
-      <div><dt>Total cost</dt><dd>$1.24</dd></div>
-      <div><dt>Cost per game</dt><dd>$0.0309</dd></div>
-      <div><dt>Illegal moves</dt><dd>0.0%</dd></div>
-      <div><dt>Cache hits</dt><dd>78.5%</dd></div>
+      <div><dt>Games</dt><dd>110</dd></div>
+      <div><dt>Total cost</dt><dd>$4.57</dd></div>
+      <div><dt>Cost per game</dt><dd>$0.0416</dd></div>
+      <div><dt>Illegal moves</dt><dd>0.7%</dd></div>
+      <div><dt>Cache hits</dt><dd>38.5%</dd></div>
     </dl>
     <details class="note">
-      <summary>Players (1)</summary>
-      <ul class="plain"><li><a href="player-sonnet-5.5_2f_ld-v1-think.html"><span class="pid">sonnet-5.5<span>/ld-v1-think</span></span></a></li></ul>
+      <summary>Players (3)</summary>
+      <ul class="plain"><li><a href="player-sonnet-5.5_2f_ld-v1-think.html"><span class="pid">sonnet-5.5<span>/ld-v1-think</span></span></a></li><li><a href="player-sonnet-5.5_2f_wwdf-v1-cautious.html"><span class="pid">sonnet-5.5<span>/wwdf-v1-cautious</span></span></a></li><li><a href="player-sonnet-5.5_2f_wwdf-v1-plain.html"><span class="pid">sonnet-5.5<span>/wwdf-v1-plain</span></span></a></li></ul>
     </details>
   </div>
   <div class="panel">
     <h2>sonnet-5</h2>
     <dl class="stats">
-      <div><dt>Games</dt><dd>40</dd></div>
-      <div><dt>Total cost</dt><dd>$1.18</dd></div>
-      <div><dt>Cost per game</dt><dd>$0.0295</dd></div>
+      <div><dt>Games</dt><dd>110</dd></div>
+      <div><dt>Total cost</dt><dd>$4.17</dd></div>
+      <div><dt>Cost per game</dt><dd>$0.0379</dd></div>
       <div><dt>Illegal moves</dt><dd>0.0%</dd></div>
       <div><dt>Cache hits</dt><dd>0.0%</dd></div>
     </dl>
     <details class="note">
-      <summary>Players (1)</summary>
-      <ul class="plain"><li><a href="player-sonnet-5_2f_ld-v1.html"><span class="pid">sonnet-5<span>/ld-v1</span></span></a></li></ul>
+      <summary>Players (3)</summary>
+      <ul class="plain"><li><a href="player-sonnet-5_2f_ld-v1.html"><span class="pid">sonnet-5<span>/ld-v1</span></span></a></li><li><a href="player-sonnet-5_2f_wwdf-v1-cautious.html"><span class="pid">sonnet-5<span>/wwdf-v1-cautious</span></span></a></li><li><a href="player-sonnet-5_2f_wwdf-v1-plain.html"><span class="pid">sonnet-5<span>/wwdf-v1-plain</span></span></a></li></ul>
     </details>
   </div>
   <div class="panel">
     <h2>haiku-5.5</h2>
     <dl class="stats">
-      <div><dt>Games</dt><dd>324</dd></div>
-      <div><dt>Total cost</dt><dd>$0.39</dd></div>
-      <div><dt>Cost per game</dt><dd>$0.0012</dd></div>
-      <div><dt>Illegal moves</dt><dd>2.5%</dd></div>
-      <div><dt>Cache hits</dt><dd>28.7%</dd></div>
+      <div><dt>Games</dt><dd>464</dd></div>
+      <div><dt>Total cost</dt><dd>$0.62</dd></div>
+      <div><dt>Cost per game</dt><dd>$0.0013</dd></div>
+      <div><dt>Illegal moves</dt><dd>1.7%</dd></div>
+      <div><dt>Cache hits</dt><dd>26.4%</dd></div>
     </dl>
     <details class="note">
       <summary>Players (14)</summary>
@@ -584,13 +584,31 @@ tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
   <thead><tr><th>Model</th><th class="num">Games</th><th class="num">Won</th><th class="num">Cost per game</th><th class="num">Illegal moves</th><th class="num">Cache hits</th><th class="num">Mean latency</th></tr></thead>
   <tbody>
     <tr class="g-werewolf_dayfirst">
+      <td>sonnet-5.5</td>
+      <td class="num">70</td>
+      <td class="num">38.6%<i class="bar" style="--w:39%"></i></td>
+      <td class="num">$0.0477</td>
+      <td class="num">1.4%</td>
+      <td class="num">24.1%</td>
+      <td class="num">6858 ms</td>
+    </tr>
+    <tr class="g-werewolf_dayfirst">
+      <td>sonnet-5</td>
+      <td class="num">70</td>
+      <td class="num">44.3%<i class="bar" style="--w:44%"></i></td>
+      <td class="num">$0.0427</td>
+      <td class="num">0.0%</td>
+      <td class="num">0.0%</td>
+      <td class="num">4282 ms</td>
+    </tr>
+    <tr class="g-werewolf_dayfirst">
       <td>haiku-5.5</td>
-      <td class="num">140</td>
-      <td class="num">50.7%<i class="bar" style="--w:51%"></i></td>
+      <td class="num">280</td>
+      <td class="num">42.9%<i class="bar" style="--w:43%"></i></td>
       <td class="num">$0.0016</td>
       <td class="num">0.1%</td>
-      <td class="num">23.4%</td>
-      <td class="num">4539 ms</td>
+      <td class="num">23.0%</td>
+      <td class="num">4187 ms</td>
     </tr>
     <tr class="g-werewolf_dayfirst">
       <td>haiku-4.5</td>

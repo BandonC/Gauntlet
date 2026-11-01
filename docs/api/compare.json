@@ -3,34 +3,38 @@
   {
    "model": "sonnet-5.5",
    "players": [
-    "sonnet-5.5/ld-v1-think"
+    "sonnet-5.5/ld-v1-think",
+    "sonnet-5.5/wwdf-v1-cautious",
+    "sonnet-5.5/wwdf-v1-plain"
    ],
-   "games": 40,
-   "won": 28,
+   "games": 110,
+   "won": 55,
    "drew": 0,
-   "lost": 12,
-   "win_rate": 0.7,
-   "cost_usd": 1.23539,
-   "cost_per_game": 0.03088475,
-   "illegal_rate": 0.0,
-   "cache_hit": 0.7850676808366903,
-   "latency_ms": 3462.1775956284155
+   "lost": 55,
+   "win_rate": 0.5,
+   "cost_usd": 4.573376,
+   "cost_per_game": 0.04157614545454545,
+   "illegal_rate": 0.007453416149068323,
+   "cache_hit": 0.38467693816287923,
+   "latency_ms": 5302.321652065081
   },
   {
    "model": "sonnet-5",
    "players": [
-    "sonnet-5/ld-v1"
+    "sonnet-5/ld-v1",
+    "sonnet-5/wwdf-v1-cautious",
+    "sonnet-5/wwdf-v1-plain"
    ],
-   "games": 40,
-   "won": 30,
+   "games": 110,
+   "won": 61,
    "drew": 0,
-   "lost": 10,
-   "win_rate": 0.75,
-   "cost_usd": 1.18142,
-   "cost_per_game": 0.0295355,
+   "lost": 49,
+   "win_rate": 0.5545454545454546,
+   "cost_usd": 4.169112,
+   "cost_per_game": 0.03790101818181818,
    "illegal_rate": 0.0,
    "cache_hit": 0.0,
-   "latency_ms": 2296.067605633803
+   "latency_ms": 3418.2585784313724
   },
   {
    "model": "haiku-5.5",
@@ -50,16 +54,16 @@
     "haiku-5.5/wwdf-v1-cautious",
     "haiku-5.5/wwdf-v1-plain"
    ],
-   "games": 324,
-   "won": 144,
+   "games": 464,
+   "won": 193,
    "drew": 0,
-   "lost": 180,
-   "win_rate": 0.4444444444444444,
-   "cost_usd": 0.390329,
-   "cost_per_game": 0.001204719135802469,
-   "illegal_rate": 0.025196850393700787,
-   "cache_hit": 0.2868223702778839,
-   "latency_ms": 3186.5403225806454
+   "lost": 271,
+   "win_rate": 0.41594827586206895,
+   "cost_usd": 0.621931,
+   "cost_per_game": 0.0013403685344827586,
+   "illegal_rate": 0.017454545454545455,
+   "cache_hit": 0.2644432994792349,
+   "latency_ms": 3386.635120147874
   },
   {
    "model": "haiku-4.5",
@@ -214,17 +218,43 @@
    "game": "werewolf_dayfirst",
    "rows": [
     {
-     "model": "haiku-5.5",
-     "games": 140,
-     "won": 71,
+     "model": "sonnet-5.5",
+     "games": 70,
+     "won": 27,
      "drew": 0,
-     "lost": 69,
-     "win_rate": 0.5071428571428571,
-     "cost_usd": 0.225234,
-     "cost_per_game": 0.0016088142857142856,
-     "illegal_rate": 0.0011547344110854503,
-     "cache_hit": 0.23408224800607985,
-     "latency_ms": 4539.304046242774
+     "lost": 43,
+     "win_rate": 0.38571428571428573,
+     "cost_usd": 3.337986,
+     "cost_per_game": 0.047685514285714284,
+     "illegal_rate": 0.01366742596810934,
+     "cache_hit": 0.2409911386187954,
+     "latency_ms": 6857.732101616628
+    },
+    {
+     "model": "sonnet-5",
+     "games": 70,
+     "won": 31,
+     "drew": 0,
+     "lost": 39,
+     "win_rate": 0.44285714285714284,
+     "cost_usd": 2.987692,
+     "cost_per_game": 0.042681314285714284,
+     "illegal_rate": 0.0,
+     "cache_hit": 0.0,
+     "latency_ms": 4282.418655097614
+    },
+    {
+     "model": "haiku-5.5",
+     "games": 280,
+     "won": 120,
+     "drew": 0,
+     "lost": 160,
+     "win_rate": 0.42857142857142855,
+     "cost_usd": 0.456836,
+     "cost_per_game": 0.0016315571428571428,
+     "illegal_rate": 0.0005844535359438924,
+     "cache_hit": 0.22969344470591097,
+     "latency_ms": 4187.357309941521
     },
     {
      "model": "haiku-4.5",

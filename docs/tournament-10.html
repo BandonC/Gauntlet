@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tournament #10 · LLM Arena</title>
+<script>
+  // Before first paint, so a saved theme never flashes the other one.
+  try { const t = localStorage.getItem("theme"); if (t) document.documentElement.dataset.theme = t; } catch {}
+</script>
+<style>
+/* Every page's styles, inlined by base.html so exported pages stay single files.
+   Motion follows .claude/skills/emil-design-eng: stepping through a replay is instant, press
+   feedback is short, and only the Play blind reveal is allowed to perform. */
+:root {
+  /* Parchment by day, moonlit by night. A test holds both palettes to WCAG AA contrast. */
+  color-scheme: light;
+  --bg: #f4efe6; --surface: #fffdf8; --fg: #1d2430; --muted: #434a57; --line: #dcd3c3;
+  --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
+  --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(0, 143, 134, 0.12);
+  /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
+  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
+  --mark-wolf: #a8201a; --mark-village: #008f86; --link: #124690;
+  /* The page wash, top left to bottom right. A test checks text against all three. */
+  --wash-1: #fbe3d0; --wash-2: #f6d4dc; --wash-3: #cfe0f2;
+  /* Each game's page takes its own wash, chosen to sit under that game's colour. */
+  --c4-wash-1: #d6f0e6; --c4-wash-2: #cde6f2; --c4-wash-3: #dcdcf5;
+  --dice-wash-1: #fdeccb; --dice-wash-2: #fbd9b8; --dice-wash-3: #f9cfc6;
+  --ww-wash-1: #fdeccb; --ww-wash-2: #ecdff2; --ww-wash-3: #d8dcf4;
+  --df-wash-1: #e6f0c8; --df-wash-2: #d3ecd6; --df-wash-3: #c7e6e4;
+  /* Seats. Marks that also sit behind a number, so held to text contrast. */
+  --seat-0: #1f63c4; --seat-1: #c2501c; --seat-2: #0e7f5c; --seat-3: #946400;
+  --seat-4: #b83a78; --seat-5: #2f7d1e; --seat-6: #6250d6;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
+  --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-liars_dice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg transform='translate%2852 56%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cg transform='translate%28150 150%29 rotate%2818%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-werewolf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cpath transform='translate%2860 62%29 rotate%28-12%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cpath transform='translate%28150 44%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28186 120%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%2844 170%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28150 172%29 rotate%2820%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3C/svg%3E");
+  --tile-werewolf_dayfirst: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg transform='translate%2850 50%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3Cg transform='translate%28142 142%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-mix: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cg transform='translate%2860 62%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cpath transform='translate%28232 66%29 rotate%28-10%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cg transform='translate%2878 236%29' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Ccircle r='11' fill='none'/%3E%3Cpath d='M0-18v-7M0 18v7M-18 0h-7M18 0h7M-13-13l-5-5M13 13l5 5M-13 13l-5 5M13-13l5-5'/%3E%3C/g%3E%3Cg transform='translate%28240 240%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cpath transform='translate%28160 150%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3C/svg%3E");
+}
+/* The two dark blocks must match: one follows the system, the other the toggle. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
+    --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
+    --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
+    --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
+    --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
+    --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
+    --seat-0: #4a8de0; --seat-1: #d86f3e; --seat-2: #24a67c; --seat-3: #b98d14;
+    --seat-4: #d06f9c; --seat-5: #60a540; --seat-6: #8a7ce6;
+  }
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
+    --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
+    --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
+    --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
+    --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
+    --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
+    --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
+    --seat-0: #4a8de0; --seat-1: #d86f3e; --seat-2: #24a67c; --seat-3: #b98d14;
+    --seat-4: #d06f9c; --seat-5: #60a540; --seat-6: #8a7ce6;
+}
+
+/* Base */
+* { box-sizing: border-box; }
+[hidden] { display: none !important; } /* or `button { display }` beats it */
+body {
+  margin: 0; color: var(--fg); min-height: 100vh;
+  font: 15px/1.5 ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(52rem 30rem at 88% -6rem, var(--glow-a), transparent 70%),
+    radial-gradient(46rem 28rem at -6% 8rem, var(--glow-b), transparent 70%),
+    linear-gradient(150deg, var(--wash-1), var(--wash-2) 50%, var(--wash-3));
+  background-attachment: fixed;
+}
+main { max-width: 1040px; margin: 0 auto; padding: 16px 16px 64px; }
+/* The wallpaper: faint game motifs in game colours, behind everything and never interactive. */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.13;
+  background: linear-gradient(115deg, var(--g-c4), var(--g-dice) 38%, var(--g-ww) 68%, var(--g-df));
+  /* Full strength in the margins, faint behind the column of text. */
+  mask: var(--tile, var(--tile-mix)) 0 0 / auto,
+    linear-gradient(90deg, #000 6%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.28) 80%, #000 94%);
+  mask-composite: intersect;
+}
+body.g-connect4 {
+  --tile: var(--tile-connect4);
+  --wash-1: var(--c4-wash-1); --wash-2: var(--c4-wash-2); --wash-3: var(--c4-wash-3);
+}
+body.g-liars_dice {
+  --tile: var(--tile-liars_dice);
+  --wash-1: var(--dice-wash-1); --wash-2: var(--dice-wash-2); --wash-3: var(--dice-wash-3);
+}
+body.g-werewolf {
+  --tile: var(--tile-werewolf);
+  --wash-1: var(--ww-wash-1); --wash-2: var(--ww-wash-2); --wash-3: var(--ww-wash-3);
+}
+body.g-werewolf_dayfirst {
+  --tile: var(--tile-werewolf_dayfirst);
+  --wash-1: var(--df-wash-1); --wash-2: var(--df-wash-2); --wash-3: var(--df-wash-3);
+}
+body[class*="g-"]::before { background: var(--g); opacity: 0.16; }
+a { color: inherit; }
+main > :not(nav) a:not(.btn, .game, .cell) { color: var(--link); text-underline-offset: 2px; }
+p, dd, li { max-width: 62ch; text-wrap: pretty; }
+h1 { font-size: 26px; line-height: 1.2; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 17px; margin: 36px 0 8px; }
+h3 { font-size: 13px; color: var(--muted); margin: 16px 0 4px; }
+[id] { scroll-margin-top: 28px; } /* a jump lands clear of the top edge, without moving layout */
+code { font: 13px ui-monospace, monospace; }
+small, .muted { color: var(--muted); }
+.bad { color: var(--bad); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Navigation and page headers */
+nav {
+  display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline;
+  padding-bottom: 12px; border-bottom: 1px solid var(--line); margin-bottom: 24px;
+}
+nav a { text-decoration: none; }
+nav .brand { font-weight: 700; margin-right: auto; }
+nav .brand { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; }
+nav .brand i { width: 18px; height: 18px; border-radius: 50%; box-shadow: inset -6px 2px 0 0 var(--accent); }
+nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; text-decoration-color: var(--accent); }
+#theme-toggle {
+  width: 38px; height: 38px; padding: 0; border-radius: 50%; display: inline-grid; place-items: center;
+  border: 1.5px solid var(--accent); color: var(--accent); background: var(--surface);
+}
+#theme-toggle svg { width: 20px; height: 20px; }
+#theme-toggle[data-mode="dark"] .moon, #theme-toggle[data-mode="light"] .sun { display: none; }
+.page-head { margin-bottom: 20px; }
+.page-head p { margin: 4px 0 0; color: var(--muted); }
+.jump { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; }
+
+/* Game identity: one colour and one pattern per game, drawn from what the game is made of. */
+.g-connect4 { --g: var(--g-c4); }
+.g-liars_dice { --g: var(--g-dice); }
+.g-werewolf { --g: var(--g-ww); }
+.g-werewolf_dayfirst { --g: var(--g-df); }
+.banner {
+  position: relative; overflow: hidden; padding: 18px 20px; border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--g, var(--accent)) 45%, var(--line));
+  background: color-mix(in srgb, var(--g, var(--accent)) 12%, var(--surface));
+}
+/* Patterns stay out from behind words: faded away from the text, or in a band above it. */
+.banner::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.7;
+  mask-image: linear-gradient(100deg, transparent 38%, #000 78%);
+}
+.game .banner::before { mask-image: linear-gradient(to bottom, #000 30px, transparent 58px); }
+.banner > * { position: relative; }
+.banner.g-connect4::before {
+  background: radial-gradient(circle, color-mix(in srgb, var(--g) 42%, transparent) 36%, transparent 38%) 0 0 / 24px 24px;
+}
+.banner.g-liars_dice::before {
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--g) 45%, transparent) 12%, transparent 14%) 0 0 / 30px 30px,
+    radial-gradient(circle, color-mix(in srgb, var(--g) 45%, transparent) 12%, transparent 14%) 15px 15px / 30px 30px,
+    radial-gradient(circle, color-mix(in srgb, var(--g) 22%, transparent) 12%, transparent 14%) 15px 0 / 30px 30px;
+}
+.banner.g-werewolf::before {
+  background:
+    radial-gradient(circle at 12% 30%, var(--g) 2px, transparent 2.6px),
+    radial-gradient(circle at 28% 70%, var(--g) 1.4px, transparent 2px),
+    radial-gradient(circle at 46% 22%, var(--g) 2.4px, transparent 3px),
+    radial-gradient(circle at 63% 62%, var(--g) 1.4px, transparent 2px),
+    radial-gradient(circle at 81% 38%, var(--g) 2px, transparent 2.6px),
+    radial-gradient(circle at 92% 78%, var(--g) 1.4px, transparent 2px);
+  background-size: 120px 58px;
+}
+.banner.g-werewolf::after {
+  content: ""; position: absolute; top: 14px; right: 18px; width: 46px; height: 46px; border-radius: 50%;
+  box-shadow: inset -13px 5px 0 0 color-mix(in srgb, var(--g) 70%, transparent); pointer-events: none;
+}
+.banner.g-werewolf_dayfirst::before {
+  background: repeating-conic-gradient(from 0deg at 100% 0%, color-mix(in srgb, var(--g) 26%, transparent) 0 5deg, transparent 5deg 13deg);
+}
+.banner.g-werewolf_dayfirst::after {
+  content: ""; position: absolute; top: -26px; right: -26px; width: 84px; height: 84px; border-radius: 50%;
+  background: color-mix(in srgb, var(--g) 65%, transparent); pointer-events: none;
+}
+.page-head.banner { padding-right: 84px; }
+.banner p { color: var(--fg); }
+
+/* The front door */
+.hero {
+  position: relative; overflow: hidden; padding: 30px 24px 24px; margin-bottom: 18px; border-radius: 12px;
+  border: 1px solid var(--line);
+  background:
+    linear-gradient(115deg,
+      color-mix(in srgb, var(--g-c4) 34%, var(--surface)),
+      color-mix(in srgb, var(--g-dice) 34%, var(--surface)) 38%,
+      color-mix(in srgb, var(--g-ww) 34%, var(--surface)) 68%,
+      color-mix(in srgb, var(--g-df) 34%, var(--surface)));
+}
+.hero h1 { font-size: 40px; }
+.hero p { margin: 8px 0 0; font-size: 17px; max-width: none; }
+.tiles { display: flex; flex-wrap: wrap; gap: 10px 36px; margin: 20px 0 0; }
+.tiles dt { font-size: 13px; }
+.tiles dd { margin: 0; font-size: 28px; font-weight: 650; line-height: 1.2; }
+.games { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 18px 0; }
+.game { display: block; text-decoration: none; padding: 0; transition: transform 160ms var(--ease-out); }
+.game .banner { height: 100%; min-height: 150px; padding: 58px 16px 14px; }
+.game .banner::after { top: 8px; right: 12px; }
+.game .banner.g-werewolf_dayfirst::after { top: -26px; right: -26px; }
+.game h2 { margin: 0 0 4px; }
+.game p { margin: 4px 0 0; font-size: 14px; }
+.game .lead-line { font-size: 13px; font-weight: 600; }
+.story { margin: 26px 0; }
+.story h2 { margin: 0; font-size: 21px; }
+.story > p { margin: 4px 0 14px; color: var(--muted); }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.panel { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.panel h2, .panel h3 { margin: 0 0 8px; color: var(--fg); font-size: 15px; }
+.panel > .muted { margin: 0; }
+.panel .stats { margin: 8px 0 0; gap: 8px 24px; }
+.headline { margin: 0; font-size: 36px; font-weight: 650; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.plain { list-style: none; margin: 6px 0 0; padding: 0; }
+
+/* One square per game, grouped so the split reads at a glance. */
+.waffle { display: flex; flex-wrap: wrap; gap: 3px; margin: 8px 0; }
+.cell { width: 20px; height: 20px; border-radius: 4px; display: block; }
+.cell.wolves, .key.wolves::before, .chip.wolves::before { background: var(--mark-wolf); }
+.cell.village, .key.village::before, .chip.village::before { background: var(--mark-village); }
+.keys { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; }
+.key, .chip { display: inline-flex; align-items: center; gap: 6px; }
+.key::before, .chip::before { content: ""; width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.chip { font-weight: 600; }
+.game-tag { white-space: nowrap; }
+.game-tag::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; background: var(--g, var(--accent)); }
+
+/* A value with a thin bar beneath it, so a column reads as a shape. */
+.bar { display: block; height: 4px; margin-top: 4px; border-radius: 2px; width: var(--w); min-width: 2px; background: var(--g, var(--accent)); margin-left: auto; }
+
+/* Tables. Numbers line up; player ids wrap rather than stretching a column. */
+.wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+.wrap tr:last-child td { border-bottom: 0; }
+.ww .wrap { background: var(--surface); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.sort { padding: 0; border: 0; background: none; font-weight: inherit; color: inherit; white-space: nowrap; }
+th[aria-sort] .sort { color: var(--fg); }
+th[aria-sort="ascending"] .sort::after { content: " ▲"; }
+th[aria-sort="descending"] .sort::after { content: " ▼"; }
+.filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0; }
+.filters button { font-size: 13px; padding: 2px 10px; border-radius: 999px; }
+.filters button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.filter-count { margin-left: 6px; font-size: 13px; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.rank { color: var(--muted); }
+td.quiet, th.quiet { color: var(--muted); }
+td.lead { font-weight: 600; }
+.pid { overflow-wrap: anywhere; }
+.pid span { color: var(--muted); }
+
+/* Stats: a tournament or match at a glance */
+.stats { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 16px 0; }
+.stats dt { color: var(--muted); font-size: 13px; }
+.stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stats div { min-width: 0; }
+
+/* Controls */
+button, .btn {
+  font: inherit; padding: 4px 12px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--surface); color: inherit; text-decoration: none; display: inline-block;
+  cursor: pointer; transition: transform 120ms var(--ease-out);
+}
+button:active:not(:disabled), .btn:active { transform: scale(0.97); }
+button:disabled { opacity: 0.5; cursor: default; }
+.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.controls input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+summary { cursor: pointer; color: var(--muted); }
+details.fold { margin-top: 36px; }
+details.fold > summary { font-size: 17px; font-weight: 600; color: var(--fg); }
+details.note { margin: 12px 0 0; }
+details.note p { max-width: none; }
+
+/* The invitation to play blind */
+.callout {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 14px 16px; margin: 0 0 8px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface);
+}
+.callout p { margin: 0; flex: 1 1 280px; }
+.callout .btn, .callout button { flex-shrink: 0; }
+
+/* Replay */
+#replay-info { min-height: 1.5em; }
+/* The scrubber, with the game's shape under it. The strip is inset by half the slider's thumb
+   so a mark sits under the frame it jumps to. Everything on it is a button. */
+.scrub input { display: block; width: 100%; margin: 0; accent-color: var(--accent); }
+#replay-marks { position: relative; height: 18px; margin: 2px 8px 0; }
+#replay-marks:empty { display: none; }
+.band, .tick { position: absolute; top: 0; bottom: 0; padding: 0; border: 0; border-radius: 0; background: none; }
+.band::before { content: ""; position: absolute; inset: 6px 1px; border-radius: 2px; background: var(--band); }
+.tick { width: 14px; margin-left: -7px; }
+.tick::before { content: ""; position: absolute; top: 1px; bottom: 1px; left: 5px; width: 4px; border-radius: 2px; background: var(--bad); }
+.band.night, .key.night { --band: color-mix(in srgb, var(--fg) 72%, transparent); }
+.band.discussion, .key.discussion { --band: color-mix(in srgb, var(--fg) 24%, transparent); }
+.band.vote, .key.vote { --band: var(--accent); }
+.key.tick-key { --band: var(--bad); }
+.key.night::before, .key.discussion::before, .key.vote::before, .key.tick-key::before { background: var(--band); }
+.scrub + #replay-frame { margin-top: 10px; }
+.scrub .keys { margin: 2px 8px 0; }
+.status { font-weight: 600; }
+.ww { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 8px 24px; }
+.ww ul { list-style: none; margin: 0; padding: 0; }
+.ww li { margin: 0 0 8px; }
+.ww .ld { width: 100%; }
+.c4 {
+  display: grid; grid-template-columns: repeat(7, 34px); gap: 4px; padding: 8px; width: max-content;
+  background: color-mix(in srgb, var(--o) 18%, transparent); border-radius: 8px;
+}
+.c4 .cell { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); }
+.c4 .disc.X { background: var(--x); } .c4 .disc.O { background: var(--o); }
+.ld { width: auto; } .ld .dice { font-size: 26px; line-height: 1; letter-spacing: 2px; }
+.ld tr.turn td { font-weight: 600; } .die.hit { color: var(--x); }
+.ld .dice .muted { font-size: 15px; letter-spacing: 0; }
+.ld-bids .die, .reveal .die { font-size: 22px; line-height: 1; vertical-align: -3px; }
+tr[data-frame] { cursor: pointer; }
+tr.current td { background: color-mix(in srgb, var(--line) 60%, transparent); }
+
+/* Play blind. Spoilers stay hidden from the first paint when the link says #blind. */
+#blind { display: none; }
+.blind #blind { display: block; }
+.blind .spoiler { display: none; }
+.blind-head { position: sticky; top: 0; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); padding: 6px 12px; border: 1px solid var(--line); border-radius: 10px; }
+.blind-head p { margin: 6px 0; }
+.blind-foot { position: sticky; bottom: 0; background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); padding: 8px 12px; margin: 8px 0 0; border: 1px solid var(--line); border-radius: 10px; }
+.seats { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.seat { padding: 4px 10px; border: 1px solid var(--line); border-radius: 6px; }
+.seat.on { border-color: var(--bad); color: var(--bad); font-weight: 600; }
+.seat.dead { color: var(--muted); text-decoration: line-through; }
+.seat.dead small { display: inline-block; }
+/* A message is a seat talking: its number in its colour, then its words in text colours.
+   Each seat keeps its colour everywhere it appears, and the number always says it too. */
+[data-seat="0"] { --seat: var(--seat-0); } [data-seat="1"] { --seat: var(--seat-1); }
+[data-seat="2"] { --seat: var(--seat-2); } [data-seat="3"] { --seat: var(--seat-3); }
+[data-seat="4"] { --seat: var(--seat-4); } [data-seat="5"] { --seat: var(--seat-5); }
+[data-seat="6"] { --seat: var(--seat-6); }
+.avatar {
+  display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--seat, var(--muted)); color: var(--surface); font-size: 13px; font-weight: 700; line-height: 1;
+}
+.said {
+  display: flex; gap: 8px; align-items: flex-start; max-width: 70ch; margin: 6px 0; padding: 7px 10px;
+  border-radius: 8px; background: color-mix(in srgb, var(--seat, var(--line)) 10%, var(--surface));
+}
+.said .line { min-width: 0; overflow-wrap: anywhere; }
+.seat[data-seat] { box-shadow: inset 3px 0 0 var(--seat); }
+
+/* The round table: seats in a ring, a vote is an arrow. Flat on purpose. */
+.round { display: block; width: min(280px, 100%); margin: 8px auto; }
+.round line { stroke: var(--accent); stroke-width: 2; }
+.round marker path { fill: var(--accent); }
+.round circle { fill: var(--surface); stroke: var(--seat, var(--line)); stroke-width: 2; }
+.round text { fill: var(--fg); font-size: 15px; font-weight: 600; text-anchor: middle; dominant-baseline: central; }
+.round .dead circle { fill: none; stroke-dasharray: none; opacity: 0.5; }
+.round .dead text { fill: var(--muted); }
+.round .wolf circle { stroke: var(--mark-wolf); stroke-width: 2.5; }
+.round .out circle { stroke: var(--bad); stroke-width: 3; opacity: 1; }
+
+/* The truth overlay: the same transcript, roles shown and bluffs marked. */
+.truth { margin-top: 28px; }
+.truth .said { max-width: none; border-left: 3px solid transparent; }
+.truth .said small { margin-right: 4px; }
+.truth .said.bluff { border-left-color: var(--mark-wolf); background: color-mix(in srgb, var(--mark-wolf) 10%, var(--surface)); }
+.truth .said.wrong { border-left-color: var(--muted); }
+.tell { display: block; font-size: 13px; font-weight: 600; }
+
+/* The reveal: one rare moment, so the cards may arrive in turn. Nothing waits on it. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 16px 0; }
+.card {
+  padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); min-width: 0;
+  animation: reveal 260ms var(--ease-out) both; animation-delay: calc(var(--i) * 60ms);
+}
+.card b { display: block; font-size: 17px; text-transform: capitalize; }
+.card small { display: block; }
+.card.wolf { border-color: var(--bad); background: color-mix(in srgb, var(--mark-wolf) 12%, var(--surface)); }
+.card.seer { border-color: var(--accent); }
+.card .pid { display: block; margin: 4px 0; font-size: 13px; }
+@keyframes reveal { from { opacity: 0; transform: translateY(6px); } }
+
+@media (hover: hover) and (pointer: fine) {
+  nav a:hover, .jump a:hover { text-decoration: underline; }
+  tbody tr:hover td { background: color-mix(in srgb, var(--line) 30%, transparent); }
+  .game:hover { transform: translateY(-2px); }
+}
+@media (max-width: 760px) {
+  .ww { grid-template-columns: minmax(0, 1fr); }
+  td.quiet, th.quiet { display: none; }
+  .hero h1 { font-size: 30px; }
+  .tiles dd { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled), .btn:active { transform: none; }
+  .game { transition: none; }
+  @keyframes reveal { from { opacity: 0; } }
+}
+
+</style>
+</head>
+<body class="g-werewolf_dayfirst">
+<main>
+  <nav>
+    <a class="brand" href="index.html"><i aria-hidden="true"></i>LLM Arena</a>
+    <a href="index.html">Leaderboards</a>
+    <a href="tournaments.html" aria-current="page">Tournaments</a>
+    <a href="matches.html">Matches</a>
+    <a href="compare.html">Compare</a>
+    <button id="theme-toggle" type="button" aria-label="Switch colour theme" hidden>
+      <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+      <svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a.6.6 0 0 0-.8-.7 9.7 9.7 0 1 0 12.2 12.2.6.6 0 0 0-.7-.8z"/></svg>
+    </button>
+  </nav>
+<div class="page-head banner g-werewolf_dayfirst">
+  <h1>Tournament #10</h1>
+  <p>Werewolf (day-first) · tables</p>
+</div>
+<dl class="stats">
+  <div><dt>Status</dt><dd>completed</dd></div>
+  <div><dt>Progress</dt><dd>40/40 completed</dd></div>
+  <div><dt>Spent</dt><dd>$6.5573 of $12.00 budget</dd></div>
+<div><dt>Results</dt><dd>Wolves 31, Village 9</dd></div></dl>
+<div class="waffle" role="img" aria-label="Wolves 31, Village 9">
+<span class="cell wolves" title="#230: Wolves"></span><span class="cell wolves" title="#232: Wolves"></span><span class="cell wolves" title="#233: Wolves"></span><span class="cell wolves" title="#234: Wolves"></span><span class="cell wolves" title="#235: Wolves"></span><span class="cell wolves" title="#236: Wolves"></span><span class="cell wolves" title="#237: Wolves"></span><span class="cell wolves" title="#238: Wolves"></span><span class="cell wolves" title="#239: Wolves"></span><span class="cell wolves" title="#240: Wolves"></span><span class="cell wolves" title="#241: Wolves"></span><span class="cell wolves" title="#243: Wolves"></span><span class="cell wolves" title="#244: Wolves"></span><span class="cell wolves" title="#245: Wolves"></span><span class="cell wolves" title="#246: Wolves"></span><span class="cell wolves" title="#247: Wolves"></span><span class="cell wolves" title="#249: Wolves"></span><span class="cell wolves" title="#250: Wolves"></span><span class="cell wolves" title="#251: Wolves"></span><span class="cell wolves" title="#253: Wolves"></span><span class="cell wolves" title="#254: Wolves"></span><span class="cell wolves" title="#255: Wolves"></span><span class="cell wolves" title="#256: Wolves"></span><span class="cell wolves" title="#257: Wolves"></span><span class="cell wolves" title="#260: Wolves"></span><span class="cell wolves" title="#261: Wolves"></span><span class="cell wolves" title="#262: Wolves"></span><span class="cell wolves" title="#263: Wolves"></span><span class="cell wolves" title="#264: Wolves"></span><span class="cell wolves" title="#265: Wolves"></span><span class="cell wolves" title="#266: Wolves"></span><span class="cell village" title="#228: Village"></span><span class="cell village" title="#229: Village"></span><span class="cell village" title="#231: Village"></span><span class="cell village" title="#242: Village"></span><span class="cell village" title="#248: Village"></span><span class="cell village" title="#252: Village"></span><span class="cell village" title="#258: Village"></span><span class="cell village" title="#259: Village"></span><span class="cell village" title="#267: Village"></span></div>
+<p class="keys"><span class="key wolves">Wolves 31</span><span class="key village">Village 9</span></p>
+
+<h2>Matches</h2>
+<div class="wrap"><table class="sortable filterable">
+  <thead><tr><th>ID</th><th>Result</th><th class="num">Cost</th></tr></thead>
+  <tbody>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#267</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1983</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#266</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1504</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#265</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1888</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#264</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1018</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#263</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1025</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#262</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1469</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#261</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.2099</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#260</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1164</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#259</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.2175</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#258</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.2202</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#257</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1473</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#256</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.2110</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#255</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1843</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#254</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1996</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#253</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1662</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#252</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1031</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#251</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1493</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#250</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1485</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#249</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1374</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#248</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1657</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#247</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1902</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#246</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.2406</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#245</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.2870</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#244</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1979</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#243</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1978</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#242</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1191</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#241</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1952</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#240</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1784</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#239</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.0924</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#238</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1776</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#237</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1363</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#236</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1340</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#235</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1505</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#234</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1678</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#233</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1377</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#232</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1686</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#231</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1453</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Wolves">
+      <td>#230</td>
+      <td><span class="chip wolves">Wolves</span></td>
+      <td class="num">$0.1300</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#229</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1428</td>
+    </tr>
+    <tr data-game="Werewolf (day-first)" data-result="Village">
+      <td>#228</td>
+      <td><span class="chip village">Village</span></td>
+      <td class="num">$0.1029</td>
+    </tr>
+  </tbody>
+</table></div>
+
+</main>
+<script>
+"use strict";
+// Sorting and filtering for any table marked up for it, on every page, plain JS. Inlined by
+// base.html. Without JavaScript the tables stay readable, just fixed. Sorting is instant: a
+// table reordered on click shouldn't animate. Loaded by Node in tests (module.exports).
+
+// "$0.0123", "#116", "0.75 (4)" and "1620.4 (1500.1 – 1740.7)" sort by their leading number,
+// and an empty cell or a dash has no value at all.
+function sortValue(text) {
+  const t = text.trim();
+  if (t === "" || t === "–") return null;
+  const n = t.match(/^[#$]?(-?\d+(?:\.\d+)?)/);
+  return n ? Number(n[1]) : t.toLowerCase();
+}
+
+// Cells with no value stay last in both directions; numbers sort ahead of words.
+function compareValues(a, b, direction) {
+  if (a === null || b === null) return (a === null) - (b === null);
+  if (typeof a !== typeof b) return typeof a === "number" ? -1 : 1;
+  const order = typeof a === "number" ? a - b : a.localeCompare(b);
+  return order * direction;
+}
+
+function initSorting(doc) {
+  doc.querySelectorAll("table.sortable").forEach((table) => {
+    const heads = [...table.tHead.rows[0].cells];
+    heads.forEach((th, column) => {
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "sort";
+      button.textContent = th.textContent;
+      th.textContent = "";
+      th.append(button);
+      button.onclick = () => {
+        const rows = [...table.tBodies[0].rows];
+        const values = new Map(rows.map((r) => [r, sortValue(r.cells[column].textContent)]));
+        const numeric = [...values.values()].some((v) => typeof v === "number");
+        const was = th.getAttribute("aria-sort");
+        // Biggest first is what a number column is usually opened for, A to Z for words.
+        const descending = was ? was === "ascending" : numeric;
+        heads.forEach((h) => h.removeAttribute("aria-sort"));
+        th.setAttribute("aria-sort", descending ? "descending" : "ascending");
+        const direction = descending ? -1 : 1;
+        rows.sort((a, b) => compareValues(values.get(a), values.get(b), direction));
+        table.tBodies[0].append(...rows);
+      };
+    });
+  });
+}
+
+// One row of chips per column worth filtering by: a single value has nothing to choose
+// between, and a dozen would be noise. Chips combine, and the count says what's left.
+const FACETS = ["game", "result"];
+const MAX_CHIPS = 8;
+
+function initFilters(doc) {
+  doc.querySelectorAll("table.filterable").forEach((table) => {
+    const rows = [...table.tBodies[0].rows];
+    const chosen = {};
+    const count = doc.createElement("span");
+    count.className = "muted filter-count";
+    const apply = () => {
+      const shown = rows.filter((row) => {
+        const on = Object.entries(chosen).every(([facet, value]) => row.dataset[facet] === value);
+        row.hidden = !on;
+        return on;
+      });
+      count.textContent = `${shown.length} of ${rows.length}`;
+    };
+    const bars = [];
+    for (const facet of FACETS) {
+      const values = [...new Set(rows.map((r) => r.dataset[facet]))].sort();
+      if (values.length < 2 || values.length > MAX_CHIPS) continue;
+      const bar = doc.createElement("div");
+      bar.className = "filters";
+      const chips = [null, ...values].map((value) => {
+        const chip = doc.createElement("button");
+        chip.type = "button";
+        chip.textContent = value ?? "All";
+        chip.setAttribute("aria-pressed", String(value === null));
+        chip.onclick = () => {
+          if (value === null) delete chosen[facet];
+          else chosen[facet] = value;
+          chips.forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+          apply();
+        };
+        return chip;
+      });
+      bar.append(...chips);
+      bars.push(bar);
+    }
+    if (!bars.length) return;
+    bars[bars.length - 1].append(count);
+    apply();
+    const panel = table.closest(".wrap");
+    bars.forEach((bar) => panel.before(bar));
+  });
+}
+
+if (typeof document !== "undefined") {
+  initSorting(document);
+  initFilters(document);
+}
+
+if (typeof module !== "undefined") module.exports = { sortValue, compareValues, initSorting, initFilters };
+
+</script>
+<script>
+  // Instant on purpose: a colour change across a page of tables shouldn't animate.
+  (() => {
+    const root = document.documentElement;
+    const button = document.getElementById("theme-toggle");
+    const dark = () => (root.dataset.theme ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+    const label = () => {
+      button.dataset.mode = dark() ? "dark" : "light";
+      button.setAttribute("aria-label", dark() ? "Switch to light mode" : "Switch to dark mode");
+    };
+    button.hidden = false;
+    label();
+    button.onclick = () => {
+      root.dataset.theme = dark() ? "light" : "dark";
+      try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+      label();
+    };
+  })();
+</script>
+</body>
+</html>

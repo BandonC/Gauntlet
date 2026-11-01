@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$7.08**: $6.93 across 211 recorded games and 8.7 million tokens, plus $0.15 on four in-memory
+**$14.08**: $13.49 across 251 recorded games and 13.6 million tokens, plus $0.59 on six in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -72,6 +72,35 @@ Three things about the players, in falling order of confidence:
 Bluffing was nearly all one move. Wolves posed as villagers 65 times in day-first and no wolf
 made a matched seer claim. No wolf deliberately leaked its role in either tournament. Claims
 are literal text matches, so paraphrases are missed.
+
+### Stronger models at the same table: the wolves won more, and no model stood out
+
+Sonnet 5.5 with reasoning, Sonnet 5 without, and Haiku 5.5 then played 40 more day-first games at
+mixed tables, 35 games per player. **The village won 9 of 40, 22.5%** (interval 12.3-37.5%). I
+predicted about 42.5% from the Haiku tournament, and that's outside this interval, though the two
+tournaments aren't clearly different (17 of 40 against 9 of 40, p = 0.09).
+
+| Model | Overall | Village side | As wolf | As seer | Village votes on a wolf |
+|---|---:|---:|---:|---:|---:|
+| Sonnet 5.5, reasoning | 27 of 70, 38.6% | 11 of 50, 22% | 16 of 20, 80% | 3 of 10 | 39 of 93, 41.9% |
+| Sonnet 5 | 31 of 70, 44.3% | 13 of 50, 26% | 18 of 20, 90% | 3 of 10 | 45 of 102, 44.1% |
+| Haiku 5.5 | 49 of 140, 35.0% | 21 of 100, 21% | 28 of 40, 70% | 3 of 20 | 71 of 176, 40.3% |
+
+**No pair of models separates on any of these** (best p = 0.11, Sonnet 5 against Haiku as wolves,
+before allowing for the 12 comparisons). A gap under about 38 points as wolves or 24 on the village
+side was always unlikely to show in 40 tables, and tables share results. The Sonnets cost 25 to 28
+times as much per seat as Haiku with nothing proven in return, and Sonnet 5.5's reasoning shows no
+measurable gain over Sonnet 5 here.
+
+The one clear change came late. Village votes on a wolf were almost identical to the Haiku
+tournament on day 1 (37.5% against 36.5%) and day 2 (48.1% against 49.6%), then fell on day 3 to
+15 of 36 from 28 of 36 (p = 0.004). Stronger wolves surviving to the end could explain that, but
+I only went looking after seeing the result, so treat it as a lead to test.
+
+Sonnet 5.5 left the required `action` field off 152 of its 266 discussion turns. The engine now
+fills it in and flags the turn, because every turn allows only one kind of action; without that it
+would have been losing turns to a formatting quirk. 6 of its 439 replies also hit `max_tokens = 1024`
+mid-thought, all recovered on retry, so that limit is thin for this game. There were no forfeits.
 
 ### Liar's Dice: a short probability bot beat both Haikus 16-4
 
@@ -160,10 +189,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Werewolf, day-first | 40 | 4,268,976 | $2.4901 |
 | Liar's Dice, Sonnet 5.5 with reasoning | 40 | 502,812 | $1.2354 |
 | Liar's Dice, Sonnet 5 | 40 | 483,262 | $1.1814 |
-| **Total** | **211** | **8,686,291** | **$6.93** |
+| Werewolf, day-first, Sonnets and Haiku | 40 | 4,918,635 | $6.5573 |
+| **Total** | **251** | **13,604,926** | **$13.49** |
 
-Four in-memory test games cost another $0.15. They never reach the turn log, so the project total
-is about $7.08.
+Six in-memory test games cost another $0.59. They never reach the turn log, so the project total
+is about $14.08.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -190,6 +220,11 @@ affected matches replayed exactly, and none failed. The recordings hold 1,737 re
 of $2.49 paid twice**. That money isn't in the turn log, so reported spend is short by it. The
 kill lost no recorded reply, though a request in flight at that moment can't be seen in
 recordings.
+
+It happened again in the mixed-model tournament: the worker was killed for low memory with 37 of
+40 games finished and 3 mid-game, and a new process resumed them 42 minutes later. All 40 finished
+with continuous turns and replayed cleanly, and recordings matched the log exactly at 1,745
+attempts.
 
 ## How it works
 
@@ -232,5 +267,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10 --matches 116,142   # the static site
 ```
