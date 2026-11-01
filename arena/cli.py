@@ -11,6 +11,7 @@ arena leaderboard --game connect4
 arena serve                                              API + UI on :8000
 arena export --out site                                  static HTML + JSON (GitHub Pages)
 arena export --out docs --tournaments 6,7 --matches 116  only those pages
+arena bench --matches 5000 --workers 1,2,4,8             scaling table, bots, own database
 """
 
 from __future__ import annotations
@@ -258,6 +259,18 @@ def _ids(text: str) -> list[int]:
     return [int(part) for part in text.split(",")]
 
 
+async def _bench(args: argparse.Namespace) -> None:
+    from arena.bench import BenchError, format_table, result_json, run_bench
+
+    try:
+        results = await run_bench(settings().database_url, args.matches, args.workers, args.players)
+    except BenchError as e:
+        sys.exit(f"arena bench: {e}")
+    print(f"\n{format_table(results)}")
+    if args.json:
+        await asyncio.to_thread(Path(args.json).write_text, result_json(results))
+
+
 async def _export(args: argparse.Namespace) -> None:
     from arena.export import export_site
     from arena.store.db import create_pool
@@ -339,6 +352,12 @@ def main(argv: list[str] | None = None) -> None:
     e.add_argument("--tournaments", type=_ids, help="only these tournament pages (comma-separated)")
     e.add_argument("--matches", type=_ids, help="only these match pages (comma-separated)")
 
+    b = sub.add_parser("bench", help="scaling table from bot matches, in its own database")
+    b.add_argument("--matches", type=int, default=5000)
+    b.add_argument("--workers", type=_ids, default=[1, 2, 4, 8], help="worker process counts")
+    b.add_argument("--players", type=int, default=8, help="bots sharing the rating rows")
+    b.add_argument("--json", metavar="PATH", help="also write the results as JSON")
+
     args = ap.parse_args(argv)
     if args.cmd == "serve":
         import uvicorn
@@ -353,6 +372,7 @@ def main(argv: list[str] | None = None) -> None:
         "leaderboard": _leaderboard,
         "ratings": _ratings,
         "export": _export,
+        "bench": _bench,
     }[args.cmd]
     asyncio.run(handler(args))
 

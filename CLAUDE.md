@@ -55,6 +55,7 @@ arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
 arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # only those pages
+arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 ```
@@ -98,6 +99,7 @@ arena/
                         styles live in templates/site.css, inlined into every page
   live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
+  bench.py              arena bench: real worker processes draining bot matches
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
@@ -285,7 +287,7 @@ opentelemetry-exporter-otlp, prometheus-client.
       run the keyless bot tournament, check the pages load. Fix anything that breaks.
       Passed 2026-11-01 at `9b6119a` with no credentials: 20 games, five local pages 200,
       nothing to fix. GitHub Pages wasn't enabled then, so the README's site links were 404.
-- [ ] `arena bench`: queue N bot matches and run M worker processes; report throughput
+- [x] `arena bench`: queue N bot matches and run M worker processes; report throughput
       (matches/s, turns/s), queue wait and claim latency p50/p95/p99, and DB connections
       used. Produce a scaling table for M = 1, 2, 4, 8 at N = 5,000. Bot matches only.
 - [ ] `arena chaos`: run a bench while randomly SIGKILLing workers and pausing Postgres
@@ -754,3 +756,24 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   in-process. A vendor with no row raises rather than waiting forever.
   `test_postgres_bucket_never_grants_more_than_capacity_plus_refill` times grants on Postgres's
   `now()`, the bucket's own clock. On the local clock it failed once by 2 ms in a full run.
+- `arena bench` makes `arena_bench` on DATABASE_URL's server, fresh for each worker count, and
+  drops it after, so it never touches real data. It refuses a URL that already names that
+  database. Same seed each run: 5,000 matches were 123,997 turns at every worker count. Each
+  worker is a real `run_worker` process. Run it on the disk-backed `db` (:5434): `testdb` is tmpfs.
+- Scaling at 5,000 matches (2026-11-01, 8 bots, 20 logical CPUs, Postgres in Docker on WSL2,
+  disk-backed `db`), one run per row, 0 re-runs, 0 deadlocks. Workers / matches/s / turns/s /
+  queue wait p50-p95-p99 s / claim p50-p95-p99 ms / peak connections:
+  1 / 4.9 / 121 / 455-975-1,014 / 5.8-11.5-15.5 / 3;
+  2 / 10.1 / 251 / 239-469-489 / 6.1-9.0-11.5 / 5;
+  4 / 11.3 / 280 / 219-420-438 / 6.5-9.7-12.5 / 9;
+  8 / 10.8 / 267 / 232-441-460 / 6.8-10.1-13.6 / 17.
+  The speed-up stops at 2 workers (2.08x, then 2.31x and 2.20x). Queue wait is backlog drain,
+  since everything is queued up front. Each worker holds about 2 connections. The machine was
+  busy with under 1 GB of RAM free, and 500-match runs ranged 6.0-8.1 matches/s with 1 worker.
+- The scaling limit is a shared row: `append_turn` adds to `tournaments.spent_usd` in the turn's
+  transaction, so every turn holds that row lock through its commit's fsync. At 8 workers and 500
+  matches, 737 of 1,455 backend samples were waiting on row locks. Disabling only that UPDATE in a
+  scratch patch moved one 8-worker run from 370 to 476 turns/s, and the 1-to-8 speed-up to 3.21x,
+  so it isn't the only limit. Bot turns are instant, so this measures the store's ceiling. An LLM
+  turn takes seconds, and tournaments here ran at concurrency 4 or below, far under about 270
+  turns/s. Budget accounting is unchanged: moving it is a design choice with the cap at stake.
