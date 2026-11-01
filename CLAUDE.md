@@ -481,6 +481,11 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   speaker's own seat; a villager's false accusation is shown as wrong, not as a lie.
 - `web.baselines` folds players named `random` or `random<n>` under each leaderboard. They
   stay on the page and in the JSON, and everyone else is still ranked by the same numbers.
+- The home page says "Leads: x" only through `web.clear_leader`: the top two by ordinal, with the
+  first's final interval wholly above the second's, or, if either has no final, an ordinal gap
+  over both sigmas. A rival with no final is never skipped: finals come from the latest tournament
+  alone, so skipping Sonnet 5.5 would clear Sonnet 5 against the bot. The tables still rank by
+  ordinal. As of tournament 9 every game says "No clear leader yet".
 - Match tables say who won (`web.match_result`), not raw scores, and a table tournament's rows
   drop the seat count. Werewolf results come from the score sum: 2 is wolves, 5 is village.
 - Play blind (`match-116.html#blind`, Werewolf, finished matches only): `replay.js` sits you in
