@@ -92,6 +92,15 @@ side was always unlikely to show in 40 tables, and tables share results. The Son
 times as much per seat as Haiku with nothing proven in return, and Sonnet 5.5's reasoning shows no
 measurable gain over Sonnet 5 here.
 
+Every model did far better as a wolf (70-90%) than on the village side (21-26%). That pattern is
+suggestive: **more capable players may help the deceiving side more than the detecting side.** I
+noticed it after seeing the data, and it isn't established. Wolves win most tables, so any model
+seated here looks good as a wolf and poor as a villager, and that alone proves nothing. The
+comparisons that bear on capability are weaker: Sonnets 34 of 40 as wolves against Haiku's 28 of 40
+(p = 0.18), Sonnets 24 of 100 on the village side against Haiku's 21 of 100 (p = 0.74), and wolves
+winning 31 of 40 tables here against 23 of 40 among the Haikus alone (p = 0.09). It needs a fresh
+test designed for this question.
+
 The one clear change came late. Village votes on a wolf were almost identical to the Haiku
 tournament on day 1 (37.5% against 36.5%) and day 2 (48.1% against 49.6%), then fell on day 3 to
 15 of 36 from 28 of 36 (p = 0.004). Stronger wolves surviving to the end could explain that, but
