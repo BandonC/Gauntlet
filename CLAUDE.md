@@ -805,6 +805,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - Chaos at full size (2026-11-01, seed 0, on `db`): 2,000 matches, 49,448 turns, 53 workers killed,
   15 pauses (60.9 s), 65 matches re-claimed, 22 turn writes fenced, 0 other worker deaths, spend
   exactly 49,448 x $0.0015 = $74.1720, all invariants held. That run had no graceful stops. The
-  full-size mix with them was killed by Claude Code for low memory and has no result, so graceful
-  stops are proven at short size only. Chaos workers start in their own process group, so a
-  killed parent can leave them running: look for `arena.chaos` processes afterwards.
+  2,000-match mix with them was killed by Claude Code for low memory and has no result. The largest
+  finished mix is the slow test: 500 matches on tmpfs `testdb`, 12 kills, 2 pauses (7.5 s), 7 stops,
+  14 extra claims, all invariants held. It asserts each kind happened, because 120 matches at the
+  first settings drained in seconds with 0 pauses and still passed. Chaos workers start in their
+  own process group, so a killed parent can leave them running: look for `arena.chaos` processes.
