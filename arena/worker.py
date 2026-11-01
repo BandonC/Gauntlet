@@ -21,6 +21,7 @@ import logging
 import os
 import signal
 import socket
+import time
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -55,11 +56,16 @@ async def run_one(
     worker_id: str,
     cfg: WorkerConfig,
     stop: asyncio.Event | None = None,
+    on_claim: Callable[[float], None] | None = None,
 ) -> bool:
-    """Claim and run one match. Returns False if there was nothing to claim."""
+    """Claim and run one match. Returns False if there was nothing to claim. `on_claim`
+    gets the seconds each successful claim took."""
+    started = time.perf_counter()
     claimed = await queue.claim(pool, worker_id, cfg.lease_seconds)
     if claimed is None:
         return False
+    if on_claim is not None:
+        on_claim(time.perf_counter() - started)
     log.info("claimed match %s (attempt %s)", claimed.id, claimed.run_attempts)
 
     try:
@@ -154,6 +160,7 @@ async def run_worker(
     concurrency: int = 1,
     stop: asyncio.Event | None = None,
     exit_when_idle: bool = False,
+    on_claim: Callable[[float], None] | None = None,
 ) -> None:
     """Run `concurrency` claim loops in this process until `stop` is set."""
     stop = stop or asyncio.Event()
@@ -162,7 +169,7 @@ async def run_worker(
     async def loop(slot: int) -> None:
         wid = f"{worker_id}/{slot}"
         while not stop.is_set():
-            if not await run_one(pool, factory, wid, cfg, stop):
+            if not await run_one(pool, factory, wid, cfg, stop, on_claim):
                 if exit_when_idle:
                     return
                 with contextlib.suppress(TimeoutError):
