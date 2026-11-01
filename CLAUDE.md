@@ -54,7 +54,7 @@ arena worker --record recordings         # also append every model reply for fix
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # only those pages
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 ```
@@ -275,7 +275,7 @@ runs (loops, scheduled tasks) skip them.
 - [x] Werewolf (werewolf_dayfirst) with stronger models: players as in Stage 2
       (roster.toml already has them). Run a fresh 7-seat test game (--budget 0.50) to
       confirm the fix on real calls, then 40 tables. Budget: $12.
-- [ ] Liar's Dice round-robin: sonnet-5.5/ld-v1-think, sonnet-5/ld-v1, liars-dice-bot-v2,
+- [x] Liar's Dice round-robin: sonnet-5.5/ld-v1-think, sonnet-5/ld-v1, liars-dice-bot-v2,
       30 games per pair. Test game first: Sonnet 5.5 vs v2. Budget: $5.
 
 ### Phase 7: Scale and reliability (bots only, no API spend)
@@ -583,8 +583,21 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   difference. `arena.dice_sim`: against v1, 0.05 and 0.10 both win about 94% on tuning seeds, and
   0.20 to 0.30 (no game plays differently) 81%. The field test chose 0.10: it beat every other
   threshold (59% against 0.05) and averaged 76.5% over 7 thresholds and 4 bluffers. On 1,000 fresh
-  seeds v2 beat v1 940 times (94.0%, 92.4-95.3%). Nothing here tests it against a real bidder, and
-  a raise can be less likely than the bid it answers, which a sharper opponent may punish.
+  seeds v2 beat v1 940 times (94.0%, 92.4-95.3%). Tournament 11 is its test against models.
+- Liar's Dice round-robin (tournament 11, 2026-11-01, 30 games per pair, $4.4364 against a
+  predicted $4.90, 1,339 replies matching recordings, 0 rejected, 0 forfeits, every `stop_reason`
+  `tool_use`): v2 21-9 over Sonnet 5.5 (70.0%, 52.1-83.3%), v2 26-4 over Sonnet 5 (86.7%, 70.3-94.7%),
+  Sonnet 5 22-8 over Sonnet 5.5 (73.3%, 55.6-85.8%, p = 0.02 against even). I predicted the Sonnets
+  near 50% against v2, and both intervals exclude that. Against v1 they went 28-12 and 30-10, so
+  the challenge threshold alone moved them p = 0.002 and under 0.0001: tournaments 8 and 9 mostly
+  measured v1's over-challenging. Sonnet 5's bids were true 56% against v2 and 70% against Sonnet
+  5.5; v2 won 77% of its challenges on it, v1 33%. Sonnet 5.5's bids 88% true. It challenged 359
+  times, won 35%, and 7 (2%) were bids its own dice proved true, against 12% in tournament 8.
+  Sonnet 5 challenged 45 times, 0 proved true. Bids impossible 1 of 580 for Sonnet 5, 2 of 258 for
+  v2 against Sonnet 5, since it picks the likeliest legal raise even when none can be true.
+  Thinking 203.3 tokens a turn (p95 498, output max 839 of 1,024). Cost by pair $1.26, $1.29, $1.89.
+  Finals: v2 1650.5 (1578.9-1722.1), Sonnet 5 1464.2 (1400.7-1527.8), Sonnet 5.5 1385.2
+  (1317.7-1452.7). Model and reasoning are still confounded, and v2 was tuned on free games.
 - Sonnet Liar's Dice runs (2026-10-31, 40 games each against the bot, 0 rejected attempts, 0
   forfeits, every `stop_reason` `tool_use`, spend reconciled with recordings): tournament 8,
   `sonnet-5.5/ld-v1-think`, 28-12, 70% (interval 54.6-81.9%), $1.2354, 200.6 thinking tokens a

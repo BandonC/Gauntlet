@@ -1,37 +1,60 @@
 [
  {
-  "player_id": "sonnet-5/ld-v1",
-  "rating": 1796.2,
-  "rd": 73.7,
-  "low": 1648.8,
-  "high": 1943.6,
-  "ordinal": 24.43,
-  "mu": 34.81,
-  "sigma": 3.46,
-  "elo": 1576.7,
-  "games": 40,
-  "points": 30.0,
+  "player_id": "liars-dice-bot-v2",
+  "rating": 1989.1,
+  "rd": 69.4,
+  "low": 1850.3,
+  "high": 2127.8,
+  "ordinal": 33.89,
+  "mu": 42.81,
+  "sigma": 2.97,
+  "elo": 1732.1,
+  "games": 60,
+  "points": 47.0,
   "final": {
-   "rating": 1595.4,
-   "low": 1533.3,
-   "high": 1657.6
+   "rating": 1650.5,
+   "low": 1578.9,
+   "high": 1722.1
   },
-  "final_tournament_id": 9
+  "final_tournament_id": 11
+ },
+ {
+  "player_id": "sonnet-5/ld-v1",
+  "rating": 1790.3,
+  "rd": 63.1,
+  "low": 1664.2,
+  "high": 1916.5,
+  "ordinal": 27.18,
+  "mu": 34.35,
+  "sigma": 2.39,
+  "elo": 1546.6,
+  "games": 100,
+  "points": 56.0,
+  "final": {
+   "rating": 1464.2,
+   "low": 1400.7,
+   "high": 1527.8
+  },
+  "final_tournament_id": 11
  },
  {
   "player_id": "sonnet-5.5/ld-v1-think",
-  "rating": 1767.9,
-  "rd": 72.2,
-  "low": 1623.5,
-  "high": 1912.2,
-  "ordinal": 23.82,
-  "mu": 34.78,
-  "sigma": 3.65,
-  "elo": 1609.4,
-  "games": 40,
-  "points": 28.0,
-  "final": null,
-  "final_tournament_id": 9
+  "rating": 1670.8,
+  "rd": 64.9,
+  "low": 1540.9,
+  "high": 1800.6,
+  "ordinal": 22.0,
+  "mu": 29.38,
+  "sigma": 2.46,
+  "elo": 1407.3,
+  "games": 100,
+  "points": 45.0,
+  "final": {
+   "rating": 1385.2,
+   "low": 1317.7,
+   "high": 1452.7
+  },
+  "final_tournament_id": 11
  },
  {
   "player_id": "liars-dice-bot",
@@ -45,12 +68,8 @@
   "elo": 1420.0,
   "games": 100,
   "points": 38.0,
-  "final": {
-   "rating": 1404.6,
-   "low": 1342.4,
-   "high": 1466.7
-  },
-  "final_tournament_id": 9
+  "final": null,
+  "final_tournament_id": 11
  },
  {
   "player_id": "haiku-4.5/ld-v1",
@@ -65,7 +84,7 @@
   "games": 20,
   "points": 7.0,
   "final": null,
-  "final_tournament_id": 9
+  "final_tournament_id": 11
  },
  {
   "player_id": "random3",
@@ -80,7 +99,7 @@
   "games": 2,
   "points": 2.0,
   "final": null,
-  "final_tournament_id": 9
+  "final_tournament_id": 11
  },
  {
   "player_id": "random",
@@ -95,7 +114,7 @@
   "games": 4,
   "points": 2.0,
   "final": null,
-  "final_tournament_id": 9
+  "final_tournament_id": 11
  },
  {
   "player_id": "haiku-5.5/ld-v1",
@@ -110,7 +129,7 @@
   "games": 20,
   "points": 7.0,
   "final": null,
-  "final_tournament_id": 9
+  "final_tournament_id": 11
  },
  {
   "player_id": "random2",
@@ -125,6 +144,6 @@
   "games": 2,
   "points": 0.0,
   "final": null,
-  "final_tournament_id": 9
+  "final_tournament_id": 11
  }
 ]
