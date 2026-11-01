@@ -266,6 +266,37 @@ runs (loops, scheduled tasks) skip them.
 - [x] `[human]` First real Liar's Dice and Werewolf tournaments (2026-10-30): Liar's Dice
       tournament 4, 30 matches, $0.2833; Werewolf tournament 6, 40 tables, 8 players, $1.4761.
 
+### Phase 6: Stronger models (paid, pre-approved within budgets)
+- [ ] Werewolf: when `action` is missing and exactly one action is legal, fill it in
+      and record the completed action plus `auto_filled: true` on the turn; a present
+      but wrong action is still rejected. Count auto-fills per player in reports so the
+      quirk stays visible. Old logs must still replay; prompts and identities unchanged.
+      Verify by replaying the Stage 2 test recording: the 10 rejections would be accepted.
+- [ ] Werewolf (werewolf_dayfirst) with stronger models: players as in Stage 2
+      (roster.toml already has them). Run a fresh 7-seat test game (--budget 0.50) to
+      confirm the fix on real calls, then 40 tables. Budget: $12.
+
+### Phase 7: Scale and reliability (bots only, no API spend)
+New dependencies pre-approved for this phase: opentelemetry-api, opentelemetry-sdk,
+opentelemetry-exporter-otlp, prometheus-client.
+- [ ] `arena bench`: queue N bot matches and run M worker processes; report throughput
+      (matches/s, turns/s), queue wait and claim latency p50/p95/p99, and DB connections
+      used. Produce a scaling table for M = 1, 2, 4, 8 at N = 5,000. Bot matches only.
+- [ ] `arena chaos`: run a bench while randomly SIGKILLing workers and pausing Postgres
+      for a few seconds (`docker pause`), then verify invariants: every match completed
+      exactly once, turn logs continuous with no duplicates, no match rated twice,
+      tournament spend equals the sum of turn costs. Exit non-zero on any violation.
+      Add a short version as a slow test.
+- [ ] Graceful SIGTERM in the worker, if not already done: stop claiming, finish
+      persisting the current turn, release the lease, exit. Test it under chaos.
+- [ ] Observability: OpenTelemetry traces (match → turn → provider call) and a
+      Prometheus /metrics endpoint (matches claimed/completed/failed, turn latency,
+      provider errors, retries, spend). Optional Jaeger + Prometheus services in
+      docker-compose under a profile, so the default setup stays light.
+- [ ] Write up results: a "Scale & reliability" README section with the scaling table,
+      chaos results (kills survived, invariants held) and a trace screenshot.
+- [ ] [human] Decide whether to deploy a hosted read-only API (costs money monthly).
+
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
       (`python -X importtime`) and lazy-load heavy modules.
