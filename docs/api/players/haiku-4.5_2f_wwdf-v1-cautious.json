@@ -16,8 +16,8 @@
  "games": [
   {
    "game": "werewolf_dayfirst",
-   "place": 2,
-   "field": 8,
+   "place": 4,
+   "field": 12,
    "ordinal": 5.2,
    "games": 35,
    "won": 20,

@@ -54,7 +54,7 @@ arena worker --record recordings         # also append every model reply for fix
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10 --matches 116,142   # only those pages
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 ```
@@ -272,7 +272,7 @@ runs (loops, scheduled tasks) skip them.
       but wrong action is still rejected. Count auto-fills per player in reports so the
       quirk stays visible. Old logs must still replay; prompts and identities unchanged.
       Verify by replaying the Stage 2 test recording: the 10 rejections would be accepted.
-- [ ] Werewolf (werewolf_dayfirst) with stronger models: players as in Stage 2
+- [x] Werewolf (werewolf_dayfirst) with stronger models: players as in Stage 2
       (roster.toml already has them). Run a fresh 7-seat test game (--budget 0.50) to
       confirm the fix on real calls, then 40 tables. Budget: $12.
 
@@ -624,6 +624,23 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   inspecting the seat just voted out), 12 of 1,068 messages truncated (10 from Haiku 5.5
   analytical). 186 true claims, 73 false (65 wolves posing as villagers, 8 seers hiding), 0 leaks.
   Threshold never reached (largest estimate 2,325 tokens). Haiku 4.5 cost $2.26, Haiku 5.5 $0.23.
+- Mixed-model day-first run (tournament 10, 2026-11-01, 40 tables, 8 players, $6.5573 against a
+  predicted $7.90): the village won 9 of 40, 22.5% (Wilson 12.3-37.5%), and the predicted 42.5% is
+  outside that, though p = 0.09 against tournament 7. Sonnet 5.5 / Sonnet 5 / Haiku 5.5: overall
+  38.6% / 44.3% / 35.0%; wolf 16/20, 18/20, 28/40; village side 11/50, 13/50, 21/100; seer 3/10,
+  3/10, 3/20; village votes on a wolf 41.9% / 44.1% / 40.3%; per seat $0.0477 / $0.0427 / $0.0017.
+  No pair separates (best p = 0.11, Sonnet 5 against Haiku as wolves, unadjusted across 12 tests),
+  so the Sonnets are 25-28x the price of Haiku with nothing proven. Sonnet 5 plain went 10 of 10 as
+  a wolf (p = 0.11 against the rest), seen after the fact. Votes on a wolf matched tournament 7 on
+  days 1 and 2 (75/200, 65/135), then fell on day 3 to 15/36 from 28/36 (p = 0.004), also after
+  the fact. Sonnet 5.5 thought for 241.5 tokens a turn (p95 651). 6 of its 439 attempts hit
+  `max_tokens = 1024`, in 5 turns, all recovered on retry; `{"action": "say"}` with no message is
+  what a cut-off reply looks like. That's why it had 6 rejected attempts in all, and 0 forfeits.
+  It auto-filled 152 of 266 discussion turns, 0 for everyone else. Sonnet 5 truncated 12 messages,
+  Haiku 19, Sonnet 5.5 none. Claims true/false: 28/7, 23/4, 154/99, so Sonnets rarely use the
+  literal phrases the classifier needs. Sonnet 5 had no cache reads again.
+  Killed for low memory at 37 of 40 tables; 3 matches resumed 42 minutes later on run attempt 2.
+  Recordings equal the log at 1,745 attempts. In-memory test games: $0.30473 and $0.13083.
 - Village votes on a wolf, by day, tournament 6 / tournament 7: day 1 86/160 (54%) / 73/200
   (36.5%); day 2 34/63 (54%) / 66/133 (49.6%); day 3 5/6 (83%) / 28/36 (77.8%). Chance on day 1
   is 40% / 33%, so a day-first first vote is close to chance, with nobody dead and nothing
