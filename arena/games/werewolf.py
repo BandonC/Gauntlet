@@ -430,6 +430,13 @@ class Werewolf(Game):
             return f"'target' must be one of {legal}"
         return None
 
+    def fill_action(self, state: WWState, seat: int, action: Action) -> Action:
+        # Each turn allows exactly one kind of action, so a missing `action` is unambiguous.
+        # One that's present and wrong is left for validate_action to reject.
+        if isinstance(action, dict) and "action" not in action:
+            return action | {"action": self._expected_action(state, seat)}
+        return action
+
     def normalize_action(self, state: WWState, seat: int, action: Action) -> Action:
         message = action.get("message")
         if isinstance(message, str) and len(message) > MAX_MESSAGE_CHARS:

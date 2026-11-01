@@ -67,6 +67,11 @@ class Game(Protocol):
         """None if legal; otherwise a short error shown back to the player."""
         ...
 
+    def fill_action(self, state: State, seat: int, action: Action) -> Action:
+        """Runs before validation. A game may complete a reply that left out a field with only
+        one legal value. If this changes it, MatchRunner flags the turn as auto_filled."""
+        return action
+
     def normalize_action(self, state: State, seat: int, action: Action) -> Action:
         """The action as it enters the log, for a VALIDATED action (Werewolf truncates long
         messages). If this changes it, MatchRunner flags the turn as truncated."""
