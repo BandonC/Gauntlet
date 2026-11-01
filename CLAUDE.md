@@ -56,6 +56,7 @@ arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
 arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
+arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 ```
@@ -100,6 +101,7 @@ arena/
   live.py               Server-Sent Events stream of one match's turns
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   bench.py              arena bench: real worker processes draining bot matches
+  chaos.py              arena chaos: bench under kills and `docker pause`, invariant checker
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
@@ -290,7 +292,7 @@ opentelemetry-exporter-otlp, prometheus-client.
 - [x] `arena bench`: queue N bot matches and run M worker processes; report throughput
       (matches/s, turns/s), queue wait and claim latency p50/p95/p99, and DB connections
       used. Produce a scaling table for M = 1, 2, 4, 8 at N = 5,000. Bot matches only.
-- [ ] `arena chaos`: run a bench while randomly SIGKILLing workers and pausing Postgres
+- [x] `arena chaos`: run a bench while randomly SIGKILLing workers and pausing Postgres
       for a few seconds (`docker pause`), then verify invariants: every match completed
       exactly once, turn logs continuous with no duplicates, no match rated twice,
       tournament spend equals the sum of turn costs. Exit non-zero on any violation.
@@ -777,3 +779,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   so it isn't the only limit. Bot turns are instant, so this measures the store's ceiling. An LLM
   turn takes seconds, and tournaments here ran at concurrency 4 or below, far under about 270
   turns/s. Budget accounting is unchanged: moving it is a design choice with the cap at stake.
+- `arena chaos` runs in `arena_bench` too, and pauses only a compose `db` or `testdb` whose
+  published port matches DATABASE_URL, so TrackWise's Postgres can't be hit. If the process dies
+  mid-pause, run `docker unpause gauntlet-db-1`. Workers seat `PricedBot` ($0.0015 of made-up money
+  a turn) because free bots would make the spend check 0 = 0. Leases are 4 s, so a pause outlives
+  them and fencing gets exercised. `check_invariants` must catch damage: `tests/test_chaos.py`
+  tampers with a clean run 12 ways. A second rating row can't be tested that way, because the
+  UNIQUE constraint refuses it, and a test holds that. The short run is `pytest -m slow`.
+- Chaos at full size (2026-11-01, seed 0, on `db`): 2,000 matches, 49,448 turns, 53 workers killed,
+  15 pauses (60.9 s), 65 matches re-claimed, 22 turn writes fenced, 0 other worker deaths, spend
+  exactly 49,448 x $0.0015 = $74.1720, all invariants held.
