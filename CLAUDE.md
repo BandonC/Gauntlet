@@ -51,6 +51,8 @@ arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
+arena worker --metrics-port 9100         # also serve Prometheus metrics on /metrics
+docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090, both optional
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
@@ -102,6 +104,7 @@ arena/
   export.py             arena export: same builders with flat file Urls, plus api/*.json
   bench.py              arena bench: real worker processes draining bot matches
   chaos.py              arena chaos: bench under kills and `docker pause`, invariant checker
+  telemetry.py          OpenTelemetry spans, Prometheus metrics, TracedPlayer
   store/read.py         read queries shared by the API, pages and export
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
@@ -299,7 +302,7 @@ opentelemetry-exporter-otlp, prometheus-client.
       Add a short version as a slow test.
 - [x] Graceful SIGTERM in the worker, if not already done: stop claiming, finish
       persisting the current turn, release the lease, exit. Test it under chaos.
-- [ ] Observability: OpenTelemetry traces (match → turn → provider call) and a
+- [x] Observability: OpenTelemetry traces (match → turn → provider call) and a
       Prometheus /metrics endpoint (matches claimed/completed/failed, turn latency,
       provider errors, retries, spend). Optional Jaeger + Prometheus services in
       docker-compose under a profile, so the default setup stays light.
@@ -783,6 +786,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   so it isn't the only limit. Bot turns are instant, so this measures the store's ceiling. An LLM
   turn takes seconds, and tournaments here ran at concurrency 4 or below, far under about 270
   turns/s. Budget accounting is unchanged: moving it is a design choice with the cap at stake.
+- Telemetry (`telemetry.py`): spans are match -> turn -> provider.call, and a `turn` span is one
+  attempt, so a rejected move shows twice. Core modules stay free of it: the worker wraps players
+  in `TracedPlayer`, and `RetryingProvider` opens the call span inside the rate limiter. Traces
+  are off without `OTEL_EXPORTER_OTLP_ENDPOINT` (use `http://localhost:4318`), and the OTLP exporter
+  is imported only then; a test holds that. Metrics live per worker process, so each needs its own
+  `--metrics-port`; `ops/prometheus.yml` scrapes one, 9100. The API server has none, because it
+  plays no matches, and `/api/metrics/{game}` is a different thing: per-player stats from the log.
+  `arena_spend_usd` moves after commit, so a fenced write adds nothing. Failed setup counts as
+  claimed and failed, so claimed can exceed completed with no match running.
 - `arena chaos` runs in `arena_bench` too, and pauses only a compose `db` or `testdb` whose
   published port matches DATABASE_URL, so TrackWise's Postgres can't be hit. If the process dies
   mid-pause, run `docker unpause gauntlet-db-1`. Workers seat `PricedBot` ($0.0015 of made-up money

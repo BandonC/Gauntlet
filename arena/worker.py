@@ -34,6 +34,13 @@ from arena.providers.base import ProviderError
 from arena.roster import PlayerFactory
 from arena.store import queue
 from arena.store.turns import PostgresTurnStore
+from arena.telemetry import (
+    MATCHES_CLAIMED,
+    MATCHES_COMPLETED,
+    MATCHES_FAILED,
+    TracedPlayer,
+    tracer,
+)
 
 log = logging.getLogger("arena.worker")
 
@@ -66,14 +73,33 @@ async def run_one(
         return False
     if on_claim is not None:
         on_claim(time.perf_counter() - started)
+    MATCHES_CLAIMED.inc()
     log.info("claimed match %s (attempt %s)", claimed.id, claimed.run_attempts)
+    attributes = {
+        "arena.match": claimed.id,
+        "arena.game": claimed.game,
+        "arena.run_attempt": claimed.run_attempts,
+    }
+    # The run task copies this context, so turns and provider calls nest under the match.
+    with tracer.start_as_current_span("match", attributes=attributes):
+        await _run_claimed(pool, factory, worker_id, cfg, claimed, stop)
+    return True
 
+
+async def _run_claimed(
+    pool: asyncpg.Pool,
+    factory: PlayerFactory,
+    worker_id: str,
+    cfg: WorkerConfig,
+    claimed: queue.ClaimedMatch,
+    stop: asyncio.Event | None,
+) -> None:
     try:
         game = get_game(claimed.game)
         built = [factory.build(pid) for pid in claimed.seats]
         runner = MatchRunner(
             game,
-            [p for p, _ in built],
+            [TracedPlayer(p, claimed.game) for p, _ in built],
             PostgresTurnStore(pool, worker_id),
             pricing=[price for _, price in built],
         )
@@ -82,10 +108,12 @@ async def run_one(
         )
     except Exception as e:  # bad config: retrying won't help, but keep the record
         log.exception("could not set up match %s", claimed.id)
-        await queue.release_for_retry(
+        status = await queue.release_for_retry(
             pool, claimed.id, worker_id, f"setup: {e}", max_attempts=1, backoff_seconds=0
         )
-        return True
+        if status == "failed":
+            MATCHES_FAILED.inc()
+        return
 
     run_task = asyncio.create_task(runner.run(spec, stop))
     hb_task = asyncio.create_task(_heartbeat_until_lost(pool, claimed.id, worker_id, cfg))
@@ -96,7 +124,7 @@ async def run_one(
             with contextlib.suppress(asyncio.CancelledError, LeaseLost):
                 await run_task
             log.warning("lost lease on match %s; abandoning", claimed.id)
-            return True
+            return
 
         outcome = run_task.result()  # raises if the match run failed
         if not await queue.complete(
@@ -104,6 +132,7 @@ async def run_one(
         ):
             log.warning("match %s finished but lease was gone; result not recorded", claimed.id)
         else:
+            MATCHES_COMPLETED.inc()
             log.info(
                 "match %s done: scores=%s turns=%s cost=$%.4f",
                 claimed.id,
@@ -125,7 +154,6 @@ async def run_one(
         hb_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await hb_task
-    return True
 
 
 async def _heartbeat_until_lost(
@@ -149,6 +177,8 @@ async def _release(
         max_attempts=cfg.max_run_attempts,
         backoff_seconds=backoff,
     )
+    if status == "failed":
+        MATCHES_FAILED.inc()
     log.warning("match %s released (%s): %s", claimed.id, status, error)
 
 

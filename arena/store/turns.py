@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncpg
 
 from arena.engine.match_runner import LeaseLost, TurnRecord
+from arena.telemetry import SPEND_USD
 from arena.types import Usage
 
 INSERT_TURN_SQL = """
@@ -109,3 +110,4 @@ class PostgresTurnStore:
             if inserted is None:
                 raise LeaseLost(f"match {mid} turn {t.turn_no}: lease lost or turn exists")
             await conn.execute(ADD_SPEND_SQL, mid, t.cost_usd)
+        SPEND_USD.inc(t.cost_usd)  # after commit: a fenced write spends nothing here
