@@ -31,6 +31,7 @@ import asyncpg
 from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.code_break import seat_stats
 from arena.games.registry import get_game
+from arena.games.split_deal import seat_stats as split_deal_stats
 from arena.games.werewolf import SEER, VILLAGER, WOLF, classify_claims
 from arena.store.ratings import NOT_CANCELLED_SQL
 from arena.store.turns import PostgresTurnStore
@@ -159,6 +160,51 @@ async def code_break_metrics(pool: asyncpg.Pool, tournament_id: int | None = Non
             "inconsistent": c["inconsistent"],
             "inconsistent_rate": _ratio(c["inconsistent"], c["guesses"]),
             "mean_above_solver": _ratio(c["above_solver"], c["solved"]),
+        }
+        for pid, c in sorted(tally.items())
+    ]
+
+
+SPLIT_DEAL_MATCHES_SQL = f"""
+SELECT m.id, m.game, m.seed, m.options, array_agg(s.player_id ORDER BY s.seat) AS seats
+FROM matches m JOIN match_seats s ON s.match_id = m.id
+WHERE m.game = 'split_deal' AND m.status = 'completed'
+  AND ($1::bigint IS NULL OR m.tournament_id = $1) AND {NOT_CANCELLED_SQL}
+GROUP BY m.id
+"""
+
+
+async def split_deal_metrics(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
+    """Per player, from replaying completed matches. `efficiency` is value created against the
+    best possible split, deals only. `false_claims` are literal statements about the speaker's
+    own values that don't match them; see `classify_value_claims` for what's missed."""
+    tally: dict[str, Counter] = {}
+    store = PostgresTurnStore(pool, "metrics")
+    for m in await pool.fetch(SPLIT_DEAL_MATCHES_SQL, tournament_id):
+        seats = list(m["seats"])
+        spec = MatchSpec(str(m["id"]), m["game"], m["seed"], seats, m["options"])
+        *_, final = iter_states(get_game(m["game"]), spec, await store.load_turns(str(m["id"])))
+        for seat, pid in enumerate(seats):
+            stats = split_deal_stats(final, seat)
+            c = tally.setdefault(pid, Counter())
+            c["games"] += 1
+            c["deals"] += stats["deal"]
+            c["offers"] += stats["offers"]
+            c["true_claims"] += stats["true_claims"]
+            c["false_claims"] += stats["false_claims"]
+            c["score"] += stats["score"]
+            c["efficiency"] += stats["efficiency"] if stats["deal"] else 0
+    return [
+        {
+            "player_id": pid,
+            "games": c["games"],
+            "deals": c["deals"],
+            "deal_rate": _ratio(c["deals"], c["games"]),
+            "mean_score": _ratio(c["score"], c["games"]),
+            "efficiency": _ratio(c["efficiency"], c["deals"]),
+            "offers": c["offers"],
+            "true_claims": c["true_claims"],
+            "false_claims": c["false_claims"],
         }
         for pid, c in sorted(tally.items())
     ]

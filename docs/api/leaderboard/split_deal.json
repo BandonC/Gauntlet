@@ -1,0 +1,59 @@
+[
+ {
+  "player_id": "split-deal-bot",
+  "rating": 1603.4,
+  "rd": 67.1,
+  "low": 1469.2,
+  "high": 1737.6,
+  "ordinal": 22.63,
+  "mu": 30.26,
+  "sigma": 2.55,
+  "elo": 1632.9,
+  "games": 120,
+  "points": 97.3,
+  "final": {
+   "rating": 1658.4,
+   "low": 1606.2,
+   "high": 1710.6
+  },
+  "final_tournament_id": 14
+ },
+ {
+  "player_id": "sonnet-5/sd-v1",
+  "rating": 1494.4,
+  "rd": 64.0,
+  "low": 1366.4,
+  "high": 1622.4,
+  "ordinal": 18.62,
+  "mu": 25.77,
+  "sigma": 2.38,
+  "elo": 1538.8,
+  "games": 120,
+  "points": 85.99999999999997,
+  "final": {
+   "rating": 1514.4,
+   "low": 1468.1,
+   "high": 1560.7
+  },
+  "final_tournament_id": 14
+ },
+ {
+  "player_id": "haiku-5.5/sd-v1",
+  "rating": 1284.7,
+  "rd": 69.6,
+  "low": 1145.6,
+  "high": 1423.9,
+  "ordinal": 9.21,
+  "mu": 17.18,
+  "sigma": 2.66,
+  "elo": 1328.3,
+  "games": 120,
+  "points": 68.49999999999999,
+  "final": {
+   "rating": 1327.2,
+   "low": 1273.4,
+   "high": 1381.0
+  },
+  "final_tournament_id": 14
+ }
+]
