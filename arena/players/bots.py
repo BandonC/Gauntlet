@@ -7,7 +7,13 @@ import math
 import random
 
 from arena.balance import DEFAULT_P, vote_target
-from arena.games.code_break import ALL_CODES, consistent, history_of, minimax_guess
+from arena.games.code_break import (
+    ALL_CODES,
+    consistent,
+    guess_action,
+    history_of,
+    minimax_guess,
+)
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
@@ -167,7 +173,7 @@ class CodeBreakRandomBot:
         history = history_of(ctx.view["your_guesses"])
         candidates = [c for c in ALL_CODES if consistent(c, history)]
         rng = random.Random(f"{self.seed}|{history}|{ctx.attempt}")
-        return Decision(action={"code": rng.choice(candidates)})
+        return Decision(action=guess_action(rng.choice(candidates)))
 
 
 class CodeBreakSolver:
@@ -177,7 +183,7 @@ class CodeBreakSolver:
         self.player_id = player_id
 
     async def act(self, ctx: TurnContext) -> Decision:
-        return Decision(action={"code": minimax_guess(history_of(ctx.view["your_guesses"]))})
+        return Decision(action=guess_action(minimax_guess(history_of(ctx.view["your_guesses"]))))
 
 
 def build_bot(kind: str, player_id: str, seed: int) -> Player:

@@ -147,6 +147,18 @@ async def _tournament(args: argparse.Namespace) -> None:
         resume_tournament,
     )
 
+    if args.tournament_cmd == "cancel":
+        from arena.store.tournaments import cancel_tournament
+
+        pool = await create_pool(settings().database_url)
+        try:
+            await cancel_tournament(pool, args.tournament_id, args.reason)
+        except ValueError as e:
+            sys.exit(f"arena tournament cancel: {e}")
+        finally:
+            await pool.close()
+        print(f"tournament {args.tournament_id}: cancelled, ratings rebuilt without it")
+        return
     if args.tournament_cmd == "resume":
         pool = await create_pool(settings().database_url)
         try:
@@ -388,6 +400,9 @@ def main(argv: list[str] | None = None) -> None:
     t_sub = t.add_subparsers(dest="tournament_cmd")
     tr = t_sub.add_parser("resume", help="re-queue failed matches and unpause")
     tr.add_argument("tournament_id", type=int)
+    tc = t_sub.add_parser("cancel", help="end it for good: keep the data, drop it from ratings")
+    tc.add_argument("tournament_id", type=int)
+    tc.add_argument("--reason", required=True)
 
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)

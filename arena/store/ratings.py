@@ -22,6 +22,11 @@ from arena.ratings import bradley_terry, elo, glicko2, weng_lin
 from arena.ratings.glicko2 import Glicko
 from arena.ratings.weng_lin import WengLin
 
+# A cancelled tournament keeps its data, but its results count for nothing. Use with the
+# match aliased `m`, in anything that ranks or totals results.
+NOT_CANCELLED_SQL = """NOT EXISTS (
+    SELECT 1 FROM tournaments c WHERE c.id = m.tournament_id AND c.status = 'cancelled')"""
+
 ENSURE_RATING_SQL = """
 INSERT INTO ratings (player_id, game, rating) VALUES ($1, $2, $3::double precision)
 ON CONFLICT (player_id, game) DO NOTHING
@@ -54,24 +59,26 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 
 # Ranked by the ordinal mu - 3*sigma, a conservative estimate: a player needs games, not
 # just a lucky win, to reach the top.
-LEADERBOARD_SQL = """
+LEADERBOARD_SQL = f"""
 SELECT r.player_id, r.rating AS elo, r.glicko_rating, r.glicko_rd, r.wl_mu, r.wl_sigma,
        r.games_played,
        COALESCE((
            SELECT sum((m.scores ->> s.seat::int)::float)
            FROM match_seats s JOIN matches m ON m.id = s.match_id
            WHERE s.player_id = r.player_id AND m.game = r.game AND m.status = 'completed'
+             AND {NOT_CANCELLED_SQL}
        ), 0) AS points
 FROM ratings r
 WHERE r.game = $1
 ORDER BY r.wl_mu - 3 * r.wl_sigma DESC, r.player_id
 """
 
-REPLAY_SQL = """
+REPLAY_SQL = f"""
 SELECT m.id, m.game, m.scores, m.placements,
        array_agg(s.player_id ORDER BY s.seat) AS seats
 FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE m.status = 'completed' AND ($1::text IS NULL OR m.game = $1)
+  AND {NOT_CANCELLED_SQL}
 GROUP BY m.id
 ORDER BY m.completed_at, m.id
 """
