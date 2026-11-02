@@ -17,7 +17,8 @@ fenced write path, and nothing calls a provider.
 - every turn log continuous from 0, with no duplicates;
 - every log replays through the engine to the stored scores;
 - no player's games_played disagrees with the matches they sat in;
-- tournament spend equals the sum of turn costs.
+- tournament spend equals the sum of turn costs, and each spend shard equals what its
+  worker slot's turns cost.
 
 If this process dies while Postgres is frozen, run `docker unpause gauntlet-db-1`.
 """
@@ -53,6 +54,7 @@ from arena.games.registry import get_game
 from arena.players.base import Decision, Player, TurnContext
 from arena.roster import PlayerFactory
 from arena.store.db import create_pool
+from arena.store.spend import EXACT, TOTAL_SPEND_SQL
 from arena.store.turns import PostgresTurnStore
 from arena.types import Usage
 from arena.worker import WorkerConfig, install_stop_signals, run_worker
@@ -100,6 +102,7 @@ class ChaosReport:
     handed_over: int  # matches played by more than one worker
     spend_usd: float
     violations: list[str]
+    spend_mode: str = EXACT
 
 
 async def _run(*args: str) -> str:
@@ -231,8 +234,9 @@ async def check_invariants(pool: asyncpg.Pool, expected_matches: int) -> list[st
             bad.append(f"{r['player_id']}: {r['seats']} seats, games_played {r['games_played']}")
 
     for r in await pool.fetch(
-        """
-        SELECT t.id, t.status, t.spent_usd, COALESCE(sum(u.cost_usd), 0) AS turn_costs
+        f"""
+        SELECT t.id, t.status, {TOTAL_SPEND_SQL} AS spent_usd,
+               COALESCE(sum(u.cost_usd), 0) AS turn_costs
         FROM tournaments t
         LEFT JOIN matches m ON m.tournament_id = t.id
         LEFT JOIN turns u ON u.match_id = m.id
@@ -243,6 +247,23 @@ async def check_invariants(pool: asyncpg.Pool, expected_matches: int) -> list[st
             bad.append(f"tournament {r['id']} spent {r['spent_usd']}, turns cost {r['turn_costs']}")
         if r["status"] != "completed":
             bad.append(f"tournament {r['id']} is {r['status']}")
+
+    for r in await pool.fetch(
+        """
+        SELECT s.worker_id, s.spent_usd, t.spend_mode, COALESCE(sum(u.cost_usd), 0) AS turn_costs
+        FROM tournament_spend_shards s
+        JOIN tournaments t ON t.id = s.tournament_id
+        LEFT JOIN matches m ON m.tournament_id = s.tournament_id
+        LEFT JOIN turns u ON u.match_id = m.id AND u.worker_id = s.worker_id
+        GROUP BY s.tournament_id, s.worker_id, s.spent_usd, t.spend_mode
+        """
+    ):
+        if r["spend_mode"] != "sharded":
+            bad.append(f"{r['spend_mode']} tournament has a spend shard for {r['worker_id']}")
+        elif r["spent_usd"] != r["turn_costs"]:
+            bad.append(
+                f"shard {r['worker_id']} holds {r['spent_usd']}, its turns cost {r['turn_costs']}"
+            )
     return bad
 
 
@@ -265,6 +286,7 @@ async def run_chaos(
     stop_chance: float = 0.2,
     pause_seconds: tuple[float, float] = (2.0, 6.0),
     time_limit: float = 1800.0,
+    spend_mode: str = EXACT,
 ) -> ChaosReport:
     rng = random.Random(seed)
     dsn = bench_dsn(admin_dsn)
@@ -275,7 +297,7 @@ async def run_chaos(
     kills = pauses = stops = bad_stops = deaths = 0
     paused = 0.0
     try:
-        await queue_matches(dsn, matches, players)
+        await queue_matches(dsn, matches, players, spend_mode)
         procs = [await _spawn(dsn, players) for _ in range(workers)]
         conn = await asyncpg.connect(dsn)
         deadline = time.monotonic() + time_limit
@@ -319,8 +341,8 @@ async def run_chaos(
         violations = await check_invariants(pool, matches)
         totals = await pool.fetchrow(
             "SELECT (SELECT count(*) FROM turns) AS turns, "
+            f"(SELECT COALESCE(sum({TOTAL_SPEND_SQL}), 0) FROM tournaments t) AS spend, "
             "(SELECT COALESCE(sum(run_attempts - 1), 0) FROM matches) AS reclaimed, "
-            "(SELECT COALESCE(sum(spent_usd), 0) FROM tournaments) AS spend, "
             "(SELECT count(*) FROM (SELECT match_id FROM turns GROUP BY match_id "
             "HAVING count(DISTINCT worker_id) > 1) AS x) AS handed_over"
         )
@@ -343,13 +365,15 @@ async def run_chaos(
         handed_over=totals["handed_over"],
         spend_usd=float(totals["spend"]),
         violations=violations,
+        spend_mode=spend_mode,
     )
 
 
 def format_report(r: ChaosReport) -> str:
     verdict = "all invariants held" if not r.violations else f"{len(r.violations)} VIOLATIONS"
     lines = [
-        f"{r.matches:,} matches, {r.turns:,} turns, ${r.spend_usd:.4f} of made-up spend",
+        f"{r.matches:,} matches, {r.turns:,} turns, ${r.spend_usd:.4f} of made-up spend "
+        f"({r.spend_mode})",
         f"{r.kills} workers killed, {r.pauses} Postgres pauses ({r.paused_seconds:.1f}s), "
         f"{r.stops} graceful stops, {r.worker_deaths} other worker deaths",
         f"{r.reclaimed} extra claims, {r.handed_over} matches played by more than one worker",

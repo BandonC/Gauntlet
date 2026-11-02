@@ -9,11 +9,12 @@ from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.registry import get_game
 from arena.games.werewolf import classify_claims
 from arena.store.metrics import WEREWOLF_GAMES
+from arena.store.spend import TOTAL_SPEND_SQL
 from arena.store.turns import PostgresTurnStore
 
-TOURNAMENTS_SQL = """
+TOURNAMENTS_SQL = f"""
 SELECT t.id, t.game, t.format, t.status, t.rounds, t.current_round, t.last_error,
-       t.budget_usd::float, t.spent_usd::float,
+       t.budget_usd::float, {TOTAL_SPEND_SQL}::float AS spent_usd,
        count(m.*) AS total,
        count(m.*) FILTER (WHERE m.status = 'completed') AS completed,
        count(m.*) FILTER (WHERE m.status = 'failed') AS failed
