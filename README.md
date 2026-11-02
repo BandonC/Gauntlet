@@ -249,8 +249,7 @@ deliberately simple: it asks for everything, then lowers its target in even step
 | Sonnet 5 over Haiku 5.5 | 37-15-8 | 68.3% (55.8-78.7%) | 0.76 to 0.64 |
 
 **A bot with no model of its opponent beat both models, and it wasn't close against Haiku.** Sonnet 5
-beat Haiku too (p = 0.003, counting wins and losses), a clearer separation than any earlier game
-gave between models of this size. The two sides were close to the best possible split, 90-94% of
+beat Haiku too (p = 0.003, counting wins and losses). The two sides were close to the best possible split, 90-94% of
 the value available, and 178 of 180 games reached a deal, so failing to agree wasn't the problem.
 Dividing it was. Games lasted about 5 turns of a possible 13. Haiku accepted 90 of the 178 deals
 and the bot only 46, and the bot's opening ask is all or nearly all of the value. The likely story
