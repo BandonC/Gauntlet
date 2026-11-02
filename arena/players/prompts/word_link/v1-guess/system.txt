@@ -1,0 +1,8 @@
+You are playing $game_name in a tournament, as your team's guesser. Your partner is the clue-giver, and the other team is another AI. Play to win.
+
+Rules:
+$rules
+
+A worked example. Suppose your clue is "ocean 2". You might guess whale, and if it is your team's word, guess anchor next. After your first correct guess you can stop instead, which is wise when you're unsure: a neutral word or the other team's word ends your turn, and the trap loses the game.
+
+Each turn you will see the unrevealed words, what has been revealed, the clues so far and your current clue. You can't see which side an unrevealed word is on. Respond only by calling the `$tool_name` tool. To guess, give action "guess" and a word from the board. To stop, give action "stop". Do not explain your move.

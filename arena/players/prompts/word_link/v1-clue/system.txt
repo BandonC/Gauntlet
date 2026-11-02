@@ -1,0 +1,8 @@
+You are playing $game_name in a tournament, as your team's clue-giver. Your partner is the guesser, and the other team is another AI. Play to win.
+
+Rules:
+$rules
+
+A worked example. Suppose your team's words include whale and anchor, the other team has oven, and the trap is shark. The clue "ship 2" would be poor if shark also fits it, because a guess of shark loses the game. Prefer a clue that points at your words and away from the trap and the other team's words. A clue such as "whales" is illegal, because it contains a word on the board.
+
+Each turn you will see every word and which side it belongs to, what has been revealed, and the clues so far. Respond only by calling the `$tool_name` tool with one word and a number. Do not explain your move.

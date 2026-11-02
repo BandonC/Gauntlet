@@ -93,6 +93,14 @@ def _split_deal_move(a: dict) -> str | None:
     return None
 
 
+def _word_link_move(a: dict) -> str | None:
+    if {"word", "number"} <= set(a):
+        return f"clue {a['word']} {a['number']}"
+    if a.get("action") == "stop":
+        return "stop"
+    return f"guess {a['word']}" if a.get("action") == "guess" and "word" in a else None
+
+
 GAME_NAMES = {
     "code_break": "Code Break",
     "connect4": "Connect 4",
@@ -100,6 +108,7 @@ GAME_NAMES = {
     "split_deal": "Split the Deal",
     "werewolf": "Werewolf",
     "werewolf_dayfirst": "Werewolf (day-first)",
+    "word_link": "Word Link",
 }
 BLIND_GAMES = ("werewolf", "werewolf_dayfirst")
 GAME_BLURBS = {
@@ -109,6 +118,7 @@ GAME_BLURBS = {
     "split_deal": "Two players divide three kinds of item, each hiding what they're worth.",
     "werewolf": "Seven seats, two wolves, a night kill to open. Bluffing in plain text.",
     "werewolf_dayfirst": "The same game opening by day, with everyone still alive.",
+    "word_link": "Two teams chase their words from one-word clues, around a trap.",
 }
 
 
@@ -160,6 +170,8 @@ def match_result(m: dict) -> str | None:
     if m["game"] == "split_deal" and best == 0:
         return "No deal"
     winners = [m["seats"][seat] for seat, score in enumerate(scores) if score == best]
+    if m["game"] == "word_link" and len(winners) == 2:
+        return f"{winners[0]} and {winners[1]} won"
     return f"{winners[0]} won" if len(winners) == 1 else "Draw"
 
 
@@ -269,6 +281,7 @@ MOVE_LABELS = {
     "split_deal": _split_deal_move,
     "werewolf": _werewolf_move,
     "werewolf_dayfirst": _werewolf_move,
+    "word_link": _word_link_move,
 }
 
 

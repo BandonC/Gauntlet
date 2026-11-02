@@ -28,7 +28,12 @@ from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue, ratings, read
 from arena.store.db import create_pool
 from arena.store.metrics import code_break_metrics as metrics_for_code_break
-from arena.store.metrics import player_metrics, split_deal_metrics, werewolf_metrics
+from arena.store.metrics import (
+    player_metrics,
+    split_deal_metrics,
+    werewolf_metrics,
+    word_link_metrics,
+)
 from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import (
@@ -38,6 +43,7 @@ from arena.store.tournaments import (
     create_round_robin,
     create_swiss,
     create_tables,
+    create_team_tournament,
     leaderboard,
     resume_tournament,
     swiss_entrants,
@@ -1359,3 +1365,35 @@ async def test_a_no_deal_moves_elo_like_a_draw_not_a_seat_one_win(pool):
         await ratings.apply_match_result(conn, mid, "split_deal", seats, [0.0, 0.0], [1, 1])
     elos = await pool.fetch("SELECT rating FROM ratings WHERE game = 'split_deal'")
     assert [r["rating"] for r in elos] == [1500.0, 1500.0]
+
+
+async def test_a_word_link_team_tournament_rates_seats_as_teams(pool):
+    clue = lambda pid, seed: PlayerConfig(pid, "bot", model="word_link_clue", seed=seed)  # noqa: E731
+    guess = lambda pid, seed: PlayerConfig(pid, "bot", model="word_link_guess", seed=seed)  # noqa: E731
+    wild = PlayerConfig("wild", "bot", model="word_link_random", seed=9)
+    teams = [[clue("c1", 1), guess("g1", 2)], [clue("c2", 3), wild]]
+    players = [p for team in teams for p in team]
+    factory = PlayerFactory(Roster({p.id: p for p in players}, {}), {})
+    tid, n = await create_team_tournament(pool, "word_link", teams, 8, None, 7)
+    assert n == 8
+    await run_worker(pool, factory, FAST, concurrency=2, exit_when_idle=True)
+
+    assert await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tid) == "completed"
+    assert await pool.fetchval("SELECT format FROM tournaments WHERE id = $1", tid) == "tables"
+    rows = {r["player_id"]: r for r in await word_link_metrics(pool, tid)}
+    assert rows["c1"]["clues"] > 0 and rows["c1"]["words_per_clue"] > 0
+    assert rows["g1"]["guesses"] > 0 and rows["c1"]["bad_clues"] == 0
+    board = {r["player_id"]: r for r in await leaderboard(pool, "word_link")}
+    assert set(board) == {"c1", "g1", "c2", "wild"}
+    assert all(r["games"] == n for r in board.values())
+    # Partners won and lost together, so identical starts give them identical ratings.
+    assert board["c1"]["mu"] == pytest.approx(board["g1"]["mu"])
+    assert board["c2"]["mu"] == pytest.approx(board["wild"]["mu"])
+    assert await ratings.rebuild(pool, "word_link") == n
+
+
+async def test_a_team_tournament_refuses_a_player_on_two_teams(pool):
+    a = PlayerConfig("c1", "bot", model="word_link_clue", seed=1)
+    b = PlayerConfig("g1", "bot", model="word_link_guess", seed=2)
+    with pytest.raises(ValueError, match="two teams"):
+        await create_team_tournament(pool, "word_link", [[a, b], [a, b]], 2, None)
