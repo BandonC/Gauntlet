@@ -3,20 +3,23 @@
   {
    "model": "sonnet-5.5",
    "players": [
+    "sonnet-5.5/ld-v1-high",
+    "sonnet-5.5/ld-v1-low",
+    "sonnet-5.5/ld-v1-medium",
     "sonnet-5.5/ld-v1-think",
     "sonnet-5.5/wwdf-v1-cautious",
     "sonnet-5.5/wwdf-v1-plain"
    ],
-   "games": 170,
-   "won": 72,
+   "games": 260,
+   "won": 86,
    "drew": 0,
-   "lost": 98,
-   "win_rate": 0.4235294117647059,
-   "cost_usd": 6.940898,
-   "cost_per_game": 0.04082881176470588,
-   "illegal_rate": 0.003949967083607637,
-   "cache_hit": 0.5221056688199643,
-   "latency_ms": 4435.2835426305355
+   "lost": 174,
+   "win_rate": 0.33076923076923076,
+   "cost_usd": 10.050306,
+   "cost_per_game": 0.03865502307692308,
+   "illegal_rate": 0.0033783783783783786,
+   "cache_hit": 0.6159498132092761,
+   "latency_ms": 3893.8775894538608
   },
   {
    "model": "sonnet-5",
@@ -170,16 +173,16 @@
    "rows": [
     {
      "model": "sonnet-5.5",
-     "games": 100,
-     "won": 45,
+     "games": 190,
+     "won": 59,
      "drew": 0,
-     "lost": 55,
-     "win_rate": 0.45,
-     "cost_usd": 3.602912,
-     "cost_per_game": 0.03602912,
-     "illegal_rate": 0.0,
-     "cache_hit": 0.7873967174997479,
-     "latency_ms": 3464.061111111111
+     "lost": 131,
+     "win_rate": 0.3105263157894737,
+     "cost_usd": 6.71232,
+     "cost_per_game": 0.035328,
+     "illegal_rate": 0.001348314606741573,
+     "cache_hit": 0.7875847550452294,
+     "latency_ms": 3316.3127812781277
     },
     {
      "model": "sonnet-5",

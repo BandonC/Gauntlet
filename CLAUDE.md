@@ -62,7 +62,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -351,7 +351,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] README: a "What each game tests" table and findings per game, with intervals.
 
 ### Phase 10: Paid experiments
-- [ ] Effort sweep: sonnet-5.5 Liar's Dice vs liars-dice-bot-v2 at effort low, medium,
+- [x] Effort sweep: sonnet-5.5 Liar's Dice vs liars-dice-bot-v2 at effort low, medium,
       high (tool_choice auto, max_tokens 2048), 30 games each. Report win rate, challenge
       blunders and thinking tokens. Budget: $8.
 - [ ] Prompt intervention: liars_dice/v2-prob (estimate the probability the bid is true
@@ -433,6 +433,17 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Effort sweep (tournaments 16-18, 2026-11-02, Sonnet 5.5 against `liars-dice-bot-v2`, 30 games each,
+  same seed, `max_tokens` 2048, $3.1094 against a predicted $2.50, 1,145 attempts matching recordings,
+  0 forfeits, 3 rejected, every `stop_reason` `tool_use`, output max 1,036): low / medium / high wins
+  6, 4, 4 of 30 (20.0% 9.5-37.3, 13.3% 5.3-29.7 twice), low against high p = 0.73. Thinking a turn 5.1 /
+  71.4 / 214.9 (p95 0 / 309 / 501). Challenges 153 / 161 / 157, won 33% / 32% / 27%, proved true by
+  their own dice 4 (2.6%) / 7 (4.3%) / 4 (2.5%), low against high p = 1.0. Bids true 80 / 80 / 82%,
+  impossible 0. Cost $0.85 / $0.94 / $1.32. `effort` works on real calls: this is its first use.
+  Omitting it gave about the same thinking as high (203.3 in tournament 11), so high is close to the
+  default. I predicted 30 / 30 / 35% wins, and medium and high fell outside their intervals; the
+  blunder rates and "no separation" held. All 14 of 90 wins sit under tournament 11's 9 of 30, on
+  other seeds, unproven (p = 0.21 for high). Test games, 3 per setting: $0.0634, $0.0698, $0.1183.
 - Word Link tournament 15 (2026-11-02, 30 games per pair, $2.1885 against a predicted $2.70, 1,125
   model attempts matching recordings, all 90 replayed to their scores, every `stop_reason` `tool_use`):
   Haiku 16-14 over the bots (53.3%, 36.1-69.8%), bots 16-14 over Sonnet 5 (same), Sonnet 5 18-12 over
