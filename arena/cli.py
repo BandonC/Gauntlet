@@ -164,7 +164,13 @@ async def _tournament(args: argparse.Namespace) -> None:
         fmt = args.format or ("tables" if args.tables else "round_robin")
         if fmt == "swiss":
             tid, n = await create_swiss(
-                pool, args.game, cfgs, args.budget, rounds=args.rounds, seed=args.seed
+                pool,
+                args.game,
+                cfgs,
+                args.budget,
+                rounds=args.rounds,
+                seed=args.seed,
+                spend_mode=args.spend_mode,
             )
             print(f"tournament {tid}: swiss, round 1 queued ({n} matches)")
         elif fmt == "tables":
@@ -173,14 +179,27 @@ async def _tournament(args: argparse.Namespace) -> None:
             size = _table_size(args.game, args.table_size)
             try:
                 tid, n = await create_tables(
-                    pool, args.game, cfgs, size, args.tables, args.budget, args.seed
+                    pool,
+                    args.game,
+                    cfgs,
+                    size,
+                    args.tables,
+                    args.budget,
+                    args.seed,
+                    args.spend_mode,
                 )
             except ValueError as e:
                 sys.exit(f"arena tournament: {e}")
             print(f"tournament {tid}: {n} tables of {size} queued")
         else:
             tid, n = await create_round_robin(
-                pool, args.game, cfgs, args.games_per_pair, args.budget, seed=args.seed
+                pool,
+                args.game,
+                cfgs,
+                args.games_per_pair,
+                args.budget,
+                seed=args.seed,
+                spend_mode=args.spend_mode,
             )
             print(f"tournament {tid}: {n} matches queued")
     finally:
@@ -276,6 +295,7 @@ async def _chaos(args: argparse.Namespace) -> None:
             players=args.players,
             seed=args.seed,
             time_limit=args.timeout,
+            spend_mode=args.spend_mode,
         )
     except BenchError as e:
         sys.exit(f"arena chaos: {e}")
@@ -288,7 +308,9 @@ async def _bench(args: argparse.Namespace) -> None:
     from arena.bench import BenchError, format_table, result_json, run_bench
 
     try:
-        results = await run_bench(settings().database_url, args.matches, args.workers, args.players)
+        results = await run_bench(
+            settings().database_url, args.matches, args.workers, args.players, args.spend_mode
+        )
     except BenchError as e:
         sys.exit(f"arena bench: {e}")
     print(f"\n{format_table(results)}")
@@ -349,6 +371,12 @@ def main(argv: list[str] | None = None) -> None:
     )
     t.add_argument("--tables", type=int, default=None, help="tables only: number of matches")
     t.add_argument("--budget", type=float, default=None, help="USD cap (strongly advised)")
+    t.add_argument(
+        "--spend-mode",
+        choices=["exact", "sharded"],
+        default="exact",
+        help="sharded scales further and stops within a turn of the cap per worker slot",
+    )
     t.add_argument("--seed", type=int, default=None)
     t_sub = t.add_subparsers(dest="tournament_cmd")
     tr = t_sub.add_parser("resume", help="re-queue failed matches and unpause")
@@ -382,6 +410,7 @@ def main(argv: list[str] | None = None) -> None:
     b.add_argument("--matches", type=int, default=5000)
     b.add_argument("--workers", type=_ids, default=[1, 2, 4, 8], help="worker process counts")
     b.add_argument("--players", type=int, default=8, help="bots sharing the rating rows")
+    b.add_argument("--spend-mode", choices=["exact", "sharded"], default="exact")
     b.add_argument("--json", metavar="PATH", help="also write the results as JSON")
 
     c = sub.add_parser("chaos", help="kill workers and freeze Postgres, then check invariants")
@@ -389,6 +418,7 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--workers", type=int, default=4)
     c.add_argument("--players", type=int, default=8)
     c.add_argument("--seed", type=int, default=0, help="which kills and pauses, not the games")
+    c.add_argument("--spend-mode", choices=["exact", "sharded"], default="exact")
     c.add_argument("--timeout", type=float, default=1800.0, help="seconds before giving up")
 
     args = ap.parse_args(argv)

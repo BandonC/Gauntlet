@@ -34,6 +34,7 @@ import asyncpg
 from arena.roster import PlayerConfig, PlayerFactory, Roster
 from arena.store.db import create_pool
 from arena.store.migrate import migrate
+from arena.store.spend import EXACT
 from arena.store.tournaments import create_round_robin
 from arena.worker import WorkerConfig, run_worker
 
@@ -41,6 +42,8 @@ BENCH_DB = "arena_bench"
 GAME = "liars_dice"
 DSN_ENV = "ARENA_BENCH_DSN"
 SAMPLE_SECONDS = 0.25
+# Never reached, so runs drain, but set so sharded mode pays for its budget checks.
+BENCH_BUDGET_USD = 100_000.0
 
 
 class BenchError(RuntimeError):
@@ -58,6 +61,7 @@ class BenchResult:
     max_connections: int
     reruns: int  # claims beyond the first, 0 in a clean run
     deadlocks: int
+    spend_mode: str = EXACT
 
     @property
     def matches_per_s(self) -> float:
@@ -114,7 +118,7 @@ async def reset_database(admin_dsn: str) -> None:
     await migrate(bench_dsn(admin_dsn))
 
 
-async def queue_matches(dsn: str, matches: int, players: int) -> None:
+async def queue_matches(dsn: str, matches: int, players: int, spend_mode: str = EXACT) -> None:
     """Exactly `matches` matches across a round-robin of `players` bots. Same seed every
     run, so each worker count plays the same games. The player pool matters: every
     completion locks both players' rating rows, so a smaller pool means more contention."""
@@ -125,7 +129,13 @@ async def queue_matches(dsn: str, matches: int, players: int) -> None:
     pool = await create_pool(dsn, max_size=2)
     try:
         tid, _ = await create_round_robin(
-            pool, GAME, list(roster.players.values()), math.ceil(matches / pairs), None, seed=0
+            pool,
+            GAME,
+            list(roster.players.values()),
+            math.ceil(matches / pairs),
+            BENCH_BUDGET_USD,
+            seed=0,
+            spend_mode=spend_mode,
         )
         await pool.execute(
             "DELETE FROM matches WHERE tournament_id = $1 AND id NOT IN "
@@ -195,10 +205,12 @@ async def _sample_connections(dsn: str, peak: list[int]) -> None:
         await conn.close()
 
 
-async def run_once(admin_dsn: str, matches: int, workers: int, players: int) -> BenchResult:
+async def run_once(
+    admin_dsn: str, matches: int, workers: int, players: int, spend_mode: str = EXACT
+) -> BenchResult:
     dsn = bench_dsn(admin_dsn)
     await reset_database(admin_dsn)
-    await queue_matches(dsn, matches, players)
+    await queue_matches(dsn, matches, players, spend_mode)
 
     with tempfile.TemporaryDirectory(prefix="arena-bench-") as tmp:
         out_dir = Path(tmp)
@@ -249,17 +261,22 @@ async def run_once(admin_dsn: str, matches: int, workers: int, players: int) -> 
         max_connections=peak[0],
         reruns=sum(r["run_attempts"] - 1 for r in rows),
         deadlocks=deadlocks,
+        spend_mode=spend_mode,
     )
 
 
 async def run_bench(
-    admin_dsn: str, matches: int, workers: Sequence[int], players: int = 8
+    admin_dsn: str,
+    matches: int,
+    workers: Sequence[int],
+    players: int = 8,
+    spend_mode: str = EXACT,
 ) -> list[BenchResult]:
     bench_dsn(admin_dsn)  # refuse before anything runs
     results = []
     try:
         for count in workers:
-            results.append(await run_once(admin_dsn, matches, count, players))
+            results.append(await run_once(admin_dsn, matches, count, players, spend_mode))
             print(format_table(results[-1:], results[0]), flush=True)
     finally:
         await drop_database(admin_dsn)
@@ -270,8 +287,8 @@ def format_table(results: Sequence[BenchResult], base: BenchResult | None = None
     base = base or results[0]
     lines = [
         "| Workers | Matches | Seconds | Matches/s | Turns/s | Speed-up "
-        "| Queue wait p50/p95/p99 (s) | Claim p50/p95/p99 (ms) | DB connections |",
-        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
+        "| Queue wait p50/p95/p99 (s) | Claim p50/p95/p99 (ms) | DB connections | Spend |",
+        "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for r in results:
         wait = "/".join(f"{v:.1f}" for v in r.queue_wait_s)
@@ -279,7 +296,7 @@ def format_table(results: Sequence[BenchResult], base: BenchResult | None = None
         lines.append(
             f"| {r.workers} | {r.matches:,} | {r.elapsed_s:.1f} | {r.matches_per_s:.1f} "
             f"| {r.turns_per_s:,.0f} | {r.matches_per_s / base.matches_per_s:.2f}x "
-            f"| {wait} | {claim} | {r.max_connections} |"
+            f"| {wait} | {claim} | {r.max_connections} | {r.spend_mode} |"
         )
     return "\n".join(lines)
 

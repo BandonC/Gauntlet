@@ -33,6 +33,7 @@ from arena.games.registry import get_game
 from arena.providers.base import ProviderError
 from arena.roster import PlayerFactory
 from arena.store import queue
+from arena.store.spend import SHARDED, BudgetGuard, BudgetReached
 from arena.store.turns import PostgresTurnStore
 from arena.telemetry import (
     MATCHES_CLAIMED,
@@ -97,10 +98,14 @@ async def _run_claimed(
     try:
         game = get_game(claimed.game)
         built = [factory.build(pid) for pid in claimed.seats]
+        sharded = claimed.spend_mode == SHARDED
+        players = [p for p, _ in built]
+        if sharded and claimed.has_budget:
+            players = [BudgetGuard(p, pool, claimed.tournament_id) for p in players]
         runner = MatchRunner(
             game,
-            [TracedPlayer(p, claimed.game) for p, _ in built],
-            PostgresTurnStore(pool, worker_id),
+            [TracedPlayer(p, claimed.game) for p in players],
+            PostgresTurnStore(pool, worker_id, sharded),
             pricing=[price for _, price in built],
         )
         spec = MatchSpec(
@@ -145,6 +150,11 @@ async def _run_claimed(
     except MatchInterrupted:
         if await queue.release_on_shutdown(pool, claimed.id, worker_id):
             log.info("match %s handed back for shutdown", claimed.id)
+    except BudgetReached:
+        # Nothing failed, so this hands back like a shutdown. Claims skip it until the budget
+        # is raised, as they do any queued match of an over-budget tournament.
+        if await queue.release_on_shutdown(pool, claimed.id, worker_id):
+            log.info("match %s handed back at the budget cap", claimed.id)
     except ProviderError as e:
         await _release(pool, claimed, worker_id, f"provider: {e}", cfg)
     except Exception as e:

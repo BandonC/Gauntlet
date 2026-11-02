@@ -88,12 +88,14 @@ def created(monkeypatch, tmp_path):
     async def create_pool(*a, **k):
         return Pool()
 
-    async def create_tables(pool, game, cfgs, size, tables, budget, seed):
+    async def create_tables(pool, game, cfgs, size, tables, budget, seed, spend_mode):
         seen.update(game=game, ids=[c.id for c in cfgs], size=size, tables=tables, budget=budget)
+        seen["spend_mode"] = spend_mode
         return 1, tables
 
-    async def create_round_robin(pool, game, cfgs, games_per_pair, budget, seed=None):
+    async def create_round_robin(pool, game, cfgs, games_per_pair, budget, seed, spend_mode):
         seen["format"] = "round_robin"
+        seen["spend_mode"] = spend_mode
         return 1, 1
 
     monkeypatch.setattr("arena.store.db.create_pool", create_pool)
@@ -137,3 +139,9 @@ def test_format_tables_still_needs_tables(created):
 
 def test_without_tables_the_default_is_still_round_robin(created):
     assert created("connect4").format == "round_robin"
+
+
+def test_spend_is_exact_unless_asked(created):
+    assert created("connect4").spend_mode == "exact"
+    assert created("connect4", "--spend-mode", "sharded").spend_mode == "sharded"
+    assert created("werewolf", "--tables", "1", "--spend-mode", "sharded").spend_mode == "sharded"
