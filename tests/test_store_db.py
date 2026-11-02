@@ -27,6 +27,7 @@ from arena.ratings.weng_lin import WengLin, rate
 from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue, ratings, read
 from arena.store.db import create_pool
+from arena.store.metrics import code_break_metrics as metrics_for_code_break
 from arena.store.metrics import player_metrics, werewolf_metrics
 from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
@@ -1256,3 +1257,23 @@ async def test_no_finite_estimate_or_multi_seat_means_no_final_rating(pool):
     await run_worker(pool, WW_FACTORY, FAST, concurrency=1, exit_when_idle=True)
     assert await ratings.final_ratings(pool, wid) is None
     assert all(r["final_tournament_id"] is None for r in await leaderboard(pool, "werewolf"))
+
+
+async def test_code_break_tournament_rates_and_reports_against_the_solver(pool):
+    players = [
+        PlayerConfig("solver", "bot", model="code_break", seed=1),
+        PlayerConfig("guesser", "bot", model="code_break_random", seed=2),
+    ]
+    factory = PlayerFactory(Roster({p.id: p for p in players}, {}), {})
+    tid, n = await create_round_robin(pool, "code_break", players, 6, None, seed=3)
+    await run_worker(pool, factory, FAST, concurrency=2, exit_when_idle=True)
+
+    assert await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tid) == "completed"
+    rows = {r["player_id"]: r for r in await metrics_for_code_break(pool, tid)}
+    assert rows["solver"]["games"] == n
+    assert rows["solver"]["solved"] >= 1  # a lucky guesser can finish first and cut it off
+    assert rows["solver"]["mean_above_solver"] == 0
+    assert rows["guesser"]["inconsistent"] == 0
+    assert await metrics_for_code_break(pool, tid + 1) == []
+    board = await leaderboard(pool, "code_break")
+    assert {r["player_id"] for r in board} == {"solver", "guesser"}

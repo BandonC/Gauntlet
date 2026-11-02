@@ -16,7 +16,35 @@ const seatAttr = (seat) => `data-seat="${Number(seat)}"`;
 const said = (seat, who, text, { tone = "", after = "" } = {}) =>
   `<p class="said${tone}" ${seatAttr(seat)}>${avatar(seat)}<span class="line"><b>${who}</b> ${text}${after}</span></p>`;
 
+const pegs = (code) =>
+  [...String(code)].map((c) => `<span class="peg p-${esc(c)}">${esc(c)}</span>`).join("");
+
 const RENDERERS = {
+  code_break(f, seats) {
+    const over = f.scores !== null;
+    const side = (guesses, seat) => {
+      const rows = guesses
+        .map((g, i) =>
+          g.code === null
+            ? `<tr><td class="num">${i + 1}</td><td colspan="2" class="muted">skipped</td></tr>`
+            : `<tr><td class="num">${i + 1}</td><td class="pegs">${pegs(g.code)}</td>` +
+              `<td>${g.exact} exact, ${g.colour} colour</td></tr>`,
+        )
+        .join("");
+      const turn = !over && f.to_move === seat ? ' class="turn"' : "";
+      const body = rows || '<tr><td class="muted">no guesses yet</td></tr>';
+      return `<div${turn}><h3>${name(seats, seat)}</h3><table class="cb-side">${body}</table></div>`;
+    };
+    let status;
+    if (over && f.scores[0] === f.scores[1]) status = "Draw";
+    else if (over) status = `${name(seats, f.scores[0] > f.scores[1] ? 0 : 1)} wins`;
+    else status = `${name(seats, f.to_move)} to guess`;
+    return (
+      `<p>Secret: <span class="pegs">${pegs(f.secret)}</span></p>` +
+      `<div class="cb">${f.guesses.map(side).join("")}</div><p class="status">${status}</p>`
+    );
+  },
+
   connect4(f, seats) {
     // Seat 0 plays X and moves first.
     const who = (sym) => `${name(seats, sym === "X" ? 0 : 1)} (${sym})`;
@@ -144,6 +172,17 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
 function timeline(game, frames, seats) {
   const bands = [];
   const ticks = [];
+  if (game === "code_break") {
+    const done = [false, false];
+    frames.forEach((f, i) => {
+      f.guesses.forEach((side, seat) => {
+        const at = side.findIndex((g) => g.exact === 4);
+        if (at < 0 || done[seat]) return;
+        done[seat] = true;
+        ticks.push({ at: i, text: `${name(seats, seat)} solved it on guess ${at + 1}` });
+      });
+    });
+  }
   if (game === "liars_dice") {
     let round = null;
     frames.forEach((f, i) => {
