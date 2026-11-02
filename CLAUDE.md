@@ -308,7 +308,15 @@ opentelemetry-exporter-otlp, prometheus-client.
       docker-compose under a profile, so the default setup stays light.
 - [x] Write up results: a "Scale & reliability" README section with the scaling table,
       chaos results (kills survived, invariants held) and a trace screenshot.
-- [ ] [human] Decide whether to deploy a hosted read-only API (costs money monthly).
+- [x] [human] Decide whether to deploy a hosted read-only API (costs money monthly).
+      Decided 2026-11-01: no. GitHub Pages already covers it, with no monthly cost.
+
+### Phase 8: Sharded spend (bots only, no spend)
+- [ ] Sharded spend counters: per-worker-slot spend rows summed for the budget check, with a
+      documented overshoot bound (worker slots × max turn cost); keep the exact single-row
+      mode as an option. Rerun arena bench for M = 1, 2, 4, 8 in both modes and add the
+      before/after table to the README's Scale & reliability section. Rerun a chaos check
+      in sharded mode.
 
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
