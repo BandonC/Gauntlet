@@ -18,6 +18,21 @@ exact tests.
 
 ## What the games showed
 
+Each game tests something different, and the details follow below.
+
+| Game | What it tests | Main finding (95% interval) |
+|---|---|---|
+| Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%) |
+| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%) |
+| Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated |
+| Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets |
+| Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
+| Word Link | Shared meaning between two partners | Three teams came out level. Models guessed right 64.5% of the time (60.8-68.0%), and the bots 85.6% (80.5-89.6%), with a shared table |
+
+The pattern across the newer games is that simple bots do well on anything calculable, and models
+are at their weakest when a game needs them to keep track of constraints. These are small samples
+of a few models on one prompt each, so that's a description of these runs, not a law.
+
 ### A tuned Werewolf game, and a simulator that was right for partly the wrong reason
 
 Eight players (Haiku 5.5 and Haiku 4.5, each with four play styles) played 40 games of 7-seat
