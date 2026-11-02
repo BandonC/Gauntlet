@@ -29,6 +29,7 @@ Optimise for correctness and clear failure semantics over features.
 | `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots, replay renderer, proven by a real run (tournament 7, see Gotchas) |
 | Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
 | Split the Deal (negotiation), conceding bot, value-claim metrics | Done, db-tested, replay renderer, proven by a real run (tournament 14, see Gotchas) |
+| Word Link (team word game), Weng-Lin team ratings, team tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 15, see Gotchas) |
 
 ## Commands
 
@@ -52,6 +53,7 @@ arena tournament --game liars_dice --players a,b,c,d --format tables --table-siz
 arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
 arena tournament --game connect4 --players a,b --budget 2 --spend-mode sharded
+arena tournament --game word_link --teams a+b,c+d,e+f --games-per-pair 30 --budget 3
 arena tournament cancel 12 --reason "..."   # keep the data, drop it from ratings
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
@@ -60,7 +62,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -341,7 +343,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       ≤200-char message, at most 6 offers each; no deal = 0. Score = own value / 10.
       Bot: concedes linearly. Metrics: deal rate, efficiency, and lies about values
       (literal matching).
-- [ ] Word Link (team semantic game): 4 seats, 2 teams of clue-giver + guesser; 16
+- [x] Word Link (team semantic game): 4 seats, 2 teams of clue-giver + guesser; 16
       words from an original word list in the repo: 6 per team, 3 neutral, 1 trap.
       Clue = one word + a number; the guesser picks one at a time and may stop; trap =
       loss. Weng-Lin teams. Bots: random guesser, and a clue bot using a hand-made
@@ -431,6 +433,20 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Word Link tournament 15 (2026-11-02, 30 games per pair, $2.1885 against a predicted $2.70, 1,125
+  model attempts matching recordings, all 90 replayed to their scores, every `stop_reason` `tool_use`):
+  Haiku 16-14 over the bots (53.3%, 36.1-69.8%), bots 16-14 over Sonnet 5 (same), Sonnet 5 18-12 over
+  Haiku (60.0%, 42.3-75.4%), so nothing separates them. Mu 25.58, 24.80, 23.84, sigma about 3.7. Trap
+  ended 31 of 90, 34.4% (25.4-44.7%) against my 10%, outside its interval; the other predictions
+  held. Trap hits by team, over 60 games each: Haiku 15, Sonnet 5 12, bots 4 (27/120 against
+  4/60, p = 0.007). Accuracy Haiku 64.0%, Sonnet 5 65.0%, bots 85.6% (models 438/679 against 196/229,
+  p under 0.0001). Words per clue 1.27, 1.12, 0.98. Illegal attempts Haiku 3 of 556, Sonnet 5 3 of
+  569, 0 forfeits; rejected clues were near-matches ("hospital", "screwdriver", "wave", "kettle").
+  Sonnet 5 auto-filled 42 guesses, sent as a word with no `action`. It had no cache reads: these
+  prompts sit under its minimum. Sonnet 5 $2.1025, Haiku $0.0859. Killed for low memory at 29 of 90
+  ($0.66); 2 matches took a second run attempt, and the first process's 340 replies plus the second's
+  785 equal the log. Test games, 5 per model: $0.0076 and $0.2080. The first team won
+  49 of 90 (54.4%, 44.2-64.3%).
 - Word Link (`games/word_link.py`): seats 0 and 1 are team A's clue-giver and guesser, 2 and 3 team
   B's, and only clue seats get `key` in their view. Each model enters as two player ids, `wl-clue-v1`
   and `wl-guess-v1`, because a match needs 4 distinct players and role prompts make them so. Run it
@@ -523,7 +539,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - Werewolf biases Weng-Lin: wolves and villagers are asymmetric teams, and ties at rank 1
   rate each winner individually with no idea of which side they were on. The mitigation
   is balancing roles per player and showing win rate by role beside the rating; the
-  maths is unchanged, and multi-player teams aren't modelled in `rate`.
+  maths is unchanged. `rate_teams` exists now for Word Link, but Werewolf doesn't use it.
 - Placements: per-seat ranks on `matches.placements`, 1 is best, ties allowed.
   `Game.placements()` defaults to competition ranking of `scores()` (1, 2, 2, 4); only
   their order matters to ratings. `Game.final_placements` then moves forfeits below
