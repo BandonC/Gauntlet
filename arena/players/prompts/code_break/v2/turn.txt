@@ -1,0 +1,2 @@
+$feedback$state
+exact = right colour, right place. colour = right colour, wrong place.

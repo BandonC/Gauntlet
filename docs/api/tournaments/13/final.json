@@ -1,0 +1,17 @@
+{
+ "code-break-solver": {
+  "rating": 2054.0,
+  "low": 1826.1,
+  "high": 2282.0
+ },
+ "sonnet-5/cb-v2": {
+  "rating": 1240.1,
+  "low": 1118.5,
+  "high": 1361.7
+ },
+ "haiku-5.5/cb-v2": {
+  "rating": 1205.8,
+  "low": 1083.2,
+  "high": 1328.5
+ }
+}

@@ -41,16 +41,23 @@ def _factory(roster_path: str | None):
 
 
 def _build_player(factory, spec: str):
-    """'random', 'random:SEED', 'liars-dice-bot', 'liars-dice-bot-v2', 'werewolf-bot' and
-    'werewolf-bot:SEED' are built in; anything else is a roster id."""
+    """'random', 'random:SEED', 'liars-dice-bot', 'liars-dice-bot-v2', 'werewolf-bot',
+    'werewolf-bot:SEED', 'code-break-solver' and 'code-break-random' are built in; anything
+    else is a roster id."""
     from arena.costs import FREE
     from arena.players.bots import (
         LIARS_DICE_V2_THRESHOLD,
+        CodeBreakRandomBot,
+        CodeBreakSolver,
         LiarsDiceBot,
         RandomPlayer,
         WerewolfBot,
     )
 
+    if spec == "code-break-solver":
+        return CodeBreakSolver(spec), FREE
+    if spec == "code-break-random":
+        return CodeBreakRandomBot(spec), FREE
     if spec == "liars-dice-bot":
         return LiarsDiceBot(spec), FREE
     if spec == "liars-dice-bot-v2":
@@ -140,6 +147,18 @@ async def _tournament(args: argparse.Namespace) -> None:
         resume_tournament,
     )
 
+    if args.tournament_cmd == "cancel":
+        from arena.store.tournaments import cancel_tournament
+
+        pool = await create_pool(settings().database_url)
+        try:
+            await cancel_tournament(pool, args.tournament_id, args.reason)
+        except ValueError as e:
+            sys.exit(f"arena tournament cancel: {e}")
+        finally:
+            await pool.close()
+        print(f"tournament {args.tournament_id}: cancelled, ratings rebuilt without it")
+        return
     if args.tournament_cmd == "resume":
         pool = await create_pool(settings().database_url)
         try:
@@ -381,6 +400,9 @@ def main(argv: list[str] | None = None) -> None:
     t_sub = t.add_subparsers(dest="tournament_cmd")
     tr = t_sub.add_parser("resume", help="re-queue failed matches and unpause")
     tr.add_argument("tournament_id", type=int)
+    tc = t_sub.add_parser("cancel", help="end it for good: keep the data, drop it from ratings")
+    tc.add_argument("tournament_id", type=int)
+    tc.add_argument("--reason", required=True)
 
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)

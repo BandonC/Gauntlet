@@ -7,6 +7,13 @@ import math
 import random
 
 from arena.balance import DEFAULT_P, vote_target
+from arena.games.code_break import (
+    ALL_CODES,
+    consistent,
+    guess_action,
+    history_of,
+    minimax_guess,
+)
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
@@ -154,6 +161,31 @@ class AccuracyVoteBot(WerewolfBot):
         return Decision(action={"action": "vote", "target": target})
 
 
+class CodeBreakRandomBot:
+    """Guesses any code that fits everything it's been told. Stateless, seeded by its history,
+    so a resumed match plays on identically."""
+
+    def __init__(self, player_id: str = "code-break-random", seed: int = 0):
+        self.player_id = player_id
+        self.seed = seed
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        history = history_of(ctx.view["your_guesses"])
+        candidates = [c for c in ALL_CODES if consistent(c, history)]
+        rng = random.Random(f"{self.seed}|{history}|{ctx.attempt}")
+        return Decision(action=guess_action(rng.choice(candidates)))
+
+
+class CodeBreakSolver:
+    """Knuth's minimax: at most 5 guesses on every secret. Stateless."""
+
+    def __init__(self, player_id: str = "code-break-solver"):
+        self.player_id = player_id
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        return Decision(action=guess_action(minimax_guess(history_of(ctx.view["your_guesses"]))))
+
+
 def build_bot(kind: str, player_id: str, seed: int) -> Player:
     """Roster `provider = "bot"`: `model` names which game's bot."""
     if kind == "werewolf":
@@ -162,7 +194,14 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return LiarsDiceBot(player_id)
     if kind == "liars_dice_v2":
         return LiarsDiceBot(player_id, LIARS_DICE_V2_THRESHOLD)
-    raise ValueError(f"unknown bot {kind!r}; known: liars_dice, liars_dice_v2, werewolf")
+    if kind == "code_break":
+        return CodeBreakSolver(player_id)
+    if kind == "code_break_random":
+        return CodeBreakRandomBot(player_id, seed)
+    raise ValueError(
+        f"unknown bot {kind!r}; known: code_break, code_break_random, liars_dice, "
+        "liars_dice_v2, werewolf"
+    )
 
 
 def _at_least(k: int, n: int, p: float) -> float:

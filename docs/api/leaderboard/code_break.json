@@ -1,0 +1,59 @@
+[
+ {
+  "player_id": "code-break-solver",
+  "rating": 2074.2,
+  "rd": 118.0,
+  "low": 1838.3,
+  "high": 2310.1,
+  "ordinal": 35.63,
+  "mu": 48.56,
+  "sigma": 4.31,
+  "elo": 1888.9,
+  "games": 120,
+  "points": 119.0,
+  "final": {
+   "rating": 2054.0,
+   "low": 1826.1,
+   "high": 2282.0
+  },
+  "final_tournament_id": 13
+ },
+ {
+  "player_id": "sonnet-5/cb-v2",
+  "rating": 1327.5,
+  "rd": 72.2,
+  "low": 1183.0,
+  "high": 1472.0,
+  "ordinal": 8.0,
+  "mu": 16.18,
+  "sigma": 2.73,
+  "elo": 1307.3,
+  "games": 120,
+  "points": 33.5,
+  "final": {
+   "rating": 1240.1,
+   "low": 1118.5,
+   "high": 1361.7
+  },
+  "final_tournament_id": 13
+ },
+ {
+  "player_id": "haiku-5.5/cb-v2",
+  "rating": 1322.5,
+  "rd": 74.4,
+  "low": 1173.8,
+  "high": 1471.2,
+  "ordinal": 7.74,
+  "mu": 15.98,
+  "sigma": 2.74,
+  "elo": 1303.8,
+  "games": 120,
+  "points": 27.5,
+  "final": {
+   "rating": 1205.8,
+   "low": 1083.2,
+   "high": 1328.5
+  },
+  "final_tournament_id": 13
+ }
+]

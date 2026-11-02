@@ -1,0 +1,877 @@
+{
+ "player_id": "code-break-solver",
+ "model": "code-break-solver",
+ "overall": {
+  "games": 120,
+  "won": 118,
+  "drew": 2,
+  "lost": 0,
+  "win_rate": 0.9833333333333333,
+  "cost_usd": 0.0,
+  "cost_per_game": 0.0,
+  "illegal_rate": 0.0,
+  "cache_hit": null,
+  "latency_ms": 0.0
+ },
+ "games": [
+  {
+   "game": "code_break",
+   "place": 1,
+   "field": 3,
+   "ordinal": 35.63,
+   "games": 120,
+   "won": 118,
+   "drew": 2,
+   "lost": 0,
+   "win_rate": 0.9833333333333333,
+   "cost_usd": 0.0,
+   "cost_per_game": 0.0,
+   "illegal_rate": 0.0,
+   "cache_hit": null,
+   "latency_ms": 0.0
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 716,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 715,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 714,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 713,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 712,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 710,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 709,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 707,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 706,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 704,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 703,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 702,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 701,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 700,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 697,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 695,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 693,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 692,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 690,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 688,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 687,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 686,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 685,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 684,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 683,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 682,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 681,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 680,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 678,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 677,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 676,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 675,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 674,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 673,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 672,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 671,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 670,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 669,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 668,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 667,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 666,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 665,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 663,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 662,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 661,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 660,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 658,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 657,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 654,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 653,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 651,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 650,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 649,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 647,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 646,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 644,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 642,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 640,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 639,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 638,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 636,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 635,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 634,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 632,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 631,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 629,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 628,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 625,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 624,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 623,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 622,
+   "game": "code_break",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 621,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 619,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 618,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 616,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 613,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 611,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 610,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 609,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 608,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 605,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 603,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 601,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 600,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 598,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 597,
+   "game": "code_break",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 596,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 595,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 594,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 592,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 591,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 590,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 588,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 587,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 585,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 584,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 583,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 582,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 581,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 578,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 576,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 574,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 571,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 569,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 566,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 565,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 562,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 561,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 560,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 558,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 556,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 551,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 550,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 549,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 548,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 547,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 546,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 544,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 541,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  },
+  {
+   "id": 540,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.0
+  }
+ ]
+}

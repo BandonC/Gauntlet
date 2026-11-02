@@ -120,6 +120,11 @@ async def metrics(game: str, tournament_id: int | None = None) -> list[dict]:
     return await m_store.player_metrics(app.state.pool, game, tournament_id)
 
 
+@app.get("/api/code_break/metrics")
+async def code_break_metrics(tournament_id: int | None = None) -> list[dict]:
+    return await m_store.code_break_metrics(app.state.pool, tournament_id)
+
+
 @app.get("/api/werewolf/roles")
 async def werewolf_roles(tournament_id: int | None = None) -> list[dict]:
     return await m_store.werewolf_metrics(app.state.pool, tournament_id)

@@ -1,0 +1,19 @@
+{
+ "player_id": "sonnet-5/cb-v1",
+ "model": "sonnet-5",
+ "overall": {
+  "games": 0,
+  "won": 0,
+  "drew": 0,
+  "lost": 0,
+  "win_rate": null,
+  "cost_usd": 0,
+  "cost_per_game": null,
+  "illegal_rate": null,
+  "cache_hit": null,
+  "latency_ms": null
+ },
+ "games": [],
+ "roles": null,
+ "recent": []
+}

@@ -342,6 +342,31 @@ async def pause_tournament(conn: asyncpg.Connection, tournament_id: int | None, 
         await conn.execute(PAUSE_SQL, tournament_id, error[:2000])
 
 
+async def cancel_tournament(pool: asyncpg.Pool, tournament_id: int, reason: str) -> None:
+    """End a tournament for good. Its data stays and its spend stays real, but claims skip
+    its queued matches and its results leave the ratings, so `ratings.rebuild` runs after."""
+    async with pool.acquire() as conn, conn.transaction():
+        row = await conn.fetchrow(
+            "SELECT game, status FROM tournaments WHERE id = $1 FOR NO KEY UPDATE", tournament_id
+        )
+        if row is None:
+            raise ValueError(f"no tournament {tournament_id}")
+        if row["status"] == "completed":
+            raise ValueError(f"tournament {tournament_id} already finished")
+        running = await conn.fetchval(
+            "SELECT count(*) FROM matches WHERE tournament_id = $1 AND status = 'running'",
+            tournament_id,
+        )
+        if running:
+            raise ValueError(f"{running} matches are running; stop the workers first")
+        await conn.execute(
+            "UPDATE tournaments SET status = 'cancelled', last_error = $2 WHERE id = $1",
+            tournament_id,
+            reason[:2000],
+        )
+    await ratings.rebuild(pool, row["game"])
+
+
 async def resume_tournament(pool: asyncpg.Pool, tournament_id: int) -> int:
     """Re-queue failed matches (fresh run attempts) and set the tournament running.
     Returns the number of matches re-queued."""
@@ -351,6 +376,8 @@ async def resume_tournament(pool: asyncpg.Pool, tournament_id: int) -> int:
         )
         if status is None:
             raise ValueError(f"no tournament {tournament_id}")
+        if status == "cancelled":
+            raise ValueError(f"tournament {tournament_id} was cancelled")
         requeued = await conn.fetchval(
             """
             WITH r AS (

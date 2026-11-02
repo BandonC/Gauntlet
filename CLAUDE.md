@@ -27,6 +27,7 @@ Optimise for correctness and clear failure semantics over features.
 | Liar's Dice engine + bots (2-6 seats) | Done, unit-tested, replay renderer |
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer, proven by a real run (tournament 6, see Gotchas) |
 | `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots, replay renderer, proven by a real run (tournament 7, see Gotchas) |
+| Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
 
 ## Commands
 
@@ -50,6 +51,7 @@ arena tournament --game liars_dice --players a,b,c,d --format tables --table-siz
 arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
 arena tournament --game connect4 --players a,b --budget 2 --spend-mode sharded
+arena tournament cancel 12 --reason "..."   # keep the data, drop it from ratings
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
 arena worker --metrics-port 9100         # also serve Prometheus metrics on /metrics
@@ -57,7 +59,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -328,7 +330,7 @@ If that exceeds $72, stop and ask. Report the project total in every final messa
 Each game: engine + tests + bots + prompt v1 + replay renderer + metrics, then a
 Haiku 5.5 test game (--budget 0.20), then a tournament with haiku-5.5, sonnet-5 and the
 best bot. Budget per game tournament: $4. Same Game contract; no invariant changes.
-- [ ] Code Break (deduction): 4 pegs, 6 colours, repeats allowed, 10-guess limit. Two
+- [x] Code Break (deduction): 4 pegs, 6 colours, repeats allowed, 10-guess limit. Two
       players race on the same seeded secret; fewer guesses wins, a tie is a draw.
       Feedback = exact/colour-only counts. Bots: random-consistent and an optimal
       minimax solver (≤5 guesses). Metrics: guesses above the solver's count, and
@@ -428,6 +430,39 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Code Break (`games/code_break.py`): one seeded secret, and each seat sees only its own guesses
+  and feedback, plus the other's count and whether they solved it. Once a seat solves on guess k
+  the other plays only to guess k, the last chance to tie, so seat 0 moving first costs seat 1
+  nothing, and the game ends early. A cut-off seat shows as unsolved in `code_break_metrics`. A
+  forfeit skips a guess, which still counts, and removes nobody, so `final_placements` ignores it.
+  `minimax_guess` lives with the engine because metrics need it. Its ties must go to the earliest
+  in `ALL_CODES`: sorting them alphabetically needed 6 guesses on some secrets. It takes 4.476 on
+  average, Knuth's figure, and a test walks all 1,296. It plays codes that can't be the secret on
+  purpose, to split the candidates, so `inconsistent` isn't always a mistake: read it against the
+  solver's own rate. No `legal_actions_hint`, so `RandomPlayer` can't play; `code-break-random` can.
+- Actions in Code Break are `peg1`-`peg4`, each an enum. `code_of` also accepts the older `code`
+  string, so tournament 12 replays, and the API doesn't enforce the enum: Sonnet 5 sent `peg3: "OB"`.
+- Cancelling (`arena tournament cancel`, migration 0013) keeps the rows and the real spend, leaves
+  queued matches unclaimed, and rebuilds that game's ratings. Anything that ranks or totals results
+  uses `ratings.NOT_CANCELLED_SQL`: the leaderboard, `read.seat_results`, Code Break metrics.
+  `read.totals` doesn't, because the money was really spent. It refuses while matches are running.
+- Tournament 12 is a format-failure note, not a finding (2026-11-02, cancelled at 30 of 180, $0.4226):
+  Sonnet 5 sent 5 to 8 letter codes, 34 of 163 attempts illegal, 11 forfeits, nearly all on its first
+  guess. Haiku's test game was the only gate, so nothing tested Sonnet 5. A gate has to run for every
+  model in a tournament: one game won't do either, as the fault hit about 1 game in 4, so run several.
+- Code Break tournament 13 (2026-11-02, 60 games per pair, $1.6726 against a predicted $1.80, 1,646
+  model attempts matching recordings, all 180 replayed to their scores): solver 59-0-1 over Haiku and
+  59-0-1 over Sonnet 5, 99.2% (92.5-99.9%). Sonnet 5 10-4-46 over Haiku, 55.0% (42.5-66.9%), p = 0.18.
+  Solved with all 10 guesses, Sonnet-Haiku games only: 11/60 (18.3%, 10.6-29.9%), 5/60 (8.3%,
+  3.6-18.1%), p = 0.18. Inconsistent guesses overall Haiku 600/813, 73.8% (70.7-76.7%), Sonnet 5
+  626/813, 77.0% (74.0-79.8%), solver 95/516, 18.4% on purpose. I predicted 65% and 60%, both outside
+  their intervals, and every other prediction held. In Sonnet-Haiku games 445/555 and 451/555.
+  Illegal attempts Sonnet 5 22/831 (2.6%), 4 forfeits, Haiku 2/815, 0. Sonnet 5 $1.59, Haiku $0.08.
+  Baseline: `code-break-random` solves all 1,296 secrets, mean 4.65, worst 7, solver 4.48. Prompt v2
+  crossed Sonnet 5's cache minimum, so it had 934,044 cache reads, unlike v1. Test games, 5 per model:
+  $0.0022 and $0.0453. Finals: solver 2054.0 (1826.1-2282.0), Sonnet 5 1240.1 (1118.5-1361.7), Haiku
+  1205.8 (1083.2-1328.5). The worked example shows no gain: Sonnet 5's inconsistent rate rose from 65%
+  in tournament 12, on a different mix of games, so don't credit or blame the prompt from this.
 - `iter_states` raises if a turn's seat doesn't match `current_player`, so engines must
   make `current_player` a pure function of state.
 - The worker treats setup errors (unknown player id, unknown game) as permanent: the
