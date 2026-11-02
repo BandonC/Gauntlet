@@ -320,6 +320,67 @@ opentelemetry-exporter-otlp, prometheus-client.
       before/after table to the README's Scale & reliability section. Rerun a chaos check
       in sharded mode.
 
+**Project spend cap: $80 total (all real API spend, including in-memory games).**
+Before every paid step, compute the project total so far plus the step's --budget.
+If that exceeds $72, stop and ask. Report the project total in every final message.
+
+### Phase 9: New capabilities
+Each game: engine + tests + bots + prompt v1 + replay renderer + metrics, then a
+Haiku 5.5 test game (--budget 0.20), then a tournament with haiku-5.5, sonnet-5 and the
+best bot. Budget per game tournament: $4. Same Game contract; no invariant changes.
+- [ ] Code Break (deduction): 4 pegs, 6 colours, repeats allowed, 10-guess limit. Two
+      players race on the same seeded secret; fewer guesses wins, a tie is a draw.
+      Feedback = exact/colour-only counts. Bots: random-consistent and an optimal
+      minimax solver (≤5 guesses). Metrics: guesses above the solver's count, and
+      inconsistent guesses (guesses that contradict earlier feedback).
+- [ ] Split the Deal (negotiation): 3 item types, seeded quantities 1–4; private
+      per-unit values (seeded, each player's total value is 10). Alternate offers with a
+      ≤200-char message, at most 6 offers each; no deal = 0. Score = own value / 10.
+      Bot: concedes linearly. Metrics: deal rate, efficiency, and lies about values
+      (literal matching).
+- [ ] Word Link (team semantic game): 4 seats, 2 teams of clue-giver + guesser; 16
+      words from an original word list in the repo: 6 per team, 3 neutral, 1 trap.
+      Clue = one word + a number; the guesser picks one at a time and may stop; trap =
+      loss. Weng-Lin teams. Bots: random guesser, and a clue bot using a hand-made
+      association table. Metrics: words per clue, trap hits, clues that break the rules.
+- [ ] README: a "What each game tests" table and findings per game, with intervals.
+
+### Phase 10: Paid experiments
+- [ ] Effort sweep: sonnet-5.5 Liar's Dice vs liars-dice-bot-v2 at effort low, medium,
+      high (tool_choice auto, max_tokens 2048), 30 games each. Report win rate, challenge
+      blunders and thinking tokens. Budget: $8.
+- [ ] Prompt intervention: liars_dice/v2-prob (estimate the probability the bid is true
+      before acting). haiku-5.5 and sonnet-5 with v2-prob vs v1, 40 games each vs
+      bot-v2. Report the change in challenge blunders. Budget: $4.
+- [ ] Frontier row: verify the top Claude model's ID, price and tool-choice support
+      (free 400 checks only). Liar's Dice vs bot-v2 (40 games) and Code Break vs
+      sonnet-5 and haiku-5.5. Test game first. Budget: $12.
+- [ ] [human] Optional if the reserve allows: larger Werewolf comparison.
+
+### Phase 11: ML on collected data (no API spend except the CFR follow-up)
+New dependencies pre-approved: numpy, scikit-learn. No torch.
+- [ ] Connect 4 perfect-play evaluator (bitboard negamax, alpha-beta, transposition
+      table; verify on known positions). Grade every recorded move: optimal /
+      inaccuracy / blunder. Report move accuracy per model.
+- [ ] Liar's Dice CFR: game id liars_dice_small (2 dice each). CFR+ until
+      exploitability is below a stated threshold (report the curve); bot
+      `liars-dice-cfr`. Then haiku-5.5 and sonnet-5 vs it, 40 games each. Budget: $3.
+- [ ] Wolf detector: messages and speaker roles from all Werewolf tournaments;
+      TF-IDF + logistic regression with cross-validation grouped by match. Report AUC,
+      and whether the classifier's top suspect beats the LLM villagers' votes, day by day.
+- [ ] README: an "ML analysis" section.
+
+### Phase 12: Bring your own agent (backend)
+- [ ] Remote HTTP player type: roster url + secret; HMAC-SHA256 signed POST (timestamp
+      + body, 5-min replay window); 10s timeout; retries with backoff on 5xx/timeout
+      (infrastructure errors, never the player's fault); per-agent circuit breaker;
+      idempotency key per (match, turn, attempt); invalid action = invalid attempt.
+- [ ] Example agent (FastAPI, ~50 lines) in examples/, and a chaos test with slow,
+      flaky and garbage-returning agents. Invariants must hold.
+- [ ] README: "Enter your own agent", with the protocol spec, signature code and a
+      curl example.
+- [ ] [human] Decide whether to host an open arena (monthly cost).
+
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
       (`python -X importtime`) and lazy-load heavy modules.
