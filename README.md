@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$22.10**: $21.25 across 731 recorded games and 19.3 million tokens, plus $0.85 on 38 in-memory
+**$24.50**: $23.44 across 821 recorded games and 21.0 million tokens, plus $1.06 on 48 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -270,6 +270,34 @@ now lists only what's legal that turn, and in the tournament no model made an il
 attempts. This game also forced a change to ratings: scores here aren't zero-sum, so heads-up ratings
 now read who finished ahead. All 446 earlier heads-up matches give the same outcome either way.
 
+### Word Link: three even teams, and a trap that decided a third of games
+
+Word Link is a team game. A clue-giver who can see which words are whose gives one word and a
+number, and a guesser who can't picks from a shared board of 16: 6 for each team, 3 neutral and 1
+trap that loses the game at once. Each model played both roles on its own team, with a role-specific
+prompt. The bot team shares a hand-made table of topics, a closer partnership than two strangers
+could have.
+
+| Pairing, 30 games each | Result | Share (interval) |
+|---|---:|---:|
+| Haiku 5.5 over the bots | 16-14 | 53.3% (36.1-69.8%) |
+| The bots over Sonnet 5 | 16-14 | 53.3% (36.1-69.8%) |
+| Sonnet 5 over Haiku 5.5 | 18-12 | 60.0% (42.3-75.4%) |
+
+**Nothing separates the three teams.** Every interval covers 50%, and these pairings had half as
+many games as the other new games, because each one makes so many calls. The clearer finding is how
+differently they got there. The bots guessed right 85.6% of the time (196 of 229) against the models'
+64.5% (438 of 679, p under 0.0001), and hit the trap in 4 of 60 games against 27 of 120 (p = 0.007).
+But the models gave more per clue, 1.27 own words for Haiku and 1.12 for Sonnet 5 against the bots'
+0.98. Safe and slow came out level with bold and costly.
+
+I expected the trap to end about 1 game in 10. It ended 31 of 90, 34.4% (25.4-44.7%), so it matters
+far more here than I assumed.
+
+This game needed real team ratings: partners now share one Weng-Lin team result, split by
+uncertainty, with the old per-seat rating as its one-player case. Sonnet 5 spent $2.10 here to
+Haiku's $0.09, about 23 times as much, with no proven gain.
+
 ### Connect 4: the illegal-move gap
 
 In 20 games, **Haiku 5.5 made 41 illegal attempts in 220 (18.6%) and Haiku 4.5 made 15 in 196
@@ -296,10 +324,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Code Break, cancelled at 30 of 180 games | 30 | 328,562 | $0.4226 |
 | Code Break, Sonnet 5, Haiku 5.5 and the solver | 180 | 2,506,529 | $1.6726 |
 | Split the Deal, Sonnet 5, Haiku 5.5 and the bot | 180 | 1,050,980 | $1.2309 |
-| **Total** | **731** | **19,318,759** | **$21.25** |
+| Word Link, Sonnet 5, Haiku 5.5 and the bot team | 90 | 1,654,265 | $2.1885 |
+| **Total** | **821** | **20,973,024** | **$23.44** |
 
-38 in-memory test games cost another $0.85. They never reach the turn log, so the project total
-is about $22.10.
+48 in-memory test games cost another $1.06. They never reach the turn log, so the project total
+is about $24.50.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -330,7 +359,8 @@ recordings.
 It happened again in the mixed-model tournament: the worker was killed for low memory with 37 of
 40 games finished and 3 mid-game, and a new process resumed them 42 minutes later. All 40 finished
 with continuous turns and replayed cleanly, and recordings matched the log exactly at 1,745
-attempts.
+attempts. The Word Link tournament went the same way, killed at 29 of 90 games: the 2 games under
+way resumed on their logged turns, all 90 replayed, and all 1,125 model replies matched the log.
 
 ## Scale & reliability
 
@@ -472,5 +502,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15 --matches 116,142   # the static site
 ```
