@@ -1,0 +1,29 @@
+[
+ {
+  "player_id": "code-break-solver",
+  "games": 120,
+  "solved": 120,
+  "guesses": 516,
+  "inconsistent": 95,
+  "inconsistent_rate": 0.1841,
+  "mean_above_solver": 0.0
+ },
+ {
+  "player_id": "haiku-5.5/cb-v2",
+  "games": 120,
+  "solved": 6,
+  "guesses": 813,
+  "inconsistent": 600,
+  "inconsistent_rate": 0.738,
+  "mean_above_solver": 1.5
+ },
+ {
+  "player_id": "sonnet-5/cb-v2",
+  "games": 120,
+  "solved": 12,
+  "guesses": 813,
+  "inconsistent": 626,
+  "inconsistent_rate": 0.77,
+  "mean_above_solver": 2.0
+ }
+]

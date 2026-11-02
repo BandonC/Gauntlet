@@ -28,6 +28,7 @@ Optimise for correctness and clear failure semantics over features.
 | Werewolf engine + bots (7 seats), role balance, claim metrics | Done, db-tested on bots, replay renderer, proven by a real run (tournament 6, see Gotchas) |
 | `werewolf_dayfirst` (Werewolf opening on day 1) | Done, db-tested on bots, replay renderer, proven by a real run (tournament 7, see Gotchas) |
 | Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
+| Split the Deal (negotiation), conceding bot, value-claim metrics | Done, db-tested, replay renderer, proven by a real run (tournament 14, see Gotchas) |
 
 ## Commands
 
@@ -59,7 +60,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -335,7 +336,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       Feedback = exact/colour-only counts. Bots: random-consistent and an optimal
       minimax solver (≤5 guesses). Metrics: guesses above the solver's count, and
       inconsistent guesses (guesses that contradict earlier feedback).
-- [ ] Split the Deal (negotiation): 3 item types, seeded quantities 1–4; private
+- [x] Split the Deal (negotiation): 3 item types, seeded quantities 1–4; private
       per-unit values (seeded, each player's total value is 10). Alternate offers with a
       ≤200-char message, at most 6 offers each; no deal = 0. Score = own value / 10.
       Bot: concedes linearly. Metrics: deal rate, efficiency, and lies about values
@@ -439,6 +440,21 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   literal (`classify_value_claims`): paraphrases are missed. Two bots deal 98.8% of the time.
   The tool lists only the actions legal this turn, because listing `reject` always cost Haiku's
   test games 2 of 16 attempts (12.5%, over the gate) in the first run, $0.0026 and $0.0753.
+- Split the Deal tournament 14 (2026-11-02, 60 games per pair, $1.2309 against a predicted $2.30,
+  588 model attempts matching recordings, all 180 replayed to their scores, 0 illegal, 0 forfeits,
+  every `stop_reason` `tool_use`, output max 240 of 256): bot 55-3-2 over Haiku, 93.3% (84.1-97.4%),
+  bot 33-17-10 over Sonnet 5, 63.3% (50.7-74.4%, p = 0.03), Sonnet 5 37-15-8 over Haiku, 68.3%
+  (55.8-78.7%, p = 0.003). Mean scores 0.89 to 0.50, 0.73 to 0.68, 0.76 to 0.64. 178 of 180 deals;
+  efficiency 0.90-0.94. 5.2 turns a game, most 13. Accepted by Haiku 90, Sonnet 5 42, bot 46.
+  Value claims in 454 messages: Haiku 84 true, 0 false, Sonnet 5 25 true, 1 false, and that one is
+  a conditional ("worth 0 to me unless I get it"), so the classifier counted a hypothetical, as its
+  note warns. Moving second won 94-66 (p = 0.03), seen afterwards. Messages truncated 17 and 23.
+  I predicted bot 80% over Haiku, 50% over Sonnet 5, Sonnet 5 60% over Haiku, 85% deals, 30% false
+  claims. Only the third held; the others fell outside their intervals. All the misses were models
+  settling faster and lying less than I guessed. Haiku $0.0477, Sonnet 5 $1.1833. Finals: bot 1658.4
+  (1606.2-1710.6), Sonnet 5 1514.4 (1468.1-1560.7), Haiku 1327.2 (1273.4-1381.0). Test games, 5 per
+  model, twice: $0.0781 failing, then $0.0818 passing. "Models settle too early" is the likely story,
+  not tested.
 - Code Break (`games/code_break.py`): one seeded secret, and each seat sees only its own guesses
   and feedback, plus the other's count and whether they solved it. Once a seat solves on guess k
   the other plays only to guess k, the last chance to tie, so seat 0 moving first costs seat 1

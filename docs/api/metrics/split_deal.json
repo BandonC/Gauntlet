@@ -1,0 +1,44 @@
+[
+ {
+  "player_id": "haiku-5.5/sd-v1",
+  "turns": 270,
+  "attempts": 270,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2020.0,
+  "latency_p95_ms": 2690.6,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.000397,
+  "cache_hit_rate": 0.4231
+ },
+ {
+  "player_id": "sonnet-5/sd-v1",
+  "turns": 318,
+  "attempts": 318,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2644.5,
+  "latency_p95_ms": 3504.3,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.009861,
+  "cache_hit_rate": 0.4628
+ },
+ {
+  "player_id": "split-deal-bot",
+  "turns": 353,
+  "attempts": 353,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ }
+]
