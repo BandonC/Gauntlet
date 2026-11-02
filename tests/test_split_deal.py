@@ -345,3 +345,21 @@ def test_labels_and_results():
 def test_every_table_has_a_legal_split():
     for q in tables():
         assert list(product(*(range(n + 1) for n in q)))
+
+
+def test_the_tool_lists_only_what_is_legal_this_turn():
+    def kinds(state, seat):
+        return G.action_spec(state, seat).input_schema["properties"]["action"]["enum"]
+
+    assert kinds(STATE, 0) == ["offer"]
+    assert kinds(play(ALL), 1) == ["offer", "accept"]
+    assert kinds(play(*[ALL] * 12), 0) == ["reject", "accept"]
+    assert kinds(G.forfeit(play(*[ALL] * 11), 1), 0) == ["reject"]  # table cleared, none left
+
+
+def test_every_listed_kind_validates():
+    for state in (STATE, play(ALL), play(*[ALL] * 12)):
+        seat = G.current_player(state)
+        for kind in G.action_spec(state, seat).input_schema["properties"]["action"]["enum"]:
+            action = ALL if kind == "offer" else {"action": kind}
+            assert G.validate_action(state, seat, action) is None

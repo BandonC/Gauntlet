@@ -128,6 +128,13 @@ def _is_int(x: object) -> bool:
     return isinstance(x, int) and not isinstance(x, bool)
 
 
+def _legal_kinds(state: SDState, seat: int) -> list[str]:
+    """Only what's legal now. Listing `reject` every turn invited it: Haiku's test games sent
+    it twice with offers left. The API doesn't enforce this, so validation still does."""
+    kinds = ["offer"] if state.used[seat] < MAX_OFFERS else ["reject"]
+    return kinds + ["accept"] if state.pending else kinds
+
+
 class SplitDeal(Game):
     name = "split_deal"
     min_players = 2
@@ -223,11 +230,11 @@ class SplitDeal(Game):
         }
         return ActionSpec(
             name="split_deal_move",
-            description="Make an offer, accept the standing offer, or reject it.",
+            description="Make your move. Only the actions listed are legal this turn.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "action": {"type": "string", "enum": ["offer", "accept", "reject"]},
+                    "action": {"type": "string", "enum": _legal_kinds(state, seat)},
                     **items,
                     "message": {
                         "type": "string",
