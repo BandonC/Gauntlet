@@ -85,7 +85,7 @@ ORDER BY m.completed_at, m.id
 
 
 FINAL_RESULTS_SQL = """
-SELECT m.scores, array_agg(s.player_id ORDER BY s.seat) AS seats
+SELECT m.placements, array_agg(s.player_id ORDER BY s.seat) AS seats
 FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE m.tournament_id = $1 AND m.status = 'completed'
 GROUP BY m.id
@@ -103,6 +103,13 @@ WHERE t.game = $1 AND t.status = 'completed'
         AND (SELECT count(*) FROM match_seats s WHERE s.match_id = m.id) <> 2
   )
 """
+
+
+def seat_zero_outcome(placements: list[int]) -> float:
+    """1 if seat 0 finished ahead, 0 if behind, 0.5 level. From placements, never scores:
+    Split the Deal scores aren't zero-sum, so scores[0] doesn't say who won."""
+    a, b = placements
+    return 1.0 if a < b else 0.0 if a > b else 0.5
 
 
 async def apply_match_result(
@@ -133,8 +140,9 @@ async def apply_match_result(
     new_elo, new_gl = dict(old_elo), dict(old_gl)
     if len(seats) == 2:
         a, b = seats
-        new_elo[a], new_elo[b] = elo.update(old_elo[a], old_elo[b], scores[0])
-        new_gl[a], new_gl[b] = glicko2.update_pair(old_gl[a], old_gl[b], scores[0])
+        outcome = seat_zero_outcome(placements)
+        new_elo[a], new_elo[b] = elo.update(old_elo[a], old_elo[b], outcome)
+        new_gl[a], new_gl[b] = glicko2.update_pair(old_gl[a], old_gl[b], outcome)
     rated = weng_lin.rate([old_wl[pid] for pid in seats], placements)
     new_wl = dict(zip(seats, rated, strict=True))
     for pid in sorted(seats):
@@ -185,7 +193,9 @@ async def final_ratings(pool: asyncpg.Pool, tournament_id: int) -> dict[str, dic
         return None
     rows = await pool.fetch(FINAL_RESULTS_SQL, tournament_id)
     fitted = bradley_terry.fit(
-        (r["seats"][0], r["seats"][1], r["scores"][0]) for r in rows if len(set(r["seats"])) == 2
+        (r["seats"][0], r["seats"][1], seat_zero_outcome(r["placements"]))
+        for r in rows
+        if len(set(r["seats"])) == 2
     )
     if fitted is None:
         return None

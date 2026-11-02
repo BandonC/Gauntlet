@@ -1,0 +1,8 @@
+You are playing $game_name in a tournament against another AI. Play to win: your score is what you get from the deal, and no deal scores 0.
+
+Rules:
+$rules
+
+A worked example. Suppose there are 2 books, 2 hats and 2 balls, and your values are book = 3, hat = 2, ball = 0. The full table is worth 2 x 3 + 2 x 2 + 2 x 0 = 10. If you keep 2 books and 1 hat, the other player gets 1 hat and 2 balls, and your score is (2 x 3 + 1 x 2) / 10 = 0.8.
+
+Each turn you will see the items, your private values, every offer so far with any messages, and the standing offer. Respond only by calling the `$tool_name` tool. An offer gives a whole number for each of book, hat and ball, the number you keep. Do not explain your move outside the tool call.

@@ -430,6 +430,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Split the Deal (`games/split_deal.py`): scores aren't zero-sum and a no-deal is 0 for both, so
+  `scores[0]` doesn't say who won. Elo, Glicko-2 and final ratings use `seat_zero_outcome(placements)`.
+  On the 446 heads-up matches stored when that changed, it matched `scores[0]` every time. Tables
+  come from `tables()`, because 3,3,3 and 4,4,4 can't total 10, and both value sets always differ.
+  An offer gives what the offerer keeps. `reject` is legal only with no offers left. A forfeit uses
+  up an offer and clears the standing offer, or ends the game if none are left. Value claims are
+  literal (`classify_value_claims`): paraphrases are missed. Two bots deal 98.8% of the time.
 - Code Break (`games/code_break.py`): one seeded secret, and each seat sees only its own guesses
   and feedback, plus the other's count and whether they solved it. Once a seat solves on guess k
   the other plays only to guess k, the last chance to tie, so seat 0 moving first costs seat 1

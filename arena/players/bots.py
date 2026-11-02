@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import random
+from itertools import product
 
 from arena.balance import DEFAULT_P, vote_target
 from arena.games.code_break import (
@@ -14,6 +15,7 @@ from arena.games.code_break import (
     history_of,
     minimax_guess,
 )
+from arena.games.split_deal import MAX_OFFERS, TOTAL_VALUE, worth
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
@@ -186,6 +188,39 @@ class CodeBreakSolver:
         return Decision(action=guess_action(minimax_guess(history_of(ctx.view["your_guesses"]))))
 
 
+class SplitDealBot:
+    """Concedes linearly: its target falls from the whole table to half of it over its offers.
+    It accepts anything that meets today's target, and always offers the least it can keep at
+    that target, so the other player gets the most. With no offers left, anything beats no
+    deal. Stateless: the target is worked out from offers left."""
+
+    FLOOR = TOTAL_VALUE / 2
+
+    def __init__(self, player_id: str = "split-deal-bot"):
+        self.player_id = player_id
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        values, quantities, items = v["your_values"], v["quantities"], v["items"]
+        pending = v["standing_offer"]
+        target = self._target(v["offers_left"])
+        if pending:
+            mine = [q - pending["keep"][i] for q, i in zip(quantities, items, strict=True)]
+            value = worth(values, mine)
+            if value >= target or (v["offers_left"] == 0 and value > 0):
+                return Decision(action={"action": "accept"})
+        if v["offers_left"] == 0:
+            return Decision(action={"action": "reject"})
+        options = product(*(range(q + 1) for q in quantities))
+        fits = [k for k in options if worth(values, k) >= target]
+        keep = min(fits, key=lambda k: (worth(values, k), sum(k), k))
+        return Decision(action={"action": "offer", **dict(zip(items, keep, strict=True))})
+
+    def _target(self, offers_left: int) -> float:
+        made = MAX_OFFERS - min(offers_left, MAX_OFFERS)
+        return TOTAL_VALUE - (TOTAL_VALUE - self.FLOOR) * made / (MAX_OFFERS - 1)
+
+
 def build_bot(kind: str, player_id: str, seed: int) -> Player:
     """Roster `provider = "bot"`: `model` names which game's bot."""
     if kind == "werewolf":
@@ -194,13 +229,15 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return LiarsDiceBot(player_id)
     if kind == "liars_dice_v2":
         return LiarsDiceBot(player_id, LIARS_DICE_V2_THRESHOLD)
+    if kind == "split_deal":
+        return SplitDealBot(player_id)
     if kind == "code_break":
         return CodeBreakSolver(player_id)
     if kind == "code_break_random":
         return CodeBreakRandomBot(player_id, seed)
     raise ValueError(
         f"unknown bot {kind!r}; known: code_break, code_break_random, liars_dice, "
-        "liars_dice_v2, werewolf"
+        "liars_dice_v2, split_deal, werewolf"
     )
 
 
