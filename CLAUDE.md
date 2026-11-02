@@ -437,6 +437,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   An offer gives what the offerer keeps. `reject` is legal only with no offers left. A forfeit uses
   up an offer and clears the standing offer, or ends the game if none are left. Value claims are
   literal (`classify_value_claims`): paraphrases are missed. Two bots deal 98.8% of the time.
+  The tool lists only the actions legal this turn, because listing `reject` always cost Haiku's
+  test games 2 of 16 attempts (12.5%, over the gate) in the first run, $0.0026 and $0.0753.
 - Code Break (`games/code_break.py`): one seeded secret, and each seat sees only its own guesses
   and feedback, plus the other's count and whether they solved it. Once a seat solves on guess k
   the other plays only to guess k, the last chance to tie, so seat 0 moving first costs seat 1
