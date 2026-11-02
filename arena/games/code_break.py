@@ -9,6 +9,8 @@ Rules:
 - Fewer guesses to solve wins; the same number is a draw; so is neither solving within 10.
   Once a player solves on guess k, the other plays on only to guess k, the last chance to
   tie. Seat 0 going first therefore costs seat 1 nothing.
+- A guess names each peg in its own field, so a code of the wrong length can't be sent.
+  The older form, one `code` string, stays valid so tournament 12's log still replays.
 - Three invalid attempts skip the guess, which still counts towards the limit. A forfeit
   removes nobody, so placements ignore it, as in Werewolf.
 
@@ -34,6 +36,7 @@ MAX_GUESSES = 10
 FIRST_GUESS = "RRGG"  # Knuth's opening
 ALL_CODES = tuple("".join(p) for p in product(COLOURS, repeat=PEGS))
 SOLVED = (PEGS, 0)
+PEG_FIELDS = tuple(f"peg{i}" for i in range(1, PEGS + 1))
 _COLOUR_COUNTS = {code: tuple(code.count(c) for c in COLOURS) for code in ALL_CODES}
 
 RULES = f"""\
@@ -72,6 +75,28 @@ class CBState:
     guesses: tuple[tuple[Guess, ...], tuple[Guess, ...]] = ((), ())
     to_move: int = 0
     forfeits: tuple[int, ...] = ()
+
+
+def code_of(action: object) -> str | None:
+    """The 4-letter code in either action form, or None if it isn't a valid guess."""
+    if not isinstance(action, dict):
+        return None
+    if set(action) == {"code"}:
+        pegs = action["code"]
+    elif set(action) == set(PEG_FIELDS):
+        pegs = [action[field] for field in PEG_FIELDS]
+        if not all(isinstance(p, str) for p in pegs):
+            return None
+        pegs = "".join(pegs)
+    else:
+        return None
+    if not isinstance(pegs, str) or len(pegs) != PEGS or set(pegs) - set(COLOURS):
+        return None
+    return pegs
+
+
+def guess_action(code: str) -> Action:
+    return dict(zip(PEG_FIELDS, code, strict=True))
 
 
 def make_secret(seed: int) -> str:
@@ -177,17 +202,18 @@ class CodeBreak(Game):
     def action_spec(self, state: CBState, seat: int) -> ActionSpec:
         return ActionSpec(
             name="code_break_guess",
-            description=f"Guess the secret: {PEGS} colours from {COLOURS}.",
+            description=f"Guess the secret: one colour for each of the {PEGS} pegs.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "code": {
+                    field: {
                         "type": "string",
-                        "pattern": f"^[{COLOURS}]{{{PEGS}}}$",
-                        "description": f"{PEGS} letters from {COLOURS}, for example RGBY.",
+                        "enum": list(COLOURS),
+                        "description": f"The colour of peg {i}.",
                     }
+                    for i, field in enumerate(PEG_FIELDS, 1)
                 },
-                "required": ["code"],
+                "required": list(PEG_FIELDS),
                 "additionalProperties": False,
             },
         )
@@ -202,13 +228,12 @@ class CodeBreak(Game):
             return "it is not your turn"
         if not isinstance(action, dict):
             return "action must be an object"
-        code = action.get("code")
-        if not isinstance(code, str) or len(code) != PEGS or set(code) - set(COLOURS):
-            return f"code must be {PEGS} letters from {COLOURS}, for example RGBY"
+        if code_of(action) is None:
+            return f"give {', '.join(PEG_FIELDS)}, each one of {', '.join(COLOURS)}"
         return None
 
     def apply(self, state: CBState, seat: int, action: Action) -> CBState:
-        code = action["code"]
+        code = code_of(action)
         guess = Guess(code, *feedback(code, state.secret))
         return self._record(state, seat, guess)
 

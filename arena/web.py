@@ -19,6 +19,7 @@ import asyncpg
 from jinja2 import Environment, PackageLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup
 
+from arena.games.code_break import code_of
 from arena.games.registry import get_game, list_games
 from arena.store import metrics, ratings, read
 from arena.store.ratings import leaderboard
@@ -79,7 +80,8 @@ def _liars_dice_move(a: dict) -> str | None:
 
 
 def _code_break_move(a: dict) -> str | None:
-    return f"guess {a['code']}" if set(a) == {"code"} else None
+    code = code_of(a)
+    return f"guess {code}" if code else None
 
 
 GAME_NAMES = {

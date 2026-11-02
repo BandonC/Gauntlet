@@ -32,6 +32,7 @@ from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.code_break import seat_stats
 from arena.games.registry import get_game
 from arena.games.werewolf import SEER, VILLAGER, WOLF, classify_claims
+from arena.store.ratings import NOT_CANCELLED_SQL
 from arena.store.turns import PostgresTurnStore
 
 METRICS_SQL = """
@@ -119,11 +120,11 @@ async def player_metrics(
     return out
 
 
-CODE_BREAK_MATCHES_SQL = """
+CODE_BREAK_MATCHES_SQL = f"""
 SELECT m.id, m.game, m.seed, m.options, array_agg(s.player_id ORDER BY s.seat) AS seats
 FROM matches m JOIN match_seats s ON s.match_id = m.id
 WHERE m.game = 'code_break' AND m.status = 'completed'
-  AND ($1::bigint IS NULL OR m.tournament_id = $1)
+  AND ($1::bigint IS NULL OR m.tournament_id = $1) AND {NOT_CANCELLED_SQL}
 GROUP BY m.id
 """
 

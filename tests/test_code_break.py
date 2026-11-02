@@ -6,14 +6,17 @@ import pytest
 
 from arena.cli import _build_player
 from arena.engine import InMemoryTurnStore, MatchRunner, MatchSpec
-from arena.engine.match_runner import iter_states
+from arena.engine.match_runner import TurnRecord, iter_states
 from arena.games.code_break import (
     ALL_CODES,
+    COLOURS,
     MAX_GUESSES,
+    PEG_FIELDS,
     CodeBreak,
     Guess,
-    consistent,
+    code_of,
     feedback,
+    guess_action,
     make_secret,
     minimax_guess,
     seat_stats,
@@ -22,6 +25,8 @@ from arena.games.code_break import (
 from arena.games.registry import get_game, list_games
 from arena.players.base import TurnContext
 from arena.players.bots import CodeBreakRandomBot, CodeBreakSolver, ScriptedPlayer, build_bot
+from arena.players.prompting import load_prompt
+from arena.types import Usage
 from arena.web import move_label
 
 G = CodeBreak()
@@ -115,12 +120,18 @@ def test_neither_solving_in_the_limit_is_a_draw():
 @pytest.mark.parametrize(
     ("action", "word"),
     [
-        ({"code": "RGB"}, "4 letters"),
-        ({"code": "RGBYO"}, "4 letters"),
-        ({"code": "RGBX"}, "4 letters"),
-        ({"code": "rgby"}, "4 letters"),
-        ({"code": 1234}, "4 letters"),
-        ({}, "4 letters"),
+        ({"code": "RGB"}, "peg1"),
+        ({"code": "RGBYO"}, "peg1"),
+        ({"code": "RGBX"}, "peg1"),
+        ({"code": "rgby"}, "peg1"),
+        ({"code": 1234}, "peg1"),
+        ({}, "peg1"),
+        ({"peg1": "R", "peg2": "G", "peg3": "B"}, "peg1"),
+        ({"peg1": "R", "peg2": "G", "peg3": "B", "peg4": "X"}, "peg1"),
+        ({"peg1": "R", "peg2": "G", "peg3": "B", "peg4": 1}, "peg1"),
+        ({"peg1": "RR", "peg2": "G", "peg3": "B", "peg4": "Y"}, "peg1"),
+        ({"peg1": "R", "peg2": "G", "peg3": "B", "peg4": "Y", "peg5": "O"}, "peg1"),
+        ({"code": "RGBY", "peg1": "R"}, "peg1"),
         ("RGBY", "object"),
     ],
 )
@@ -246,7 +257,7 @@ def test_bots_are_stateless_and_seeded():
     assert asyncio.run(CodeBreakRandomBot("a", 3).act(ctx)) == asyncio.run(
         CodeBreakRandomBot("b", 3).act(ctx)
     )
-    assert consistent(asyncio.run(CodeBreakSolver().act(ctx)).action["code"], [])
+    assert code_of(asyncio.run(CodeBreakSolver().act(ctx)).action) in ALL_CODES
 
 
 def test_stats_count_guesses_that_contradict_earlier_feedback():
@@ -273,4 +284,53 @@ def test_bots_reach_tournaments_through_the_roster_and_the_cli():
 
 def test_move_label():
     assert move_label("code_break", {"code": "RGBY"}) == "guess RGBY"
+    assert move_label("code_break", guess_action("RGBY")) == "guess RGBY"
     assert move_label("code_break", None, True) == "forfeit"
+
+
+def test_both_action_forms_play_the_same_guess():
+    pegs = guess_action(WRONG)
+    state = G.initial_state(2, SEED)
+    assert set(pegs) == set(PEG_FIELDS)
+    assert G.validate_action(state, 0, pegs) is None
+    assert G.validate_action(state, 0, {"code": WRONG}) is None
+    assert G.apply(state, 0, pegs) == G.apply(state, 0, {"code": WRONG})
+
+
+def test_a_log_in_the_old_form_still_replays():
+    record = TurnRecord(0, 0, {"code": SECRET}, False, 1, None, None, Usage(), 0.0, 0)
+    spec = MatchSpec("m", "code_break", SEED, ["a", "b"])
+    *_, state = iter_states(G, spec, [record])
+    assert state.guesses[0][0].solved
+
+
+def test_the_tool_schema_has_one_required_enum_per_peg():
+    schema = G.action_spec(G.initial_state(2, SEED), 0).input_schema
+    assert schema["required"] == list(PEG_FIELDS)
+    assert all(schema["properties"][f]["enum"] == list(COLOURS) for f in PEG_FIELDS)
+    assert schema["additionalProperties"] is False
+
+
+def test_the_v2_prompt_worked_example_is_right():
+    prompt = load_prompt("code_break/v2")
+    assert feedback("RBOB", "RGBB") == (2, 1)
+    for word in ("R G B B", "R B O B", "exact 2, colour 1"):
+        assert word in prompt.system
+    assert "right colour, wrong place" in prompt.turn
+
+
+def test_v2_renders_with_a_real_view():
+    state = play(WRONG, WRONG)
+    view = G.player_view(state, 0)
+    ctx = TurnContext(
+        "code_break",
+        0,
+        G.rules_text(),
+        view,
+        G.render_view(view),
+        G.action_spec(state, 0),
+        None,
+    )
+    prompt = load_prompt("code_break/v2")
+    assert "exact 0, colour 0" in prompt.render_turn(ctx)
+    assert "Rules:" in prompt.render_system(ctx)

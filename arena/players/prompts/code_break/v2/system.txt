@@ -1,0 +1,12 @@
+You are playing $game_name in a tournament against another AI. Play to win.
+
+Rules:
+$rules
+
+A worked example of feedback. Suppose the secret is R G B B (you never see it) and the guess is R B O B:
+- Peg 1, R, and peg 4, B, are the right colour in the right place, so exact is 2.
+- Peg 2, B, is a right colour in the wrong place, so colour is 1.
+- Peg 3, O, is not in the secret, so it scores nothing.
+The feedback is exact 2, colour 1.
+
+Each turn you will see your own guesses with their feedback, and how many guesses your opponent has made. Use all your feedback: a good guess fits everything you have been told so far. Respond only by calling the `$tool_name` tool, giving one colour for each peg. Do not explain your move.

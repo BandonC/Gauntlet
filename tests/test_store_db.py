@@ -34,6 +34,7 @@ from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import (
     NEXT_ROUND_SQL,
     advance_tournament,
+    cancel_tournament,
     create_round_robin,
     create_swiss,
     create_tables,
@@ -1277,3 +1278,50 @@ async def test_code_break_tournament_rates_and_reports_against_the_solver(pool):
     assert await metrics_for_code_break(pool, tid + 1) == []
     board = await leaderboard(pool, "code_break")
     assert {r["player_id"] for r in board} == {"solver", "guesser"}
+
+
+async def test_cancelling_keeps_the_data_and_drops_the_results(pool):
+    players = [
+        PlayerConfig("solver", "bot", model="code_break", seed=1),
+        PlayerConfig("guesser", "bot", model="code_break_random", seed=2),
+    ]
+    factory = PlayerFactory(Roster({p.id: p for p in players}, {}), {})
+    tid, n = await create_round_robin(pool, "code_break", players, 3, None, seed=3)
+    kept, _ = await create_round_robin(pool, "code_break", players, 2, None, seed=4)
+    await pool.execute("UPDATE tournaments SET status = 'paused' WHERE id = $1", kept)
+    assert await run_one(pool, factory, "A", FAST)  # one real, rated match in the first
+    played = await pool.fetchval(
+        "SELECT count(*) FROM matches WHERE tournament_id = $1 AND status = 'completed'", tid
+    )
+    assert played == 1
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 2
+
+    await cancel_tournament(pool, tid, "format failure")
+
+    row = await pool.fetchrow("SELECT status, last_error FROM tournaments WHERE id = $1", tid)
+    assert (row["status"], row["last_error"]) == ("cancelled", "format failure")
+    assert await pool.fetchval("SELECT count(*) FROM turns") > 0  # the data stays
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 0
+    assert await leaderboard(pool, "code_break") == []
+    assert await read.seat_results(pool) == []
+    assert await metrics_for_code_break(pool) == []
+    assert (await read.list_tournaments(pool, tid))[0]["status"] == "cancelled"
+    assert await queue.claim(pool, "B", 30) is None  # its queued matches stay unclaimed
+    with pytest.raises(ValueError, match="cancelled"):
+        await resume_tournament(pool, tid)
+    await pool.execute("UPDATE tournaments SET status = 'running' WHERE id = $1", kept)
+    assert await run_one(pool, factory, "A", FAST)
+    assert await pool.fetchval("SELECT count(*) FROM rating_history") == 2  # others still count
+
+
+async def test_cancel_refuses_a_running_match_and_a_finished_tournament(pool):
+    tid, _ = await create_round_robin(pool, "connect4", PLAYERS, 1, None)
+    await queue.claim(pool, "A", 30)
+    with pytest.raises(ValueError, match="running"):
+        await cancel_tournament(pool, tid, "x")
+    await pool.execute("UPDATE matches SET status = 'completed'")
+    await pool.execute("UPDATE tournaments SET status = 'completed'")
+    with pytest.raises(ValueError, match="finished"):
+        await cancel_tournament(pool, tid, "x")
+    with pytest.raises(ValueError, match="no tournament"):
+        await cancel_tournament(pool, 999, "x")

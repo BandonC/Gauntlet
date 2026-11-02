@@ -9,6 +9,7 @@ from arena.engine.match_runner import MatchSpec, iter_states
 from arena.games.registry import get_game
 from arena.games.werewolf import classify_claims
 from arena.store.metrics import WEREWOLF_GAMES
+from arena.store.ratings import NOT_CANCELLED_SQL
 from arena.store.spend import TOTAL_SPEND_SQL
 from arena.store.turns import PostgresTurnStore
 
@@ -52,7 +53,7 @@ FROM turns WHERE cost_usd > 0
 
 # One row per seat of a finished match. Player and model pages summarise these, so the two
 # can't disagree about what a win, a cost or an illegal move is.
-SEAT_RESULTS_SQL = """
+SEAT_RESULTS_SQL = f"""
 SELECT s.player_id, p.provider, m.id AS match_id, m.game, m.seed, m.options, m.scores, s.seat,
        count(t.turn_no) AS turns,
        count(t.turn_no) FILTER (WHERE NOT t.forfeited) AS accepted,
@@ -67,6 +68,7 @@ JOIN matches m ON m.id = s.match_id
 JOIN players p ON p.id = s.player_id
 LEFT JOIN turns t ON t.match_id = s.match_id AND t.seat = s.seat
 WHERE m.status = 'completed' AND ($1::text IS NULL OR s.player_id = $1)
+  AND {NOT_CANCELLED_SQL}
 GROUP BY s.player_id, p.provider, m.id, s.seat
 ORDER BY m.id DESC, s.seat
 """
