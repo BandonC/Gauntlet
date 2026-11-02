@@ -19,6 +19,7 @@ import asyncpg
 from jinja2 import Environment, PackageLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup
 
+from arena.games.code_break import code_of
 from arena.games.registry import get_game, list_games
 from arena.store import metrics, ratings, read
 from arena.store.ratings import leaderboard
@@ -78,7 +79,13 @@ def _liars_dice_move(a: dict) -> str | None:
     return None
 
 
+def _code_break_move(a: dict) -> str | None:
+    code = code_of(a)
+    return f"guess {code}" if code else None
+
+
 GAME_NAMES = {
+    "code_break": "Code Break",
     "connect4": "Connect 4",
     "liars_dice": "Liar's Dice",
     "werewolf": "Werewolf",
@@ -86,6 +93,7 @@ GAME_NAMES = {
 }
 BLIND_GAMES = ("werewolf", "werewolf_dayfirst")
 GAME_BLURBS = {
+    "code_break": "Two players race to crack one secret code. A solver never needs over 5 guesses.",
     "connect4": "Four in a row. Simple rules, and the first move decides most games.",
     "liars_dice": "Hidden dice and bold bids. A short probability bot sets the bar.",
     "werewolf": "Seven seats, two wolves, a night kill to open. Bluffing in plain text.",
@@ -242,6 +250,7 @@ def _werewolf_move(a: dict) -> str | None:
 # Short labels for the turn table and the replay info line. Keep in step with the
 # game's action schema; anything unexpected falls back to the raw (sorted) JSON.
 MOVE_LABELS = {
+    "code_break": _code_break_move,
     "connect4": _connect4_move,
     "liars_dice": _liars_dice_move,
     "werewolf": _werewolf_move,

@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$18.56**: $17.92 across 341 recorded games and 15.4 million tokens, plus $0.64 on seven in-memory
+**$20.71**: $20.02 across 551 recorded games and 18.3 million tokens, plus $0.69 on 18 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -201,6 +201,41 @@ A simple probability rule with one tuned number beat both models here. That's a 
 two-player game with its rules, and v2 was tuned on free games beforehand, while the models played
 it cold on a generic prompt.
 
+### Code Break: neither model could keep track of its own clues
+
+Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
+own guesses and feedback. A minimax solver never needs more than 5 guesses. A bot that picks any
+code fitting its feedback, with no strategy beyond that, solved all 1,296 possible secrets too, in
+4.65 guesses on average against the solver's 4.48. **Not contradicting your own clues is nearly
+all this game asks. Haiku 5.5 and Sonnet 5 mostly couldn't do it.**
+
+| Pairing, 60 games each | Result | Score share (interval) |
+|---|---:|---:|
+| Solver over Haiku 5.5 | 59 wins, 1 draw | 99.2% (92.5-99.9%) |
+| Solver over Sonnet 5 | 59 wins, 1 draw | 99.2% (92.5-99.9%) |
+| Sonnet 5 over Haiku 5.5 | 10 wins, 4 losses, 46 draws | 55.0% (42.5-66.9%) |
+
+The Sonnet-Haiku games are the fair measure of solving, since the solver usually ended the others
+by guess 5. With 10 guesses available, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5
+of 60 (8.3%, 3.6-18.1%). That gap isn't proven (p = 0.18), and nor is 10 wins to 4 (p = 0.18), so
+neither model is shown to be better. About 80% of their guesses in those games contradicted their
+own earlier feedback, 445 of 555 for Haiku and 451 of 555 for Sonnet 5.
+
+Sonnet 5 cost 20 times as much as Haiku, $1.59 to $0.08, with no proven gain. The solver also
+"contradicts" its clues on 18% of guesses, deliberately, to split the remaining codes, so that
+number needs reading beside the solve rate.
+
+Transcripts suggest partial tracking more than ignoring feedback. Models often held on to pegs
+they'd placed correctly while breaking older clues, and some replayed a guess whose score was on
+screen. Replies came through a forced tool call with no text, so that's inferred from the moves.
+
+This was a rerun. Tournament 12 was cancelled at 30 of 180 games as a format failure, not a result:
+Sonnet 5 kept sending codes longer than 4 letters, 21% of its attempts, costing it 11 turns. Its
+data is kept, it's out of the ratings, and its $0.42 counts as spend. The rerun gave each peg its
+own field and added a worked example of feedback to the prompt. Sonnet 5 still sometimes put two
+letters in one peg, because the API doesn't enforce the schema, but that fell to 2.6% of attempts
+(22 of 831), with 4 lost turns. The rerun gave no sign that the worked example helped.
+
 ### Connect 4: the illegal-move gap
 
 In 20 games, **Haiku 5.5 made 41 illegal attempts in 220 (18.6%) and Haiku 4.5 made 15 in 196
@@ -224,10 +259,12 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Liar's Dice, Sonnet 5 | 40 | 483,262 | $1.1814 |
 | Werewolf, day-first, Sonnets and Haiku | 40 | 4,918,635 | $6.5573 |
 | Liar's Dice, Sonnets and v2 round-robin | 90 | 1,827,762 | $4.4364 |
-| **Total** | **341** | **15,432,688** | **$17.92** |
+| Code Break, cancelled at 30 of 180 games | 30 | 328,562 | $0.4226 |
+| Code Break, Sonnet 5, Haiku 5.5 and the solver | 180 | 2,506,529 | $1.6726 |
+| **Total** | **551** | **18,267,779** | **$20.02** |
 
-Seven in-memory test games cost another $0.64. They never reach the turn log, so the project total
-is about $18.56.
+Eighteen in-memory test games cost another $0.69. They never reach the turn log, so the project
+total is about $20.71.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -400,5 +437,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13 --matches 116,142   # the static site
 ```

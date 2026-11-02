@@ -28,8 +28,12 @@ from collections import Counter
 
 import asyncpg
 
+from arena.engine.match_runner import MatchSpec, iter_states
+from arena.games.code_break import seat_stats
 from arena.games.registry import get_game
 from arena.games.werewolf import SEER, VILLAGER, WOLF, classify_claims
+from arena.store.ratings import NOT_CANCELLED_SQL
+from arena.store.turns import PostgresTurnStore
 
 METRICS_SQL = """
 WITH t AS (
@@ -114,6 +118,50 @@ async def player_metrics(
             }
         )
     return out
+
+
+CODE_BREAK_MATCHES_SQL = f"""
+SELECT m.id, m.game, m.seed, m.options, array_agg(s.player_id ORDER BY s.seat) AS seats
+FROM matches m JOIN match_seats s ON s.match_id = m.id
+WHERE m.game = 'code_break' AND m.status = 'completed'
+  AND ($1::bigint IS NULL OR m.tournament_id = $1) AND {NOT_CANCELLED_SQL}
+GROUP BY m.id
+"""
+
+
+async def code_break_metrics(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
+    """Per player, from replaying completed matches. `above_solver` is guesses over what the
+    minimax solver needs on the same secret, for games the player solved. `inconsistent` is
+    guesses that contradict the player's own earlier feedback: legal, but they waste a turn.
+    A player cut off by the opponent's solve shows as unsolved, so read `solved` with `games`.
+    """
+    tally: dict[str, Counter] = {}
+    store = PostgresTurnStore(pool, "metrics")
+    for m in await pool.fetch(CODE_BREAK_MATCHES_SQL, tournament_id):
+        seats = list(m["seats"])
+        spec = MatchSpec(str(m["id"]), m["game"], m["seed"], seats, m["options"])
+        *_, final = iter_states(get_game(m["game"]), spec, await store.load_turns(str(m["id"])))
+        for seat, pid in enumerate(seats):
+            stats = seat_stats(final, seat)
+            c = tally.setdefault(pid, Counter())
+            c["games"] += 1
+            c["guesses"] += stats["guesses"]
+            c["inconsistent"] += stats["inconsistent"]
+            if stats["solved"]:
+                c["solved"] += 1
+                c["above_solver"] += stats["above_solver"]
+    return [
+        {
+            "player_id": pid,
+            "games": c["games"],
+            "solved": c["solved"],
+            "guesses": c["guesses"],
+            "inconsistent": c["inconsistent"],
+            "inconsistent_rate": _ratio(c["inconsistent"], c["guesses"]),
+            "mean_above_solver": _ratio(c["above_solver"], c["solved"]),
+        }
+        for pid, c in sorted(tally.items())
+    ]
 
 
 async def werewolf_metrics(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:

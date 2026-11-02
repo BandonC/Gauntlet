@@ -36,7 +36,7 @@ WHERE m.id = (
       AND NOT EXISTS (
           SELECT 1 FROM tournaments t
           WHERE t.id = matches.tournament_id
-            AND (t.status = 'paused'
+            AND (t.status IN ('paused', 'cancelled')
                  OR (t.budget_usd IS NOT NULL AND {TOTAL_SPEND_SQL} >= t.budget_usd))
       )
     ORDER BY available_at, id

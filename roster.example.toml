@@ -32,6 +32,18 @@ seed = 1
 
 # Liar's Dice bots. v2 challenges less: see arena/dice_sim.py.
 [[players]]
+id = "code-break-solver"
+provider = "bot"
+model = "code_break"
+seed = 1
+
+[[players]]
+id = "code-break-random"
+provider = "bot"
+model = "code_break_random"
+seed = 1
+
+[[players]]
 id = "liars-dice-bot"
 provider = "bot"
 model = "liars_dice"
