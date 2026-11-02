@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$24.50**: $23.44 across 821 recorded games and 21.0 million tokens, plus $1.06 on 48 in-memory
+**$27.86**: $26.55 across 911 recorded games and 22.5 million tokens, plus $1.31 on 57 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -216,6 +216,25 @@ A simple probability rule with one tuned number beat both models here. That's a 
 two-player game with its rules, and v2 was tuned on free games beforehand, while the models played
 it cold on a generic prompt.
 
+### More effort bought more thinking, and no more wins
+
+Sonnet 5.5 can be told how hard to think. It played 30 games against the tuned bot at each of three
+effort settings, on the same seeds:
+
+| Effort | Wins against v2 | Thinking tokens a turn | Blundered challenges | Cost |
+|---|---:|---:|---:|---:|
+| Low | 6 of 30, 20.0% (9.5-37.3%) | 5 | 4 of 153, 2.6% (1.0-6.5%) | $0.85 |
+| Medium | 4 of 30, 13.3% (5.3-29.7%) | 71 | 7 of 161, 4.3% (2.1-8.7%) | $0.94 |
+| High | 4 of 30, 13.3% (5.3-29.7%) | 215 | 4 of 157, 2.5% (1.0-6.4%) | $1.32 |
+
+**Thinking rose about 40-fold from low to high, and neither wins nor blunders improved** (p = 0.73
+and 1.0). A blunder here is challenging a bid your own dice already prove true. With 30 games each
+this can't rule out a small gain, but it shows no sign of a large one, for 56% more money. Bids were
+true about 80% of the time at every setting, and challenges won 33%, 32% and 27%.
+
+All three did worse than the 9 of 30 Sonnet 5.5 managed against the same bot in the round-robin, on
+different seeds. That gap isn't proven (p = 0.21 against high effort, which thought about as much).
+
 ### Code Break: neither model could keep track of its own clues
 
 Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
@@ -340,10 +359,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Code Break, Sonnet 5, Haiku 5.5 and the solver | 180 | 2,506,529 | $1.6726 |
 | Split the Deal, Sonnet 5, Haiku 5.5 and the bot | 180 | 1,050,980 | $1.2309 |
 | Word Link, Sonnet 5, Haiku 5.5 and the bot team | 90 | 1,654,265 | $2.1885 |
-| **Total** | **821** | **20,973,024** | **$23.44** |
+| Liar's Dice, Sonnet 5.5 effort sweep against v2 | 90 | 1,500,815 | $3.1094 |
+| **Total** | **911** | **22,473,839** | **$26.55** |
 
-48 in-memory test games cost another $1.06. They never reach the turn log, so the project total
-is about $24.50.
+57 in-memory test games cost another $1.31. They never reach the turn log, so the project total
+is about $27.86.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -517,5 +537,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18 --matches 116,142   # the static site
 ```
