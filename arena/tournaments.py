@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import random
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from itertools import combinations
 
@@ -312,3 +312,14 @@ def _assign_seats(groups: list[list[int]], k: int) -> list[list[int]]:
                     at[v][seat + free - c] = u
             at[table][seat], at[block][seat] = block, table
     return [[at[(t,)][seat][0] for seat in range(k)] for t in range(len(groups))]  # type: ignore[index]
+
+
+def team_round_robin(teams: Sequence[Sequence[str]], games_per_pair: int) -> list[list[str]]:
+    """Every team against every other, each going first in half the games. An odd count
+    gives the earlier team the extra one."""
+    seatings = []
+    for a, b in combinations(teams, 2):
+        for game in range(games_per_pair):
+            first, second = (a, b) if game % 2 == 0 else (b, a)
+            seatings.append([*first, *second])
+    return seatings

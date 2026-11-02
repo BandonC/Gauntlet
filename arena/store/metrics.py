@@ -33,6 +33,7 @@ from arena.games.code_break import seat_stats
 from arena.games.registry import get_game
 from arena.games.split_deal import seat_stats as split_deal_stats
 from arena.games.werewolf import SEER, VILLAGER, WOLF, classify_claims
+from arena.games.word_link import team_stats as word_link_team_stats
 from arena.store.ratings import NOT_CANCELLED_SQL
 from arena.store.turns import PostgresTurnStore
 
@@ -160,6 +161,58 @@ async def code_break_metrics(pool: asyncpg.Pool, tournament_id: int | None = Non
             "inconsistent": c["inconsistent"],
             "inconsistent_rate": _ratio(c["inconsistent"], c["guesses"]),
             "mean_above_solver": _ratio(c["above_solver"], c["solved"]),
+        }
+        for pid, c in sorted(tally.items())
+    ]
+
+
+WORD_LINK_MATCHES_SQL = f"""
+SELECT m.id, m.game, m.seed, m.options, array_agg(s.player_id ORDER BY s.seat) AS seats
+FROM matches m JOIN match_seats s ON s.match_id = m.id
+WHERE m.game = 'word_link' AND m.status = 'completed'
+  AND ($1::bigint IS NULL OR m.tournament_id = $1) AND {NOT_CANCELLED_SQL}
+GROUP BY m.id
+"""
+
+
+async def word_link_metrics(pool: asyncpg.Pool, tournament_id: int | None = None) -> list[dict]:
+    """Per player, from replaying completed matches. Clue-givers: `words_per_clue` is their
+    team's words revealed per clue, and `bad_clues` is clue attempts rejected by the rules.
+    Guessers: `accuracy` is own words per guess, and `trap_hits` counts games lost that way."""
+    tally: dict[str, Counter] = {}
+    store = PostgresTurnStore(pool, "metrics")
+    for m in await pool.fetch(WORD_LINK_MATCHES_SQL, tournament_id):
+        seats = list(m["seats"])
+        spec = MatchSpec(str(m["id"]), m["game"], m["seed"], seats, m["options"])
+        turns = await store.load_turns(str(m["id"]))
+        *_, final = iter_states(get_game(m["game"]), spec, turns)
+        rejected = Counter()
+        for turn in turns:
+            rejected[turn.seat] += len(turn.rejections)
+        for team in (0, 1):
+            stats = word_link_team_stats(final, team)
+            clue = tally.setdefault(seats[team * 2], Counter())
+            guess = tally.setdefault(seats[team * 2 + 1], Counter())
+            for c in (clue, guess):
+                c["games"] += 1
+                c["wins"] += stats["won"]
+            clue["clues"] += stats["clues"]
+            clue["own_words"] += stats["own_words"]
+            clue["bad_clues"] += rejected[team * 2]
+            guess["guesses"] += stats["guesses"]
+            guess["correct"] += stats["own_words"]
+            guess["trap_hits"] += stats["trap_hits"]
+    return [
+        {
+            "player_id": pid,
+            "games": c["games"],
+            "wins": c["wins"],
+            "clues": c["clues"],
+            "words_per_clue": _ratio(c["own_words"], c["clues"]),
+            "bad_clues": c["bad_clues"],
+            "guesses": c["guesses"],
+            "accuracy": _ratio(c["correct"], c["guesses"]),
+            "trap_hits": c["trap_hits"],
         }
         for pid, c in sorted(tally.items())
     ]

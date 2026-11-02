@@ -6,6 +6,7 @@ from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
 from arena.games.split_deal import SplitDeal
 from arena.games.werewolf import Werewolf, WerewolfDayFirst
+from arena.games.word_link import WordLink
 
 _GAMES: dict[str, Game] = {
     "code_break": CodeBreak(),
@@ -14,6 +15,7 @@ _GAMES: dict[str, Game] = {
     "split_deal": SplitDeal(),
     "werewolf": Werewolf(),
     "werewolf_dayfirst": WerewolfDayFirst(),
+    "word_link": WordLink(),
 }
 
 

@@ -133,6 +133,7 @@ async def export_site(
     data("werewolf/roles.json", await metrics.werewolf_metrics(pool))
     data("code_break/metrics.json", await metrics.code_break_metrics(pool))
     data("split_deal/metrics.json", await metrics.split_deal_metrics(pool))
+    data("word_link/metrics.json", await metrics.word_link_metrics(pool))
     return summary
 
 

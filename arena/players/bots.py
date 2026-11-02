@@ -16,6 +16,8 @@ from arena.games.code_break import (
     minimax_guess,
 )
 from arena.games.split_deal import MAX_OFFERS, TOTAL_VALUE, worth
+from arena.games.word_link import MAX_NUMBER, NEUTRAL, TRAP
+from arena.games.word_link_words import TOPICS
 from arena.players.base import Decision, Player, TurnContext
 from arena.types import Action
 
@@ -221,6 +223,69 @@ class SplitDealBot:
         return TOTAL_VALUE - (TOTAL_VALUE - self.FLOOR) * made / (MAX_OFFERS - 1)
 
 
+class WordLinkClueBot:
+    """Gives the topic from the association table that covers the most of its team's words,
+    marked down for the other team's words on the board and heavily for the trap. Stateless."""
+
+    def __init__(self, player_id: str = "word-link-clue-bot"):
+        self.player_id = player_id
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        key = {w: k for w, k in v["key"].items() if w in _hidden(v)}
+        mine, trap = v["team"], TRAP
+
+        def merit(topic: str) -> tuple[int, str]:
+            kinds = [key[w] for w in TOPICS[topic] if w in key]
+            own = sum(k == mine for k in kinds)
+            other = sum(k not in (mine, NEUTRAL, trap) for k in kinds)
+            return (own - 2 * other - 5 * (trap in kinds) - (NEUTRAL in kinds), topic)
+
+        topic = max(TOPICS, key=merit)
+        own = sum(key.get(w) == mine for w in TOPICS[topic])
+        return Decision(action={"word": topic, "number": min(max(own, 1), MAX_NUMBER)})
+
+
+class WordLinkGuessBot:
+    """Guesses the unrevealed words in the clue's topic, then stops. It shares the clue bot's
+    table, so together they are a closer partnership than two strangers could be."""
+
+    def __init__(self, player_id: str = "word-link-guess-bot", seed: int = 0):
+        self.player_id = player_id
+        self.seed = seed
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        hidden = _hidden(v)
+        fits = [w for w in hidden if w in TOPICS.get(v["clue"]["word"], ())]
+        if fits and v["guesses_made"] < v["clue"]["number"]:
+            return Decision(action={"action": "guess", "word": fits[0]})
+        if v["guesses_made"]:
+            return Decision(action={"action": "stop"})
+        rng = random.Random(f"{self.seed}|{v['clue']}|{sorted(hidden)}")
+        return Decision(action={"action": "guess", "word": rng.choice(sorted(hidden))})
+
+
+class WordLinkRandomGuesser:
+    """Any unrevealed word, and a coin toss on stopping after the first. Stateless."""
+
+    def __init__(self, player_id: str = "word-link-random", seed: int = 0):
+        self.player_id = player_id
+        self.seed = seed
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        v = ctx.view
+        hidden = sorted(_hidden(v))
+        rng = random.Random(f"{self.seed}|{v['clue']}|{hidden}|{ctx.attempt}")
+        if v["guesses_made"] and rng.random() < 0.5:
+            return Decision(action={"action": "stop"})
+        return Decision(action={"action": "guess", "word": rng.choice(hidden)})
+
+
+def _hidden(view: dict) -> set[str]:
+    return {cell["word"] for cell in view["board"] if not cell["revealed"]}
+
+
 def build_bot(kind: str, player_id: str, seed: int) -> Player:
     """Roster `provider = "bot"`: `model` names which game's bot."""
     if kind == "werewolf":
@@ -231,13 +296,20 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return LiarsDiceBot(player_id, LIARS_DICE_V2_THRESHOLD)
     if kind == "split_deal":
         return SplitDealBot(player_id)
+    if kind == "word_link_clue":
+        return WordLinkClueBot(player_id)
+    if kind == "word_link_guess":
+        return WordLinkGuessBot(player_id, seed)
+    if kind == "word_link_random":
+        return WordLinkRandomGuesser(player_id, seed)
     if kind == "code_break":
         return CodeBreakSolver(player_id)
     if kind == "code_break_random":
         return CodeBreakRandomBot(player_id, seed)
     raise ValueError(
         f"unknown bot {kind!r}; known: code_break, code_break_random, liars_dice, "
-        "liars_dice_v2, split_deal, werewolf"
+        "liars_dice_v2, split_deal, werewolf, word_link_clue, word_link_guess, "
+        "word_link_random"
     )
 
 

@@ -58,6 +58,30 @@ const RENDERERS = {
     return `<div class="c4">${cells}</div><p class="status">${status}</p>`;
   },
 
+  word_link(f, seats) {
+    const team = (t) => (t === "a" ? "A" : "B");
+    const cells = f.board
+      .map((c) => {
+        const kind = f.key[c.word];
+        const cls = `wl-cell k-${esc(kind)}${c.revealed ? " shown" : ""}`;
+        return `<span class="${cls}">${esc(c.word)}</span>`;
+      })
+      .join("");
+    const clues = f.clues.map((c) => `<li>Team ${team(c.team)}: ${esc(c.word)} ${Number(c.number)}</li>`).join("");
+    let status;
+    if (f.over && f.winner) {
+      const seat = f.winner === "a" ? 0 : 2;
+      status = `${name(seats, seat)} and ${name(seats, seat + 1)} win`;
+    } else if (f.over) status = "Draw";
+    else status = `Team ${team(f.turn)}: ${f.phase === "clue" ? "clue-giver" : "guesser"} to act. Left: A ${Number(f.left.a)}, B ${Number(f.left.b)}`;
+    const roster =
+      `<p>Team A: ${name(seats, 0)} and ${name(seats, 1)}. Team B: ${name(seats, 2)} and ${name(seats, 3)}.</p>`;
+    return (
+      `${roster}<div class="wl">${cells}</div>` +
+      `${clues ? `<ul class="wl-clues">${clues}</ul>` : '<p class="muted">no clues yet</p>'}<p class="status">${status}</p>`
+    );
+  },
+
   split_deal(f, seats) {
     const items = f.items;
     const given = (keep) => items.map((it, i) => `${Number(keep[it])} ${esc(it)}`).join(", ");
@@ -200,6 +224,18 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
 function timeline(game, frames, seats) {
   const bands = [];
   const ticks = [];
+  if (game === "word_link") {
+    let seen = 0;
+    frames.forEach((f, i) => {
+      f.reveals.slice(seen).forEach((r) => {
+        if (r.kind === "trap") ticks.push({ at: i, text: `Team ${r.team === "a" ? "A" : "B"} hit the trap` });
+      });
+      seen = f.reveals.length;
+      if (f.over && f.winner && i === frames.length - 1) {
+        ticks.push({ at: i, text: `Team ${f.winner === "a" ? "A" : "B"} won` });
+      }
+    });
+  }
   if (game === "split_deal") {
     let ended = false;
     frames.forEach((f, i) => {

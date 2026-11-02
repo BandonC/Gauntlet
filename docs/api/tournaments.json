@@ -1,5 +1,19 @@
 [
  {
+  "id": 15,
+  "game": "word_link",
+  "format": "tables",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 3.7,
+  "spent_usd": 2.188502,
+  "total": 90,
+  "completed": 90,
+  "failed": 0
+ },
+ {
   "id": 14,
   "game": "split_deal",
   "format": "round_robin",

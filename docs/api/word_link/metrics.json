@@ -1,0 +1,68 @@
+[
+ {
+  "player_id": "haiku-5.5/wl-clue-v1",
+  "games": 60,
+  "wins": 28,
+  "clues": 180,
+  "words_per_clue": 1.2667,
+  "bad_clues": 2,
+  "guesses": 0,
+  "accuracy": null,
+  "trap_hits": 0
+ },
+ {
+  "player_id": "haiku-5.5/wl-guess-v1",
+  "games": 60,
+  "wins": 28,
+  "clues": 0,
+  "words_per_clue": null,
+  "bad_clues": 0,
+  "guesses": 356,
+  "accuracy": 0.6404,
+  "trap_hits": 15
+ },
+ {
+  "player_id": "sonnet-5/wl-clue-v1",
+  "games": 60,
+  "wins": 32,
+  "clues": 188,
+  "words_per_clue": 1.117,
+  "bad_clues": 3,
+  "guesses": 0,
+  "accuracy": null,
+  "trap_hits": 0
+ },
+ {
+  "player_id": "sonnet-5/wl-guess-v1",
+  "games": 60,
+  "wins": 32,
+  "clues": 0,
+  "words_per_clue": null,
+  "bad_clues": 0,
+  "guesses": 323,
+  "accuracy": 0.6502,
+  "trap_hits": 12
+ },
+ {
+  "player_id": "word-link-clue-bot",
+  "games": 60,
+  "wins": 30,
+  "clues": 200,
+  "words_per_clue": 0.98,
+  "bad_clues": 0,
+  "guesses": 0,
+  "accuracy": null,
+  "trap_hits": 0
+ },
+ {
+  "player_id": "word-link-guess-bot",
+  "games": 60,
+  "wins": 30,
+  "clues": 0,
+  "words_per_clue": null,
+  "bad_clues": 0,
+  "guesses": 229,
+  "accuracy": 0.8559,
+  "trap_hits": 4
+ }
+]

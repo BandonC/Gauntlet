@@ -82,6 +82,10 @@ class Game(Protocol):
         Table tournaments balance them per player and pass them in options["roles"]."""
         return None
 
+    def teams(self, num_players: int) -> tuple[tuple[int, ...], ...] | None:
+        """Seats that win and lose together, for team ratings. None rates seats alone."""
+        return None
+
     def apply(self, state: State, seat: int, action: Action) -> State:
         """Apply a VALIDATED action. Must not mutate `state`."""
         ...
