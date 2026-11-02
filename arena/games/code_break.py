@@ -9,8 +9,9 @@ Rules:
 - Fewer guesses to solve wins; the same number is a draw; so is neither solving within 10.
   Once a player solves on guess k, the other plays on only to guess k, the last chance to
   tie. Seat 0 going first therefore costs seat 1 nothing.
-- A guess names each peg in its own field, so a code of the wrong length can't be sent.
-  The older form, one `code` string, stays valid so tournament 12's log still replays.
+- A guess names each peg in its own field. The API doesn't enforce the enum, so a model
+  can still send two letters in one peg, and validation rejects that. The older form, one
+  `code` string, stays valid so tournament 12's log still replays.
 - Three invalid attempts skip the guess, which still counts towards the limit. A forfeit
   removes nobody, so placements ignore it, as in Werewolf.
 
