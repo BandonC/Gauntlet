@@ -1,0 +1,457 @@
+{
+ "player_id": "sonnet-5/wl-clue-v1",
+ "model": "sonnet-5",
+ "overall": {
+  "games": 60,
+  "won": 0,
+  "drew": 32,
+  "lost": 28,
+  "win_rate": 0.0,
+  "cost_usd": 0.641342,
+  "cost_per_game": 0.010689033333333332,
+  "illegal_rate": 0.015706806282722512,
+  "cache_hit": 0.0,
+  "latency_ms": 2533.622340425532
+ },
+ "games": [
+  {
+   "game": "word_link",
+   "place": 1,
+   "field": 6,
+   "ordinal": 14.64,
+   "games": 60,
+   "won": 0,
+   "drew": 32,
+   "lost": 28,
+   "win_rate": 0.0,
+   "cost_usd": 0.641342,
+   "cost_per_game": 0.010689033333333332,
+   "illegal_rate": 0.015706806282722512,
+   "cache_hit": 0.0,
+   "latency_ms": 2533.622340425532
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 987,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.006656
+  },
+  {
+   "id": 986,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.010118
+  },
+  {
+   "id": 985,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.020476
+  },
+  {
+   "id": 983,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013402
+  },
+  {
+   "id": 980,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013642
+  },
+  {
+   "id": 979,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013576
+  },
+  {
+   "id": 978,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.006526
+  },
+  {
+   "id": 977,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009996
+  },
+  {
+   "id": 975,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009974
+  },
+  {
+   "id": 973,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.00324
+  },
+  {
+   "id": 972,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.006676
+  },
+  {
+   "id": 971,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.01013
+  },
+  {
+   "id": 970,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.006592
+  },
+  {
+   "id": 969,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010076
+  },
+  {
+   "id": 967,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.006646
+  },
+  {
+   "id": 963,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013454
+  },
+  {
+   "id": 961,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.009996
+  },
+  {
+   "id": 960,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013504
+  },
+  {
+   "id": 958,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.00325
+  },
+  {
+   "id": 957,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.010028
+  },
+  {
+   "id": 956,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013284
+  },
+  {
+   "id": 955,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013446
+  },
+  {
+   "id": 954,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.006492
+  },
+  {
+   "id": 952,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.01
+  },
+  {
+   "id": 951,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010048
+  },
+  {
+   "id": 948,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.016832
+  },
+  {
+   "id": 947,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.003264
+  },
+  {
+   "id": 946,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.006682
+  },
+  {
+   "id": 945,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013544
+  },
+  {
+   "id": 944,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.003164
+  },
+  {
+   "id": 943,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013468
+  },
+  {
+   "id": 942,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.00998
+  },
+  {
+   "id": 941,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013616
+  },
+  {
+   "id": 937,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.010074
+  },
+  {
+   "id": 936,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013538
+  },
+  {
+   "id": 935,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.017164
+  },
+  {
+   "id": 934,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.01348
+  },
+  {
+   "id": 933,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010034
+  },
+  {
+   "id": 930,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013338
+  },
+  {
+   "id": 929,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013372
+  },
+  {
+   "id": 928,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013398
+  },
+  {
+   "id": 927,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013418
+  },
+  {
+   "id": 925,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013598
+  },
+  {
+   "id": 924,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.00644
+  },
+  {
+   "id": 923,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010014
+  },
+  {
+   "id": 922,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.003268
+  },
+  {
+   "id": 921,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013584
+  },
+  {
+   "id": 919,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.010162
+  },
+  {
+   "id": 918,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.009972
+  },
+  {
+   "id": 917,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.016988
+  },
+  {
+   "id": 915,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.009984
+  },
+  {
+   "id": 914,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.003146
+  },
+  {
+   "id": 913,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.020384
+  },
+  {
+   "id": 912,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.003262
+  },
+  {
+   "id": 911,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013556
+  },
+  {
+   "id": 909,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.003182
+  },
+  {
+   "id": 907,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009914
+  },
+  {
+   "id": 902,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010032
+  },
+  {
+   "id": 900,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.01368
+  },
+  {
+   "id": 898,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.020582
+  }
+ ]
+}

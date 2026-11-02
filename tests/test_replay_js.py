@@ -15,6 +15,7 @@ from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
 from arena.games.split_deal import SplitDeal
 from arena.games.werewolf import Werewolf, WerewolfDayFirst
+from arena.games.word_link import WordLink
 from arena.web import REPLAY_JS
 
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not installed")
@@ -158,6 +159,36 @@ def test_split_deal_no_deal_and_its_timeline_tick():
     assert "No deal" in node(RENDER, data)["frames"][-1]
     out = node(TIMELINE, {"game": "split_deal", "seats": ["a", "b"], "frames": frames})
     assert "No deal" in str(out)
+
+
+def word_link_frames(*actions, seed=3):
+    game = WordLink()
+    state = game.initial_state(4, seed)
+    frames = [game.spectator_view(state)]
+    for action in actions:
+        state = game.apply(state, game.current_player(state), action)
+        frames.append(game.spectator_view(state))
+    return frames
+
+
+def test_word_link_shows_the_board_the_clues_the_trap_and_the_winner():
+    state = WordLink().initial_state(4, 3)
+    key = dict(zip(state.board, state.key, strict=True))
+    trap = next(w for w, k in key.items() if k == "trap")
+    frames = word_link_frames(
+        {"word": "<b>evil</b>", "number": 1}, {"action": "guess", "word": trap}
+    )
+    seats = [EVIL, "b", "c", "d"]
+    data = {"game": "word_link", "seats": seats, "frames": frames, "turns": []}
+    html = node(RENDER, data)["frames"]
+    assert html[0].count("wl-cell") == 16 and "no clues yet" in html[0]
+    assert "clue-giver to act" in html[0]
+    assert "&lt;b&gt;evil&lt;/b&gt; 1" in html[1]
+    assert "c and d win" in html[2]
+    assert "k-trap shown" in html[2]
+    assert not any(EVIL in h for h in html)
+    out = node(TIMELINE, {"game": "word_link", "seats": seats, "frames": frames})
+    assert "hit the trap" in str(out)
 
 
 def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():

@@ -43,7 +43,7 @@ def _factory(roster_path: str | None):
 def _build_player(factory, spec: str):
     """'random', 'random:SEED', 'liars-dice-bot', 'liars-dice-bot-v2', 'werewolf-bot',
     'werewolf-bot:SEED', 'code-break-solver', 'code-break-random' and 'split-deal-bot' are built
-    in; anything else is a roster id."""
+    in, as are the Word Link bots; anything else is a roster id."""
     from arena.costs import FREE
     from arena.players.bots import (
         LIARS_DICE_V2_THRESHOLD,
@@ -53,8 +53,17 @@ def _build_player(factory, spec: str):
         RandomPlayer,
         SplitDealBot,
         WerewolfBot,
+        WordLinkClueBot,
+        WordLinkGuessBot,
+        WordLinkRandomGuesser,
     )
 
+    if spec == "word-link-clue-bot":
+        return WordLinkClueBot(spec), FREE
+    if spec == "word-link-guess-bot":
+        return WordLinkGuessBot(spec), FREE
+    if spec == "word-link-random":
+        return WordLinkRandomGuesser(spec), FREE
     if spec == "split-deal-bot":
         return SplitDealBot(spec), FREE
     if spec == "code-break-solver":
@@ -147,6 +156,7 @@ async def _tournament(args: argparse.Namespace) -> None:
         create_round_robin,
         create_swiss,
         create_tables,
+        create_team_tournament,
         resume_tournament,
     )
 
@@ -172,6 +182,9 @@ async def _tournament(args: argparse.Namespace) -> None:
             await pool.close()
         print(f"tournament {args.tournament_id}: running, {n} failed matches re-queued")
         return
+    teams = [tuple(t.split("+")) for t in args.teams.split(",")] if args.teams else None
+    if teams:
+        args.players = ",".join(pid for team in teams for pid in team)
     if not args.game or not args.players:
         sys.exit("arena tournament: --game and --players are required")
 
@@ -184,7 +197,19 @@ async def _tournament(args: argparse.Namespace) -> None:
     pool = await create_pool(settings().database_url)
     try:
         fmt = args.format or ("tables" if args.tables else "round_robin")
-        if fmt == "swiss":
+        if teams:
+            config = {c.id: c for c in cfgs}
+            tid, n = await create_team_tournament(
+                pool,
+                args.game,
+                [[config[pid] for pid in team] for team in teams],
+                args.games_per_pair,
+                args.budget,
+                args.seed,
+                args.spend_mode,
+            )
+            print(f"tournament {tid}: {len(teams)} teams, {n} matches queued")
+        elif fmt == "swiss":
             tid, n = await create_swiss(
                 pool,
                 args.game,
@@ -378,6 +403,7 @@ def main(argv: list[str] | None = None) -> None:
     t = sub.add_parser("tournament", help="queue a tournament, or resume a paused one")
     t.add_argument("--game")
     t.add_argument("--players", help="comma-separated roster ids")
+    t.add_argument("--teams", help="team games: a+b,c+d, seated in that order")
     t.add_argument(
         "--format",
         choices=["round_robin", "swiss", "tables"],

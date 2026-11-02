@@ -32,6 +32,24 @@ seed = 1
 
 # Liar's Dice bots. v2 challenges less: see arena/dice_sim.py.
 [[players]]
+id = "word-link-clue-bot"
+provider = "bot"
+model = "word_link_clue"
+seed = 1
+
+[[players]]
+id = "word-link-guess-bot"
+provider = "bot"
+model = "word_link_guess"
+seed = 1
+
+[[players]]
+id = "word-link-random"
+provider = "bot"
+model = "word_link_random"
+seed = 1
+
+[[players]]
 id = "split-deal-bot"
 provider = "bot"
 model = "split_deal"
