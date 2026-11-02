@@ -348,7 +348,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       Clue = one word + a number; the guesser picks one at a time and may stop; trap =
       loss. Weng-Lin teams. Bots: random guesser, and a clue bot using a hand-made
       association table. Metrics: words per clue, trap hits, clues that break the rules.
-- [ ] README: a "What each game tests" table and findings per game, with intervals.
+- [x] README: a "What each game tests" table and findings per game, with intervals.
 
 ### Phase 10: Paid experiments
 - [ ] Effort sweep: sonnet-5.5 Liar's Dice vs liars-dice-bot-v2 at effort low, medium,
