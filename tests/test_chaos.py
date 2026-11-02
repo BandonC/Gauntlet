@@ -27,6 +27,7 @@ from arena.chaos import (
     run_chaos,
 )
 from arena.store.db import create_pool
+from arena.store.spend import TOTAL_SPEND_SQL
 from arena.worker import WorkerConfig, run_worker
 
 FIRST_MATCH = "(SELECT min(id) FROM matches)"
@@ -53,13 +54,13 @@ def test_chaos_players_bill_something():
     assert price == CHAOS_PRICE
 
 
-@pytest.fixture
-async def clean_run():
+@pytest.fixture(params=["exact", "sharded"])
+async def clean_run(request):
     """A small undamaged run in arena_bench, finished by one in-process worker."""
     admin = os.environ["DATABASE_URL"]
     dsn = bench_dsn(admin)
     await reset_database(admin)
-    await queue_matches(dsn, 6, 3)
+    await queue_matches(dsn, 6, 3, request.param)
     pool = await create_pool(dsn, max_size=4)
     await run_worker(pool, ChaosFactory(bench_roster(3), {}), WorkerConfig(), exit_when_idle=True)
     yield pool
@@ -70,7 +71,7 @@ async def clean_run():
 @pytest.mark.db
 async def test_clean_run_has_no_violations_and_real_spend(clean_run):
     assert await check_invariants(clean_run, 6) == []
-    assert await clean_run.fetchval("SELECT spent_usd FROM tournaments") > 0
+    assert await clean_run.fetchval(f"SELECT {TOTAL_SPEND_SQL} FROM tournaments t") > 0
 
 
 TAMPERED = [
@@ -112,6 +113,12 @@ TAMPERED = [
         "games_played",
     ),
     ("spend drift", "UPDATE tournaments SET spent_usd = spent_usd + 0.000001", "turns cost"),
+    (
+        "stray shard",
+        "INSERT INTO tournament_spend_shards (tournament_id, worker_id, spent_usd) "
+        "SELECT id, 'ghost', 0.000001 FROM tournaments",
+        "ghost",
+    ),
     (
         "unpaid turn",
         f"UPDATE turns SET cost_usd = 0 WHERE turn_no = 0 AND match_id = {FIRST_MATCH}",
@@ -162,7 +169,8 @@ async def test_only_this_repos_compose_postgres_can_be_paused():
 @pytest.mark.slow
 @pytest.mark.skipif(not os.environ.get("DATABASE_URL"), reason="needs DATABASE_URL")
 @pytest.mark.skipif(shutil.which("docker") is None, reason="needs docker")
-async def test_short_chaos_run_holds_every_invariant():
+@pytest.mark.parametrize("spend_mode", ["exact", "sharded"])
+async def test_short_chaos_run_holds_every_invariant(spend_mode):
     result = await asyncio.wait_for(
         run_chaos(
             os.environ["DATABASE_URL"],
@@ -173,6 +181,7 @@ async def test_short_chaos_run_holds_every_invariant():
             pause_chance=0.25,
             stop_chance=0.25,
             pause_seconds=(1.0, 5.0),
+            spend_mode=spend_mode,
             time_limit=300.0,
         ),
         timeout=360.0,
