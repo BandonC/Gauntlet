@@ -19,8 +19,9 @@ import asyncpg
 
 from arena.store import ratings
 from arena.store import tournaments as t_store
+from arena.store.spend import TOTAL_SPEND_SQL
 
-CLAIM_SQL = """
+CLAIM_SQL = f"""
 UPDATE matches m
 SET status = 'running',
     lease_owner = $1,
@@ -36,13 +37,15 @@ WHERE m.id = (
           SELECT 1 FROM tournaments t
           WHERE t.id = matches.tournament_id
             AND (t.status = 'paused'
-                 OR (t.budget_usd IS NOT NULL AND t.spent_usd >= t.budget_usd))
+                 OR (t.budget_usd IS NOT NULL AND {TOTAL_SPEND_SQL} >= t.budget_usd))
       )
     ORDER BY available_at, id
     FOR UPDATE SKIP LOCKED
     LIMIT 1
 )
-RETURNING m.id, m.tournament_id, m.game, m.seed, m.run_attempts, m.options
+RETURNING m.id, m.tournament_id, m.game, m.seed, m.run_attempts, m.options,
+    (SELECT t.spend_mode FROM tournaments t WHERE t.id = m.tournament_id) AS spend_mode,
+    (SELECT t.budget_usd FROM tournaments t WHERE t.id = m.tournament_id) AS budget_usd
 """
 
 HEARTBEAT_SQL = """
@@ -93,6 +96,8 @@ class ClaimedMatch:
     run_attempts: int
     seats: list[str]
     options: dict | None = None
+    spend_mode: str | None = None  # None for a match outside any tournament
+    has_budget: bool = False
 
 
 async def claim(pool: asyncpg.Pool, worker_id: str, lease_seconds: float) -> ClaimedMatch | None:
@@ -109,6 +114,8 @@ async def claim(pool: asyncpg.Pool, worker_id: str, lease_seconds: float) -> Cla
         run_attempts=row["run_attempts"],
         seats=seats,
         options=row["options"],
+        spend_mode=row["spend_mode"],
+        has_budget=row["budget_usd"] is not None,
     )
 
 

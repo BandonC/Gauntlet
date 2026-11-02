@@ -284,10 +284,36 @@ that row through a disk sync. In a smaller run at 8 workers, half the sampled da
 (737 of 1,455) were waiting on row locks, and disabling only that update raised 370 turns/s to 476.
 That isn't the only limit, but it's the main one found.
 
-I left it alone. That update is what makes the budget cap exact, and bot turns are instant. A real
-model takes seconds a turn, so about 270 turns/s is far above anything these tournaments need.
-Sharding spend per match would be the fix if that changed. The machine was busy, with under 1 GB
-of memory free, so treat the shape as the finding rather than the exact figures.
+Bot turns are instant, though. A real model takes seconds a turn, so about 270 turns/s is far above
+anything these tournaments need. The machine was busy, with under 1 GB of memory free, so treat
+the shape as the finding rather than the exact figures.
+
+### Sharded spend: the lock went away, the ceiling mostly didn't
+
+`--spend-mode sharded` gives each worker slot its own spend row, summed for the budget check, so
+slots stop queuing on the tournament row. It worked as designed: at 8 workers, samples of sessions
+waiting on row locks fell from 855 to 0. Throughput moved far less. Here are 5,000 matches again,
+one run per cell, alternating modes on a slower night than the table above:
+
+| Workers | Exact, matches/s | Sharded, matches/s | Sharded against exact |
+|---:|---:|---:|---:|
+| 1 | 5.0 | 4.7 | 0.93x |
+| 2 | 8.1 | 6.8 | 0.84x |
+| 4 | 9.9 | 9.3 | 0.94x |
+| 8 | 8.9 | 12.6 | 1.42x |
+
+**Sharding only paid off at 8 workers.** Below that it's slightly slower, because each turn makes an
+extra budget-check round trip. Exact peaks at 4 workers and falls, while sharded keeps climbing, and
+a separate 1,000-match run showed the same crossover (exact 14.8 then 13.2 matches/s at 4 and 8
+workers, sharded 12.2 then 15.9). With single runs on a busy machine, gaps of 6-16% could be noise.
+The direction is the finding. With the lock gone, the sampled sessions were mostly Postgres waiting
+on the workers, then waiting on disk syncs, so those are the next limits.
+
+Sharding also tightens the cap, which I hadn't planned to change. Exact mode checks the budget only
+when claiming a match, so a running match can pass it by the rest of that match. Sharded mode checks
+before every turn and hands the match back, which holds overshoot to **worker slots x max turn
+cost**. Tests confirm that bound at 1 and 4 slots. Exact stays the default, because nothing here
+runs enough workers to need sharding.
 
 ### Chaos: nothing was lost
 
@@ -310,8 +336,10 @@ kinds of deliberate damage each have to be caught.
 
 Graceful stops have a shorter test. With only stops, matches changed worker mid-game with no lease
 expiry and no extra claims, and breaking the release made that test fail. A 2,000-match run mixing
-stops in was itself killed for low memory. The largest finished mix is 500 matches on a faster
-in-memory database: 12 kills, 2 freezes and 7 graceful stops, with every invariant held.
+stops in was itself killed for low memory. The largest finished mixes are 500 matches on a faster
+in-memory database, with every invariant held: 12 kills, 2 freezes and 7 graceful stops with exact
+spend, and 19 kills, 7 freezes and 8 graceful stops with sharded spend, where each slot's row also
+had to match the cost of its own turns exactly.
 
 ### Tracing
 

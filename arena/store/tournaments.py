@@ -17,6 +17,7 @@ from arena.games.registry import get_game
 from arena.ratings.weng_lin import WengLin
 from arena.roster import PlayerConfig, config_hash
 from arena.store import ratings
+from arena.store.spend import EXACT
 from arena.tournaments import (
     BYE_POINTS,
     SwissEntrant,
@@ -134,15 +135,17 @@ async def _insert_tournament(
     players: list[PlayerConfig],
     budget_usd: float | None,
     rounds: int | None = None,
+    spend_mode: str = EXACT,
 ) -> int:
     await upsert_players(conn, players)
     tid = await conn.fetchval(
-        "INSERT INTO tournaments (game, format, budget_usd, rounds) "
-        "VALUES ($1, $2, $3, $4) RETURNING id",
+        "INSERT INTO tournaments (game, format, budget_usd, rounds, spend_mode) "
+        "VALUES ($1, $2, $3, $4, $5) RETURNING id",
         game,
         fmt,
         budget_usd,
         rounds,
+        spend_mode,
     )
     await conn.executemany(
         "INSERT INTO tournament_players (tournament_id, player_id) VALUES ($1, $2)",
@@ -178,12 +181,15 @@ async def create_round_robin(
     games_per_pair: int,
     budget_usd: float | None,
     seed: int | None = None,
+    spend_mode: str = EXACT,
 ) -> tuple[int, int]:
     """Returns (tournament_id, number_of_matches)."""
     seed = random.randrange(2**31) if seed is None else seed
     seatings = shuffle_matches(round_robin([p.id for p in players], games_per_pair), seed)
     async with pool.acquire() as conn, conn.transaction():
-        tid = await _insert_tournament(conn, game, "round_robin", players, budget_usd)
+        tid = await _insert_tournament(
+            conn, game, "round_robin", players, budget_usd, spend_mode=spend_mode
+        )
         await _insert_matches(conn, tid, game, seatings, random.Random(seed))
     return tid, len(seatings)
 
@@ -196,6 +202,7 @@ async def create_tables(
     tables: int,
     budget_usd: float | None,
     seed: int | None = None,
+    spend_mode: str = EXACT,
 ) -> tuple[int, int]:
     """Queue every table at once (see tournaments.table_schedule). Returns
     (tournament_id, number_of_matches)."""
@@ -225,7 +232,9 @@ async def create_tables(
             if max(by_player.values()) - min(by_player.values()) > 1:
                 log.warning("no even deal found for role %s: %s", role, by_player)
     async with pool.acquire() as conn, conn.transaction():
-        tid = await _insert_tournament(conn, game, "tables", players, budget_usd)
+        tid = await _insert_tournament(
+            conn, game, "tables", players, budget_usd, spend_mode=spend_mode
+        )
         await _insert_matches(conn, tid, game, seatings, random.Random(seed), options=options)
     return tid, len(seatings)
 
@@ -237,6 +246,7 @@ async def create_swiss(
     budget_usd: float | None,
     rounds: int | None = None,
     seed: int | None = None,
+    spend_mode: str = EXACT,
 ) -> tuple[int, int]:
     """Queue round 1 (seeded by Weng-Lin ordinal); later rounds are queued as
     rounds finish. Returns (tournament_id, matches in round 1)."""
@@ -244,7 +254,7 @@ async def create_swiss(
         raise ValueError("a Swiss tournament needs at least 2 players")
     rounds = rounds or default_swiss_rounds(len(players))
     async with pool.acquire() as conn, conn.transaction():
-        tid = await _insert_tournament(conn, game, "swiss", players, budget_usd, rounds)
+        tid = await _insert_tournament(conn, game, "swiss", players, budget_usd, rounds, spend_mode)
         await conn.execute("UPDATE tournaments SET current_round = 1 WHERE id = $1", tid)
         n = await _queue_swiss_round(conn, tid, game, 1, random.Random(seed))
     return tid, n

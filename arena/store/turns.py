@@ -5,8 +5,8 @@ the match row means a concurrent re-claim (which needs a row lock) waits for thi
 insert to commit, so a worker whose lease just expired can't sneak in a late write.
 The (match_id, turn_no) primary key is the second line of defence.
 
-Turn cost is added to the tournament's spent_usd in the same transaction, so the
-budget cap reflects every persisted turn across all workers.
+Turn cost is added to the tournament's spend in the same transaction, so the budget cap
+reflects every persisted turn across all workers. store/spend.py has the two modes.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncpg
 
 from arena.engine.match_runner import LeaseLost, TurnRecord
+from arena.store.spend import ADD_EXACT_SQL, ADD_SHARD_SQL
 from arena.telemetry import SPEND_USD
 from arena.types import Usage
 
@@ -38,18 +39,14 @@ ON CONFLICT (match_id, turn_no) DO NOTHING
 RETURNING turn_no
 """
 
-ADD_SPEND_SQL = """
-UPDATE tournaments SET spent_usd = spent_usd + $2
-WHERE id = (SELECT tournament_id FROM matches WHERE id = $1)
-"""
-
 LOAD_SQL = "SELECT * FROM turns WHERE match_id = $1 ORDER BY turn_no"
 
 
 class PostgresTurnStore:
-    def __init__(self, pool: asyncpg.Pool, worker_id: str):
+    def __init__(self, pool: asyncpg.Pool, worker_id: str, sharded: bool = False):
         self._pool = pool
         self._worker_id = worker_id
+        self._sharded = sharded
 
     async def load_turns(self, match_id: str) -> list[TurnRecord]:
         rows = await self._pool.fetch(LOAD_SQL, int(match_id))
@@ -109,5 +106,8 @@ class PostgresTurnStore:
             )
             if inserted is None:
                 raise LeaseLost(f"match {mid} turn {t.turn_no}: lease lost or turn exists")
-            await conn.execute(ADD_SPEND_SQL, mid, t.cost_usd)
+            if self._sharded:
+                await conn.execute(ADD_SHARD_SQL, mid, t.cost_usd, self._worker_id)
+            else:
+                await conn.execute(ADD_EXACT_SQL, mid, t.cost_usd)
         SPEND_USD.inc(t.cost_usd)  # after commit: a fenced write spends nothing here
