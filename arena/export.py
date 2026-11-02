@@ -131,6 +131,8 @@ async def export_site(
         data(f"leaderboard/{g}.json", await leaderboard(pool, g))
         data(f"metrics/{g}.json", await metrics.player_metrics(pool, g))
     data("werewolf/roles.json", await metrics.werewolf_metrics(pool))
+    data("code_break/metrics.json", await metrics.code_break_metrics(pool))
+    data("split_deal/metrics.json", await metrics.split_deal_metrics(pool))
     return summary
 
 

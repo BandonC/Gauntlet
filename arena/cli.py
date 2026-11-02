@@ -42,8 +42,8 @@ def _factory(roster_path: str | None):
 
 def _build_player(factory, spec: str):
     """'random', 'random:SEED', 'liars-dice-bot', 'liars-dice-bot-v2', 'werewolf-bot',
-    'werewolf-bot:SEED', 'code-break-solver' and 'code-break-random' are built in; anything
-    else is a roster id."""
+    'werewolf-bot:SEED', 'code-break-solver', 'code-break-random' and 'split-deal-bot' are built
+    in; anything else is a roster id."""
     from arena.costs import FREE
     from arena.players.bots import (
         LIARS_DICE_V2_THRESHOLD,
@@ -51,9 +51,12 @@ def _build_player(factory, spec: str):
         CodeBreakSolver,
         LiarsDiceBot,
         RandomPlayer,
+        SplitDealBot,
         WerewolfBot,
     )
 
+    if spec == "split-deal-bot":
+        return SplitDealBot(spec), FREE
     if spec == "code-break-solver":
         return CodeBreakSolver(spec), FREE
     if spec == "code-break-random":

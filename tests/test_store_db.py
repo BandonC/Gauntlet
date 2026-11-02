@@ -28,7 +28,7 @@ from arena.roster import PlayerConfig, PlayerFactory, ProviderLimits, Roster
 from arena.store import queue, ratings, read
 from arena.store.db import create_pool
 from arena.store.metrics import code_break_metrics as metrics_for_code_break
-from arena.store.metrics import player_metrics, werewolf_metrics
+from arena.store.metrics import player_metrics, split_deal_metrics, werewolf_metrics
 from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
 from arena.store.tournaments import (
@@ -1325,3 +1325,37 @@ async def test_cancel_refuses_a_running_match_and_a_finished_tournament(pool):
         await cancel_tournament(pool, tid, "x")
     with pytest.raises(ValueError, match="no tournament"):
         await cancel_tournament(pool, 999, "x")
+
+
+async def test_split_deal_rates_by_who_scored_more_not_by_scores(pool):
+    players = [
+        PlayerConfig("bot-a", "bot", model="split_deal", seed=1),
+        PlayerConfig("bot-b", "bot", model="split_deal", seed=2),
+    ]
+    factory = PlayerFactory(Roster({p.id: p for p in players}, {}), {})
+    tid, n = await create_round_robin(pool, "split_deal", players, 10, None, seed=5)
+    await run_worker(pool, factory, FAST, concurrency=2, exit_when_idle=True)
+
+    assert await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tid) == "completed"
+    rows = await split_deal_metrics(pool, tid)
+    assert {r["player_id"] for r in rows} == {"bot-a", "bot-b"}
+    assert all(r["games"] == n and 0 < r["deal_rate"] <= 1 for r in rows)
+    assert all(0 < r["efficiency"] <= 1 for r in rows)
+    assert len(await leaderboard(pool, "split_deal")) == 2
+
+
+async def test_a_no_deal_moves_elo_like_a_draw_not_a_seat_one_win(pool):
+    players = [
+        PlayerConfig("bot-a", "bot", model="split_deal", seed=1),
+        PlayerConfig("bot-b", "bot", model="split_deal", seed=2),
+    ]
+    await create_round_robin(pool, "split_deal", players, 1, None, seed=5)
+    mid = await pool.fetchval("SELECT min(id) FROM matches")
+    seats = [
+        r["player_id"]
+        for r in await pool.fetch("SELECT player_id FROM match_seats WHERE match_id=$1", mid)
+    ]
+    async with pool.acquire() as conn, conn.transaction():
+        await ratings.apply_match_result(conn, mid, "split_deal", seats, [0.0, 0.0], [1, 1])
+    elos = await pool.fetch("SELECT rating FROM ratings WHERE game = 'split_deal'")
+    assert [r["rating"] for r in elos] == [1500.0, 1500.0]

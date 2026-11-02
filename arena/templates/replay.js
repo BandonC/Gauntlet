@@ -58,6 +58,34 @@ const RENDERERS = {
     return `<div class="c4">${cells}</div><p class="status">${status}</p>`;
   },
 
+  split_deal(f, seats) {
+    const items = f.items;
+    const given = (keep) => items.map((it, i) => `${Number(keep[it])} ${esc(it)}`).join(", ");
+    const rows = items
+      .map(
+        (it, i) =>
+          `<tr><td>${esc(it)}</td><td class="num">${Number(f.quantities[i])}</td>` +
+          `<td class="num">${Number(f.values[0][i])}</td><td class="num">${Number(f.values[1][i])}</td></tr>`,
+      )
+      .join("");
+    const head =
+      `<tr><th>Item</th><th class="num">On the table</th><th class="num">${name(seats, 0)} values</th>` +
+      `<th class="num">${name(seats, 1)} values</th></tr>`;
+    const offers = f.offers
+      .map((o) =>
+        said(o.seat, name(seats, o.seat), `keeps ${given(o.keep)}.${o.message ? ` <q>${esc(o.message)}</q>` : ""}`),
+      )
+      .join("");
+    let status;
+    if (f.deal) status = `Deal: ${name(seats, 0)} ${f.scores[0].toFixed(1)}, ${name(seats, 1)} ${f.scores[1].toFixed(1)}`;
+    else if (f.over) status = "No deal: both score 0";
+    else status = `${name(seats, f.to_move)} to act, ${6 - Number(f.used[f.to_move])} offers left`;
+    return (
+      `<table class="ld sd"><thead>${head}</thead><tbody>${rows}</tbody></table>` +
+      `${offers || '<p class="muted">no offers yet</p>'}<p class="status">${status}</p>`
+    );
+  },
+
   liars_dice(f, seats) {
     const over = f.winner !== null;
     const last = f.bids.length ? f.bids[f.bids.length - 1] : null;
@@ -172,6 +200,14 @@ function roundTable({ seats, dead, votes, out = null, roles = null }) {
 function timeline(game, frames, seats) {
   const bands = [];
   const ticks = [];
+  if (game === "split_deal") {
+    let ended = false;
+    frames.forEach((f, i) => {
+      if (!f.over || ended) return;
+      ended = true;
+      ticks.push({ at: i, text: f.deal ? "Deal reached" : "No deal" });
+    });
+  }
   if (game === "code_break") {
     const done = [false, false];
     frames.forEach((f, i) => {

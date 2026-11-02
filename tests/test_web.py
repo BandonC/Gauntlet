@@ -441,7 +441,7 @@ def _contrast(a, b):
 
 def test_the_dark_palette_is_the_same_for_the_system_setting_and_the_toggle():
     _, system, toggled = _palettes()
-    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 44
+    assert _tokens(system) == _tokens(toggled) and len(_tokens(toggled)) == 48
 
 
 @pytest.mark.parametrize("index", [0, 2], ids=["light", "dark"])

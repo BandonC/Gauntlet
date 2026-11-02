@@ -13,6 +13,7 @@ import pytest
 from arena.games.code_break import ALL_CODES, CodeBreak, make_secret
 from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
+from arena.games.split_deal import SplitDeal
 from arena.games.werewolf import Werewolf, WerewolfDayFirst
 from arena.web import REPLAY_JS
 
@@ -126,6 +127,37 @@ def test_code_break_ticks_each_solve_on_the_timeline():
     frames = code_break_frames(WRONG, SECRET)
     out = node(TIMELINE, {"game": "code_break", "seats": ["a", "b"], "frames": frames})
     assert "b solved it on guess 1" in str(out)
+
+
+def split_deal_frames(*actions, seed=2):
+    game = SplitDeal()
+    state = game.initial_state(2, seed)
+    frames = [game.spectator_view(state)]
+    for action in actions:
+        state = game.apply(state, game.current_player(state), action)
+        frames.append(game.spectator_view(state))
+    return frames
+
+
+def test_split_deal_shows_values_offers_escaped_messages_and_the_deal():
+    offer = {"action": "offer", "book": 0, "hat": 0, "ball": 0, "message": "<b>evil</b>"}
+    frames = split_deal_frames(offer, {"action": "accept"})
+    data = {"game": "split_deal", "seats": [EVIL, "b"], "frames": frames, "turns": []}
+    html = node(RENDER, data)["frames"]
+    assert "no offers yet" in html[0] and "6 offers left" in html[0]
+    assert "keeps 0 book, 0 hat, 0 ball" in html[1]
+    assert "&lt;b&gt;evil&lt;/b&gt;" in html[1]
+    assert "Deal:" in html[2]
+    assert not any(EVIL in h for h in html)
+
+
+def test_split_deal_no_deal_and_its_timeline_tick():
+    offer = {"action": "offer", "book": 0, "hat": 0, "ball": 0}
+    frames = split_deal_frames(*[offer] * 12, {"action": "reject"})
+    data = {"game": "split_deal", "seats": ["a", "b"], "frames": frames, "turns": []}
+    assert "No deal" in node(RENDER, data)["frames"][-1]
+    out = node(TIMELINE, {"game": "split_deal", "seats": ["a", "b"], "frames": frames})
+    assert "No deal" in str(out)
 
 
 def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():
