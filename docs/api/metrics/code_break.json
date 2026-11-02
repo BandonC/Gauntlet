@@ -1,0 +1,72 @@
+[
+ {
+  "player_id": "code-break-solver",
+  "turns": 604,
+  "attempts": 604,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 140,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "haiku-5.5/cb-v1",
+  "turns": 134,
+  "attempts": 134,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2093.5,
+  "latency_p95_ms": 2678.1,
+  "completed_games": 19,
+  "cost_per_game_usd": 0.000392,
+  "cache_hit_rate": 0.7052
+ },
+ {
+  "player_id": "haiku-5.5/cb-v2",
+  "turns": 813,
+  "attempts": 815,
+  "illegal_attempts": 2,
+  "illegal_move_rate": 0.0025,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 1988.0,
+  "latency_p95_ms": 2607.6,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.000647,
+  "cache_hit_rate": 0.7627
+ },
+ {
+  "player_id": "sonnet-5/cb-v1",
+  "turns": 140,
+  "attempts": 163,
+  "illegal_attempts": 34,
+  "illegal_move_rate": 0.2086,
+  "forfeits": 11,
+  "auto_fills": 0,
+  "latency_p50_ms": 2694.5,
+  "latency_p95_ms": 7268.5,
+  "completed_games": 21,
+  "cost_per_game_usd": 0.01977,
+  "cache_hit_rate": 0.0
+ },
+ {
+  "player_id": "sonnet-5/cb-v2",
+  "turns": 813,
+  "attempts": 831,
+  "illegal_attempts": 22,
+  "illegal_move_rate": 0.0265,
+  "forfeits": 4,
+  "auto_fills": 0,
+  "latency_p50_ms": 2737.0,
+  "latency_p95_ms": 3131.0,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.013291,
+  "cache_hit_rate": 0.7736
+ }
+]
