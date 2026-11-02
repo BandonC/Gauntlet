@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$20.71**: $20.02 across 551 recorded games and 18.3 million tokens, plus $0.69 on 18 in-memory
+**$22.10**: $21.25 across 731 recorded games and 19.3 million tokens, plus $0.85 on 38 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -236,6 +236,40 @@ own field and added a worked example of feedback to the prompt. Sonnet 5 still s
 letters in one peg, because the API doesn't enforce the schema, but that fell to 2.6% of attempts
 (22 of 831), with 4 lost turns. The rerun gave no sign that the worked example helped.
 
+### Split the Deal: honest, and too quick to settle
+
+Two players divide three kinds of item, each knowing only their own values. A deal pays each side
+what their share is worth to them, so both can do well, and no deal pays nothing. The bot is
+deliberately simple: it asks for everything, then lowers its target in even steps to half.
+
+| Pairing, 60 games each | Result, wins-losses-ties | Share (interval) | Mean score |
+|---|---:|---:|---:|
+| Bot over Haiku 5.5 | 55-3-2 | 93.3% (84.1-97.4%) | 0.89 to 0.50 |
+| Bot over Sonnet 5 | 33-17-10 | 63.3% (50.7-74.4%) | 0.73 to 0.68 |
+| Sonnet 5 over Haiku 5.5 | 37-15-8 | 68.3% (55.8-78.7%) | 0.76 to 0.64 |
+
+**A bot with no model of its opponent beat both models, and it wasn't close against Haiku.** Sonnet 5
+beat Haiku too (p = 0.003, counting wins and losses). The two sides were close to the best possible split, 90-94% of
+the value available, and 178 of 180 games reached a deal, so failing to agree wasn't the problem.
+Dividing it was. Games lasted about 5 turns of a possible 13. Haiku accepted 90 of the 178 deals
+and the bot only 46, and the bot's opening ask is all or nearly all of the value. The likely story
+is that models take a decent offer early, while the bot holds out because that's all it knows how to
+do. I didn't test that directly.
+
+**Nobody lied in a way I could catch.** Of 454 model messages, 110 made a literal statement about
+the speaker's own values, and 109 were true, including all 84 of Haiku's. The one mismatch was
+Sonnet 5 saying a hat was "worth 0 to me unless I get it", a conditional rather than a lie. Matching
+is literal, so paraphrases and evasions don't count, and this says only that plain false statements
+of value were almost absent. It doesn't show the models were candid about everything.
+
+Moving second won more often, 94 games to 66 (p = 0.03), which I only looked for afterwards.
+
+One design error of mine showed up before this run. The move tool listed `reject` every turn though
+it's only legal at the very end, and Haiku's first test games tried it, 2 of 16 attempts. The tool
+now lists only what's legal that turn, and in the tournament no model made an illegal move in 588
+attempts. This game also forced a change to ratings: scores here aren't zero-sum, so heads-up ratings
+now read who finished ahead. All 446 earlier heads-up matches give the same outcome either way.
+
 ### Connect 4: the illegal-move gap
 
 In 20 games, **Haiku 5.5 made 41 illegal attempts in 220 (18.6%) and Haiku 4.5 made 15 in 196
@@ -261,10 +295,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Liar's Dice, Sonnets and v2 round-robin | 90 | 1,827,762 | $4.4364 |
 | Code Break, cancelled at 30 of 180 games | 30 | 328,562 | $0.4226 |
 | Code Break, Sonnet 5, Haiku 5.5 and the solver | 180 | 2,506,529 | $1.6726 |
-| **Total** | **551** | **18,267,779** | **$20.02** |
+| Split the Deal, Sonnet 5, Haiku 5.5 and the bot | 180 | 1,050,980 | $1.2309 |
+| **Total** | **731** | **19,318,759** | **$21.25** |
 
-Eighteen in-memory test games cost another $0.69. They never reach the turn log, so the project
-total is about $20.71.
+38 in-memory test games cost another $0.85. They never reach the turn log, so the project total
+is about $22.10.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -437,5 +472,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14 --matches 116,142   # the static site
 ```

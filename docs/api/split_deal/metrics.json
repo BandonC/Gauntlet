@@ -1,0 +1,35 @@
+[
+ {
+  "player_id": "haiku-5.5/sd-v1",
+  "games": 120,
+  "deals": 120,
+  "deal_rate": 1.0,
+  "mean_score": 0.5708,
+  "efficiency": 0.9087,
+  "offers": 180,
+  "true_claims": 84,
+  "false_claims": 0
+ },
+ {
+  "player_id": "sonnet-5/sd-v1",
+  "games": 120,
+  "deals": 118,
+  "deal_rate": 0.9833,
+  "mean_score": 0.7167,
+  "efficiency": 0.9275,
+  "offers": 274,
+  "true_claims": 25,
+  "false_claims": 1
+ },
+ {
+  "player_id": "split-deal-bot",
+  "games": 120,
+  "deals": 118,
+  "deal_rate": 0.9833,
+  "mean_score": 0.8108,
+  "efficiency": 0.9221,
+  "offers": 307,
+  "true_claims": 0,
+  "false_claims": 0
+ }
+]

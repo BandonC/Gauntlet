@@ -21,6 +21,7 @@ from markupsafe import Markup
 
 from arena.games.code_break import code_of
 from arena.games.registry import get_game, list_games
+from arena.games.split_deal import ITEMS
 from arena.store import metrics, ratings, read
 from arena.store.ratings import leaderboard
 
@@ -84,10 +85,19 @@ def _code_break_move(a: dict) -> str | None:
     return f"guess {code}" if code else None
 
 
+def _split_deal_move(a: dict) -> str | None:
+    if a.get("action") in ("accept", "reject"):
+        return a["action"]
+    if a.get("action") == "offer" and set(ITEMS) <= set(a):
+        return "keep " + ", ".join(f"{a[item]} {item}" for item in ITEMS)
+    return None
+
+
 GAME_NAMES = {
     "code_break": "Code Break",
     "connect4": "Connect 4",
     "liars_dice": "Liar's Dice",
+    "split_deal": "Split the Deal",
     "werewolf": "Werewolf",
     "werewolf_dayfirst": "Werewolf (day-first)",
 }
@@ -96,6 +106,7 @@ GAME_BLURBS = {
     "code_break": "Two players race to crack one secret code. A solver never needs over 5 guesses.",
     "connect4": "Four in a row. Simple rules, and the first move decides most games.",
     "liars_dice": "Hidden dice and bold bids. A short probability bot sets the bar.",
+    "split_deal": "Two players divide three kinds of item, each hiding what they're worth.",
     "werewolf": "Seven seats, two wolves, a night kill to open. Bluffing in plain text.",
     "werewolf_dayfirst": "The same game opening by day, with everyone still alive.",
 }
@@ -146,6 +157,8 @@ def match_result(m: dict) -> str | None:
     if m["game"] in BLIND_GAMES:
         return "Wolves" if sum(scores) == 2 else "Village"
     best = max(scores)
+    if m["game"] == "split_deal" and best == 0:
+        return "No deal"
     winners = [m["seats"][seat] for seat, score in enumerate(scores) if score == best]
     return f"{winners[0]} won" if len(winners) == 1 else "Draw"
 
@@ -253,6 +266,7 @@ MOVE_LABELS = {
     "code_break": _code_break_move,
     "connect4": _connect4_move,
     "liars_dice": _liars_dice_move,
+    "split_deal": _split_deal_move,
     "werewolf": _werewolf_move,
     "werewolf_dayfirst": _werewolf_move,
 }

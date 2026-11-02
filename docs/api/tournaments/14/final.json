@@ -1,0 +1,17 @@
+{
+ "split-deal-bot": {
+  "rating": 1658.4,
+  "low": 1606.2,
+  "high": 1710.6
+ },
+ "sonnet-5/sd-v1": {
+  "rating": 1514.4,
+  "low": 1468.1,
+  "high": 1560.7
+ },
+ "haiku-5.5/sd-v1": {
+  "rating": 1327.2,
+  "low": 1273.4,
+  "high": 1381.0
+ }
+}

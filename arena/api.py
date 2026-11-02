@@ -125,6 +125,11 @@ async def code_break_metrics(tournament_id: int | None = None) -> list[dict]:
     return await m_store.code_break_metrics(app.state.pool, tournament_id)
 
 
+@app.get("/api/split_deal/metrics")
+async def split_deal_metrics(tournament_id: int | None = None) -> list[dict]:
+    return await m_store.split_deal_metrics(app.state.pool, tournament_id)
+
+
 @app.get("/api/werewolf/roles")
 async def werewolf_roles(tournament_id: int | None = None) -> list[dict]:
     return await m_store.werewolf_metrics(app.state.pool, tournament_id)
