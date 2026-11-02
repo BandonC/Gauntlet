@@ -431,6 +431,19 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Word Link (`games/word_link.py`): seats 0 and 1 are team A's clue-giver and guesser, 2 and 3 team
+  B's, and only clue seats get `key` in their view. Each model enters as two player ids, `wl-clue-v1`
+  and `wl-guess-v1`, because a match needs 4 distinct players and role prompts make them so. Run it
+  with `--teams a+b,c+d`, stored as format `tables`: `create_team_tournament` swaps who goes first.
+  `Game.teams` opts a game into `weng_lin.rate_teams`, where partners share a result by variance;
+  `rate` is its one-player case, so openskill's reference values still hold it. Werewolf isn't a
+  team game here, so it stays rated by seat. A topic can't sit inside any word: "sport" in
+  "passport" made a bot clue illegal, and a test holds that. The guess bot shares the clue bot's
+  table, a closer partnership than strangers. Two bot teams split 148-152 over 300 games, 27 turns
+  each. 24 clues is the limit, which keeps a game of skipped clues finite. `validate_palette.js`
+  passes adjacent pairs for the 7 game colours, but `--pairs all` puts Split the Deal's orange 1.5
+  from Werewolf's amber for deutan vision. Names always sit beside game colours, so identity isn't
+  colour alone.
 - Split the Deal (`games/split_deal.py`): scores aren't zero-sum and a no-deal is 0 for both, so
   `scores[0]` doesn't say who won. Elo, Glicko-2 and final ratings use `seat_zero_outcome(placements)`.
   On the 446 heads-up matches stored when that changed, it matched `scores[0]` every time. Tables

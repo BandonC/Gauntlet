@@ -8,7 +8,7 @@
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
   --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(0, 143, 134, 0.12);
   /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
-  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86; --g-cb: #7a3fb0; --g-sd: #b5521b;
+  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86; --g-cb: #7a3fb0; --g-sd: #b5521b; --g-wl: #0d7ea8;
   --mark-wolf: #a8201a; --mark-village: #008f86; --link: #124690;
   /* The page wash, top left to bottom right. A test checks text against all three. */
   --wash-1: #fbe3d0; --wash-2: #f6d4dc; --wash-3: #cfe0f2;
@@ -16,6 +16,7 @@
   --c4-wash-1: #d6f0e6; --c4-wash-2: #cde6f2; --c4-wash-3: #dcdcf5;
   --cb-wash-1: #eadff7; --cb-wash-2: #e2dcf8; --cb-wash-3: #f1dcf3;
   --sd-wash-1: #fbe9d8; --sd-wash-2: #f8e0cc; --sd-wash-3: #f4e6c8;
+  --wl-wash-1: #e6efd2; --wl-wash-2: #dcebd6; --wl-wash-3: #eef0cf;
   --dice-wash-1: #fdeccb; --dice-wash-2: #fbd9b8; --dice-wash-3: #f9cfc6;
   --ww-wash-1: #fdeccb; --ww-wash-2: #ecdff2; --ww-wash-3: #d8dcf4;
   --df-wash-1: #e6f0c8; --df-wash-2: #d3ecd6; --df-wash-3: #c7e6e4;
@@ -26,6 +27,7 @@
   /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
   --tile-code_break: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Ccircle cx='38' cy='44' r='13'/%3E%3Ccircle cx='76' cy='44' r='13'/%3E%3Ccircle cx='114' cy='44' r='13'/%3E%3Ccircle cx='152' cy='44' r='13'/%3E%3C/g%3E%3Cg%3E%3Ccircle cx='57' cy='130' r='13'/%3E%3Ccircle cx='95' cy='130' r='13'/%3E%3C/g%3E%3C/svg%3E");
   --tile-split_deal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Crect x='28' y='30' width='40' height='30' rx='3'/%3E%3Cpath d='M48 30v30'/%3E%3Cpath d='M112 62l14-30h12l14 30z'/%3E%3Ccircle cx='70' cy='130' r='17'/%3E%3Crect x='118' y='112' width='40' height='30' rx='3'/%3E%3C/g%3E%3C/svg%3E");
+  --tile-word_link: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Crect x='24' y='30' width='60' height='26' rx='4'/%3E%3Crect x='106' y='30' width='60' height='26' rx='4'/%3E%3Crect x='24' y='120' width='60' height='26' rx='4'/%3E%3Crect x='106' y='120' width='60' height='26' rx='4'/%3E%3Cpath d='M84 43h22M54 56v64'/%3E%3C/g%3E%3C/svg%3E");
   --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
   --tile-liars_dice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg transform='translate%2852 56%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cg transform='translate%28150 150%29 rotate%2818%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3C/svg%3E");
   --tile-werewolf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cpath transform='translate%2860 62%29 rotate%28-12%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cpath transform='translate%28150 44%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28186 120%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%2844 170%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28150 172%29 rotate%2820%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3C/svg%3E");
@@ -39,12 +41,13 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
-    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea; --g-sd: #d9703f;
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea; --g-sd: #d9703f; --g-wl: #2f9fc4;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
     --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
     --cb-wash-1: #1b1238; --cb-wash-2: #160f33; --cb-wash-3: #24103a;
     --sd-wash-1: #2a1a10; --sd-wash-2: #2c1712; --sd-wash-3: #241e10;
+    --wl-wash-1: #1b2412; --wl-wash-2: #152414; --wl-wash-3: #232610;
     --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
     --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
     --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
@@ -57,12 +60,13 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
-    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea; --g-sd: #d9703f;
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea; --g-sd: #d9703f; --g-wl: #2f9fc4;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
     --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
     --cb-wash-1: #1b1238; --cb-wash-2: #160f33; --cb-wash-3: #24103a;
     --sd-wash-1: #2a1a10; --sd-wash-2: #2c1712; --sd-wash-3: #241e10;
+    --wl-wash-1: #1b2412; --wl-wash-2: #152414; --wl-wash-3: #232610;
     --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
     --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
     --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
@@ -99,6 +103,10 @@ body.g-code_break {
 body.g-split_deal {
   --tile: var(--tile-split_deal);
   --wash-1: var(--sd-wash-1); --wash-2: var(--sd-wash-2); --wash-3: var(--sd-wash-3);
+}
+body.g-word_link {
+  --tile: var(--tile-word_link);
+  --wash-1: var(--wl-wash-1); --wash-2: var(--wl-wash-2); --wash-3: var(--wl-wash-3);
 }
 body.g-connect4 {
   --tile: var(--tile-connect4);
@@ -152,6 +160,7 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 /* Game identity: one colour and one pattern per game, drawn from what the game is made of. */
 .g-code_break { --g: var(--g-cb); }
 .g-split_deal { --g: var(--g-sd); }
+.g-word_link { --g: var(--g-wl); }
 .g-connect4 { --g: var(--g-c4); }
 .g-liars_dice { --g: var(--g-dice); }
 .g-werewolf { --g: var(--g-ww); }
@@ -175,6 +184,11 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
   background:
     linear-gradient(90deg, transparent 46%, color-mix(in srgb, var(--g) 40%, transparent) 46% 54%, transparent 54%) 0 0 / 34px 34px,
     linear-gradient(0deg, transparent 46%, color-mix(in srgb, var(--g) 22%, transparent) 46% 54%, transparent 54%) 0 0 / 34px 34px;
+}
+.banner.g-word_link::before {
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--g) 34%, transparent) 70%, transparent 70%) 0 6px / 34px 14px,
+    linear-gradient(90deg, color-mix(in srgb, var(--g) 18%, transparent) 70%, transparent 70%) 17px 13px / 34px 14px;
 }
 .banner.g-connect4::before {
   background: radial-gradient(circle, color-mix(in srgb, var(--g) 42%, transparent) 36%, transparent 38%) 0 0 / 24px 24px;
@@ -345,6 +359,14 @@ details.note p { max-width: none; }
 .cb { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
 .cb h3 { margin: 0 0 6px; font-size: 1rem; } .cb .turn h3 { color: var(--accent); }
 .cb-side { width: auto; }
+.wl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; max-width: 560px; margin-bottom: 12px; }
+.wl-cell {
+  padding: 8px 4px; text-align: center; border-radius: 6px; font-size: 14px; overflow-wrap: anywhere;
+  border: 2px solid var(--wl, var(--line)); background: color-mix(in srgb, var(--wl, var(--line)) 8%, var(--surface));
+}
+.wl-cell.shown { background: color-mix(in srgb, var(--wl, var(--line)) 42%, var(--surface)); font-weight: 700; }
+.k-a { --wl: #3f7fd6; } .k-b { --wl: #d0504a; } .k-neutral { --wl: var(--line); } .k-trap { --wl: var(--fg); }
+.wl-clues { margin: 0 0 8px; padding-left: 20px; }
 .sd { margin-bottom: 12px; } .said q { color: var(--muted); }
 .pegs { white-space: nowrap; }
 .peg {

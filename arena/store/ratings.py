@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncpg
 
+from arena.games.registry import get_game
 from arena.ratings import bradley_terry, elo, glicko2, weng_lin
 from arena.ratings.glicko2 import Glicko
 from arena.ratings.weng_lin import WengLin
@@ -112,6 +113,22 @@ def seat_zero_outcome(placements: list[int]) -> float:
     return 1.0 if a < b else 0.0 if a > b else 0.5
 
 
+def _rate_seats(
+    game: str, seats: list[str], placements: list[int], old: dict[str, WengLin]
+) -> dict[str, WengLin]:
+    teams = get_game(game).teams(len(seats))
+    if teams is None:
+        rated = weng_lin.rate([old[pid] for pid in seats], placements)
+        return dict(zip(seats, rated, strict=True))
+    groups = [[old[seats[seat]] for seat in team] for team in teams]
+    new_teams = weng_lin.rate_teams(groups, [placements[team[0]] for team in teams])
+    return {
+        seats[seat]: rating
+        for team, ratings_of_team in zip(teams, new_teams, strict=True)
+        for seat, rating in zip(team, ratings_of_team, strict=True)
+    }
+
+
 async def apply_match_result(
     conn: asyncpg.Connection,
     match_id: int,
@@ -143,8 +160,7 @@ async def apply_match_result(
         outcome = seat_zero_outcome(placements)
         new_elo[a], new_elo[b] = elo.update(old_elo[a], old_elo[b], outcome)
         new_gl[a], new_gl[b] = glicko2.update_pair(old_gl[a], old_gl[b], outcome)
-    rated = weng_lin.rate([old_wl[pid] for pid in seats], placements)
-    new_wl = dict(zip(seats, rated, strict=True))
+    new_wl = _rate_seats(game, seats, placements, old_wl)
     for pid in sorted(seats):
         gl, wl = new_gl[pid], new_wl[pid]
         await conn.execute(

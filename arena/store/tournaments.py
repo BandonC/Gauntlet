@@ -30,6 +30,7 @@ from arena.tournaments import (
     swiss_pairings,
     swiss_seatings,
     table_schedule,
+    team_round_robin,
 )
 
 log = logging.getLogger(__name__)
@@ -189,6 +190,31 @@ async def create_round_robin(
     async with pool.acquire() as conn, conn.transaction():
         tid = await _insert_tournament(
             conn, game, "round_robin", players, budget_usd, spend_mode=spend_mode
+        )
+        await _insert_matches(conn, tid, game, seatings, random.Random(seed))
+    return tid, len(seatings)
+
+
+async def create_team_tournament(
+    pool: asyncpg.Pool,
+    game: str,
+    teams: list[list[PlayerConfig]],
+    games_per_pair: int,
+    budget_usd: float | None,
+    seed: int | None = None,
+    spend_mode: str = EXACT,
+) -> tuple[int, int]:
+    """Teams keep their seats' order: for Word Link, clue-giver then guesser. Stored as a
+    `tables` tournament, since it's a fixed list of matches of more than two seats."""
+    players = [p for team in teams for p in team]
+    if len({p.id for p in players}) != len(players):
+        raise ValueError("a player can't be on two teams")
+    seed = random.randrange(2**31) if seed is None else seed
+    ids = [[p.id for p in team] for team in teams]
+    seatings = shuffle_matches(team_round_robin(ids, games_per_pair), seed)
+    async with pool.acquire() as conn, conn.transaction():
+        tid = await _insert_tournament(
+            conn, game, "tables", players, budget_usd, spend_mode=spend_mode
         )
         await _insert_matches(conn, tid, game, seatings, random.Random(seed))
     return tid, len(seatings)
