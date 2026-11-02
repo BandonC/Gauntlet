@@ -49,6 +49,7 @@ arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pa
 arena tournament --game liars_dice --players a,b,c,d --format tables --table-size 3 --tables 12
 arena tournament --game werewolf --players a,b,c,d,e,f,g --tables 1
 arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
+arena tournament --game connect4 --players a,b --budget 2 --spend-mode sharded
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
 arena worker --metrics-port 9100         # also serve Prometheus metrics on /metrics
@@ -106,6 +107,7 @@ arena/
   chaos.py              arena chaos: bench under kills and `docker pause`, invariant checker
   telemetry.py          OpenTelemetry spans, Prometheus metrics, TracedPlayer
   store/read.py         read queries shared by the API, pages and export
+  store/spend.py        exact and sharded spend, TOTAL_SPEND_SQL, BudgetGuard
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
   tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
@@ -312,7 +314,7 @@ opentelemetry-exporter-otlp, prometheus-client.
       Decided 2026-11-01: no. GitHub Pages already covers it, with no monthly cost.
 
 ### Phase 8: Sharded spend (bots only, no spend)
-- [ ] Sharded spend counters: per-worker-slot spend rows summed for the budget check, with a
+- [x] Sharded spend counters: per-worker-slot spend rows summed for the budget check, with a
       documented overshoot bound (worker slots × max turn cost); keep the exact single-row
       mode as an option. Rerun arena bench for M = 1, 2, 4, 8 in both modes and add the
       before/after table to the README's Scale & reliability section. Rerun a chaos check
@@ -793,7 +795,23 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   scratch patch moved one 8-worker run from 370 to 476 turns/s, and the 1-to-8 speed-up to 3.21x,
   so it isn't the only limit. Bot turns are instant, so this measures the store's ceiling. An LLM
   turn takes seconds, and tournaments here ran at concurrency 4 or below, far under about 270
-  turns/s. Budget accounting is unchanged: moving it is a design choice with the cap at stake.
+  turns/s. Exact mode is still this way; sharded mode is the answer, below.
+- Spend modes (`store/spend.py`, migration 0012): `tournaments.spend_mode`, `exact` by default.
+  Sharded writes `tournament_spend_shards`, one row per worker slot, and leaves
+  `tournaments.spent_usd` at 0, so read spend only through `TOTAL_SPEND_SQL`, which is right in
+  both modes. Slot rows outlive restarts, so a restart adds a row; the sum stays small.
+  Overshoot in sharded mode is at most worker slots x max turn cost, because `BudgetGuard` checks
+  before a turn's first attempt and hands the match back. Claim-time checks alone can't give that
+  bound: a running match would finish. Exact mode still finishes it, so sharded has the tighter
+  cap. A later attempt doesn't check, or the record of earlier attempts would be lost. A match
+  stopped at the cap stays queued, costs no run attempt, and resumes if the budget is raised.
+- Spend modes compared (2026-11-01, 5,000 matches, `db`, one run per cell, alternating): exact /
+  sharded matches/s at 1 worker 5.0 / 4.7, 2 8.1 / 6.8, 4 9.9 / 9.3, 8 8.9 / 12.6. At 1,000
+  matches, 4 workers 14.8 / 12.2, 8 13.2 / 15.9. Bench tournaments now carry a budget that's never
+  reached, so sharded pays for its checks; that extra round trip is the likely cost at 1 to 4
+  workers. It removed the lock waits: at 8 workers, of 1,000-match samples, `Lock:*` went from 855
+  to 0, leaving mostly Postgres idle waiting on workers (1,285), then `IO:WALSync` and
+  `LWLock:WALWrite` (198). Exact stays the default: nothing here runs above concurrency 4.
 - Telemetry (`telemetry.py`): spans are match -> turn -> provider.call, and a `turn` span is one
   attempt, so a rejected move shows twice. Core modules stay free of it: the worker wraps players
   in `TracedPlayer`, and `RetryingProvider` opens the call span inside the rate limiter. Traces
@@ -816,5 +834,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   2,000-match mix with them was killed by Claude Code for low memory and has no result. The largest
   finished mix is the slow test: 500 matches on tmpfs `testdb`, 12 kills, 2 pauses (7.5 s), 7 stops,
   14 extra claims, all invariants held. It asserts each kind happened, because 120 matches at the
-  first settings drained in seconds with 0 pauses and still passed. Chaos workers start in their
+  first settings drained in seconds with 0 pauses and still passed. In sharded mode the same run
+  had 19 kills, 7 pauses (23.3 s), 8 stops, 23 extra claims, 12,340 turns, $18.5100, all invariants
+  held, and `check_invariants` also holds each shard to its slot's turn costs. Chaos workers start
+  in their
   own process group, so a killed parent can leave them running: look for `arena.chaos` processes.
