@@ -10,6 +10,7 @@ import subprocess
 
 import pytest
 
+from arena.games.code_break import ALL_CODES, CodeBreak, make_secret
 from arena.games.connect4 import Connect4
 from arena.games.liars_dice import LiarsDice
 from arena.games.werewolf import Werewolf, WerewolfDayFirst
@@ -81,6 +82,50 @@ def test_liars_dice_frames_show_dice_bids_reveals_and_the_winner():
     winner = seats[frames[-1]["winner"]].replace("<", "&lt;").replace(">", "&gt;")
     assert f"{winner} wins" in html[-1]
     assert not any(EVIL in h for h in html)
+
+
+def code_break_frames(*codes, seed=7):
+    game = CodeBreak()
+    state = game.initial_state(2, seed)
+    frames = [game.spectator_view(state)]
+    for code in codes:
+        state = game.apply(state, game.current_player(state), {"code": code})
+        frames.append(game.spectator_view(state))
+    return frames
+
+
+def code_break_html(frames, seats=("a", "b")):
+    data = {"game": "code_break", "seats": list(seats), "frames": frames, "turns": []}
+    return node(RENDER, data)["frames"]
+
+
+SECRET = make_secret(7)
+WRONG = next(c for c in ALL_CODES if not set(c) & set(SECRET))
+
+
+def test_code_break_frames_show_the_secret_both_sides_and_the_result():
+    html = code_break_html(code_break_frames(SECRET, WRONG), [EVIL, "b"])
+    assert "no guesses yet" in html[0] and "to guess" in html[0]
+    assert html[1].count('class="peg p-') == 8  # the secret and one guess
+    assert "4 exact, 0 colour" in html[1]
+    assert "&lt;b&gt;evil&lt;/b&gt; wins" in html[-1]
+    assert not any(EVIL in h for h in html)
+
+
+def test_code_break_draws_and_skipped_guesses_render():
+    game = CodeBreak()
+    state = game.forfeit(game.initial_state(2, 7), 0)
+    state = game.apply(state, 1, {"code": WRONG})
+    skipped = game.spectator_view(state)
+    html = code_break_html([skipped, code_break_frames(SECRET, SECRET)[-1]])
+    assert "skipped" in html[0]
+    assert "Draw" in html[1]
+
+
+def test_code_break_ticks_each_solve_on_the_timeline():
+    frames = code_break_frames(WRONG, SECRET)
+    out = node(TIMELINE, {"game": "code_break", "seats": ["a", "b"], "frames": frames})
+    assert "b solved it on guess 1" in str(out)
 
 
 def test_unknown_game_falls_back_to_the_raw_frame_and_turns_are_described():

@@ -428,6 +428,16 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Code Break (`games/code_break.py`): one seeded secret, and each seat sees only its own guesses
+  and feedback, plus the other's count and whether they solved it. Once a seat solves on guess k
+  the other plays only to guess k, the last chance to tie, so seat 0 moving first costs seat 1
+  nothing, and the game ends early. A cut-off seat shows as unsolved in `code_break_metrics`. A
+  forfeit skips a guess, which still counts, and removes nobody, so `final_placements` ignores it.
+  `minimax_guess` lives with the engine because metrics need it. Its ties must go to the earliest
+  in `ALL_CODES`: sorting them alphabetically needed 6 guesses on some secrets. It takes 4.476 on
+  average, Knuth's figure, and a test walks all 1,296. It plays codes that can't be the secret on
+  purpose, to split the candidates, so `inconsistent` isn't always a mistake: read it against the
+  solver's own rate. No `legal_actions_hint`, so `RandomPlayer` can't play; `code-break-random` can.
 - `iter_states` raises if a turn's seat doesn't match `current_player`, so engines must
   make `current_player` a pure function of state.
 - The worker treats setup errors (unknown player id, unknown game) as permanent: the

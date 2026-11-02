@@ -8,12 +8,13 @@
   --accent: #0b6b6b; --on-accent: #f4efe6; --x: #b4480f; --o: #1f5fa8; --bad: #a8201a;
   --good: #1b7a3d; --glow-a: rgba(214, 150, 40, 0.16); --glow-b: rgba(0, 143, 134, 0.12);
   /* Marks, not text: validated by the dataviz checks, and words stay in text colours. */
-  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86;
+  --g-c4: #2563c9; --g-dice: #b3265e; --g-ww: #8a5a00; --g-df: #008f86; --g-cb: #7a3fb0;
   --mark-wolf: #a8201a; --mark-village: #008f86; --link: #124690;
   /* The page wash, top left to bottom right. A test checks text against all three. */
   --wash-1: #fbe3d0; --wash-2: #f6d4dc; --wash-3: #cfe0f2;
   /* Each game's page takes its own wash, chosen to sit under that game's colour. */
   --c4-wash-1: #d6f0e6; --c4-wash-2: #cde6f2; --c4-wash-3: #dcdcf5;
+  --cb-wash-1: #eadff7; --cb-wash-2: #e2dcf8; --cb-wash-3: #f1dcf3;
   --dice-wash-1: #fdeccb; --dice-wash-2: #fbd9b8; --dice-wash-3: #f9cfc6;
   --ww-wash-1: #fdeccb; --ww-wash-2: #ecdff2; --ww-wash-3: #d8dcf4;
   --df-wash-1: #e6f0c8; --df-wash-2: #d3ecd6; --df-wash-3: #c7e6e4;
@@ -22,6 +23,7 @@
   --seat-4: #b83a78; --seat-5: #2f7d1e; --seat-6: #6250d6;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   /* Motifs for the wallpaper: masks, so their colour comes from the theme. */
+  --tile-code_break: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cg fill='none' stroke='%23000' stroke-width='3'%3E%3Ccircle cx='38' cy='44' r='13'/%3E%3Ccircle cx='76' cy='44' r='13'/%3E%3Ccircle cx='114' cy='44' r='13'/%3E%3Ccircle cx='152' cy='44' r='13'/%3E%3C/g%3E%3Cg%3E%3Ccircle cx='57' cy='130' r='13'/%3E%3Ccircle cx='95' cy='130' r='13'/%3E%3C/g%3E%3C/svg%3E");
   --tile-connect4: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cg transform='translate%2845 45%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3Cg transform='translate%28135 135%29'%3E%3Ccircle r='20' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle r='11'/%3E%3C/g%3E%3C/svg%3E");
   --tile-liars_dice: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg transform='translate%2852 56%29 rotate%28-14%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3Cg transform='translate%28150 150%29 rotate%2818%29'%3E%3Crect x='-22' y='-22' width='44' height='44' rx='8' fill='none' stroke='black' stroke-width='3'/%3E%3Ccircle cx='-10' cy='-10' r='3.6'/%3E%3Ccircle cx='10' cy='10' r='3.6'/%3E%3Ccircle r='3.6'/%3E%3Ccircle cx='10' cy='-10' r='3.6'/%3E%3Ccircle cx='-10' cy='10' r='3.6'/%3E%3C/g%3E%3C/svg%3E");
   --tile-werewolf: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cpath transform='translate%2860 62%29 rotate%28-12%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3Cpath transform='translate%28150 44%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28186 120%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%2844 170%29' d='M0-8 2-2 8 0 2 2 0 8-2 2-8 0-2-2z'/%3E%3Cpath transform='translate%28150 172%29 rotate%2820%29' d='M-4-22a22 22 0 1 0 22 30A17 17 0 0 1-4-22z'/%3E%3C/svg%3E");
@@ -35,10 +37,11 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
-    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
     --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --cb-wash-1: #1b1238; --cb-wash-2: #160f33; --cb-wash-3: #24103a;
     --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
     --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
     --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
@@ -51,10 +54,11 @@
     --bg: #0d1320; --surface: #151d2e; --fg: #e9edf4; --muted: #b0bacb; --line: #26324a;
     --accent: #f2b84b; --on-accent: #0d1320; --x: #ff9e5e; --o: #6db3f2; --bad: #ff7b72;
     --good: #5fd38d; --glow-a: rgba(242, 184, 75, 0.16); --glow-b: rgba(64, 120, 200, 0.2);
-    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397;
+    --g-c4: #4f8fe8; --g-dice: #e85c92; --g-ww: #c08418; --g-df: #1fa397; --g-cb: #a678ea;
     --mark-wolf: #e05a50; --mark-village: #1fa397; --link: #7db8ff;
     --wash-1: #141a3a; --wash-2: #2a1638; --wash-3: #0d2a38;
     --c4-wash-1: #06282c; --c4-wash-2: #0a2036; --c4-wash-3: #161a3c;
+    --cb-wash-1: #1b1238; --cb-wash-2: #160f33; --cb-wash-3: #24103a;
     --dice-wash-1: #2b1a2e; --dice-wash-2: #3a1c24; --dice-wash-3: #2c2414;
     --ww-wash-1: #1b1b44; --ww-wash-2: #261a42; --ww-wash-3: #2c2412;
     --df-wash-1: #10281c; --df-wash-2: #0e2a2a; --df-wash-3: #14243a;
@@ -83,6 +87,10 @@ body::before {
   mask: var(--tile, var(--tile-mix)) 0 0 / auto,
     linear-gradient(90deg, #000 6%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.28) 80%, #000 94%);
   mask-composite: intersect;
+}
+body.g-code_break {
+  --tile: var(--tile-code_break);
+  --wash-1: var(--cb-wash-1); --wash-2: var(--cb-wash-2); --wash-3: var(--cb-wash-3);
 }
 body.g-connect4 {
   --tile: var(--tile-connect4);
@@ -134,6 +142,7 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 .jump { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 12px 0 0; }
 
 /* Game identity: one colour and one pattern per game, drawn from what the game is made of. */
+.g-code_break { --g: var(--g-cb); }
 .g-connect4 { --g: var(--g-c4); }
 .g-liars_dice { --g: var(--g-dice); }
 .g-werewolf { --g: var(--g-ww); }
@@ -150,6 +159,9 @@ nav [aria-current="page"] { text-decoration: underline; text-underline-offset: 6
 }
 .game .banner::before { mask-image: linear-gradient(to bottom, #000 30px, transparent 58px); }
 .banner > * { position: relative; }
+.banner.g-code_break::before {
+  background: radial-gradient(circle, transparent 28%, color-mix(in srgb, var(--g) 42%, transparent) 30% 40%, transparent 42%) 0 0 / 28px 28px;
+}
 .banner.g-connect4::before {
   background: radial-gradient(circle, color-mix(in srgb, var(--g) 42%, transparent) 36%, transparent 38%) 0 0 / 24px 24px;
 }
@@ -316,6 +328,17 @@ details.note p { max-width: none; }
 }
 .c4 .cell { width: 34px; height: 34px; border-radius: 50%; background: var(--bg); }
 .c4 .disc.X { background: var(--x); } .c4 .disc.O { background: var(--o); }
+.cb { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 8px 24px; }
+.cb h3 { margin: 0 0 6px; font-size: 1rem; } .cb .turn h3 { color: var(--accent); }
+.cb-side { width: auto; }
+.pegs { white-space: nowrap; }
+.peg {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; margin-right: 3px;
+  border-radius: 50%; border: 2px solid var(--peg); font-size: 13px; font-weight: 700;
+  background: color-mix(in srgb, var(--peg) 18%, var(--surface));
+}
+.p-R { --peg: #d1382f; } .p-G { --peg: #2e8b57; } .p-B { --peg: #2f6fd1; }
+.p-Y { --peg: #c9a400; } .p-O { --peg: #dd7a1a; } .p-P { --peg: #9a4fc9; }
 .ld { width: auto; } .ld .dice { font-size: 26px; line-height: 1; letter-spacing: 2px; }
 .ld tr.turn td { font-weight: 600; } .die.hit { color: var(--x); }
 .ld .dice .muted { font-size: 15px; letter-spacing: 0; }
