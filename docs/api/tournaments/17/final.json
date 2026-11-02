@@ -1,0 +1,12 @@
+{
+ "liars-dice-bot-v2": {
+  "rating": 1662.6,
+  "low": 1571.1,
+  "high": 1754.0
+ },
+ "sonnet-5.5/ld-v1-medium": {
+  "rating": 1337.4,
+  "low": 1246.0,
+  "high": 1428.9
+ }
+}
