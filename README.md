@@ -24,7 +24,7 @@ Each game tests something different, and the details follow below.
 |---|---|---|
 | Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%). Graded by a perfect-play solver, both Haikus found the best move 43-44% of the time and blundered on 27-29% |
 | Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
-| Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated |
+| Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated. A text classifier's top suspect was a wolf on 58.7% of first days, where the village's most-voted seat was one 36.4% of the time |
 | Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
 | Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
 | Word Link | Shared meaning between two partners | Three teams came out level. Models guessed right 64.5% of the time (60.8-68.0%), and the bots 85.6% (80.5-89.6%), with a shared table |
@@ -125,6 +125,38 @@ Sonnet 5.5 left the required `action` field off 152 of its 266 discussion turns.
 fills it in and flags the turn, because every turn allows only one kind of action; without that it
 would have been losing turns to a formatting quirk. 6 of its 439 replies also hit `max_tokens = 1024`
 mid-thought, all recovered on retry, so that limit is thin for this game. There were no forfeits.
+
+### A word counter spotted wolves better than the villagers did
+
+Every discussion message from all 121 Werewolf games (tournaments 5, 6, 7 and 10, both rulesets),
+2,828 in all, 31.2% written by wolves, went into a plain text classifier: TF-IDF over words and word
+pairs, then logistic regression (`arena/analysis/wolf_detector.py`). Every score is out of fold,
+with the folds split by game, so no game was scored by a model that had seen it; a test plants a
+wolf word unique to each game and checks that it can't leak.
+
+Scoring single messages, it ranked a wolf's above a villager's 72.7% of the time (AUC 0.727,
+0.703-0.748 with games resampled); averaging each seat's messages in a game, 0.828. Then, at
+every day's vote, its top suspect among the living was the seat with the highest average score so
+far, set against what the village chose at the same table:
+
+| Day | Detector's top suspect a wolf | Village's most-voted seat a wolf | Only one right: detector / village | Chance |
+|---|---|---|---|---|
+| 1 | 71 of 121, 58.7% (49.8-67.1%) | 44 of 121, 36.4% (28.3-45.2%) | 46 / 19, p = 0.001 | 30% |
+| 2 | 74 of 101, 73.3% (63.9-80.9%) | 41 of 101, 40.6% (31.5-50.3%) | 43 / 10, p < 0.0001 | 33% |
+| 3 | 32 of 37, 86.5% (72.0-94.1%) | 19 of 37, 51.4% (35.9-66.6%) | 15 / 2, p = 0.002 | 32% |
+
+p is McNemar's exact test on the same table-days. Counting individual votes rather than tables,
+villagers voted for a wolf 41.5%, 49.8% and 61.5% of the time on days 1 to 3.
+
+The words that gave wolves away were sympathy and steering: "loss", "hurts", "is gone" (mourning
+the night's victim), "think", "let's", "look at", "before we". The village-like ones were about
+wolves: "wolf", "wolves", "among", "voting", and the literal "Player N here, villager" that Haiku 5.5
+villagers say and wolves mostly don't. So the wolves' tell is in how they talk, not in what they
+claim. Two caveats: the detector learned from other games' outcomes, which no player gets, and it
+names one suspect a table with nothing at stake, so this says the evidence was in the transcripts,
+not that a villager could have read it the same way. The first comparison counted single votes;
+the paired one by table was added after seeing it, to compare like with like. No figures were
+predicted beforehand.
 
 ### Liar's Dice: a short probability bot beat both Haikus 16-4
 
