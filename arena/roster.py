@@ -6,6 +6,7 @@ buried in code. Check them against the provider pricing pages before real runs.
 
 from __future__ import annotations
 
+import hashlib
 import time
 import tomllib
 from dataclasses import dataclass
@@ -21,7 +22,7 @@ from arena.providers.mock import RecordingProvider
 from arena.providers.ratelimit import RateLimiter, TokenSource
 from arena.providers.retry import RetryingProvider
 
-FREE_PROVIDERS = ("random", "bot")  # every other provider must list its prices
+FREE_PROVIDERS = ("random", "bot", "http")  # every other provider must list its prices
 
 
 @dataclass(frozen=True)
@@ -38,9 +39,15 @@ class PlayerConfig:
     thinking_budget: int | None = None  # tokens of manual thinking, Anthropic only
     thinking_mode: str = "default"  # "between_tools": no up-front thinking, Anthropic only
     effort: str | None = None  # output_config.effort, Anthropic only
+    url: str = ""  # provider "http": the agent's endpoint
+    secret: str = ""  # provider "http": the shared HMAC secret (roster.toml is gitignored)
 
     def __post_init__(self) -> None:
         """Refuse here what the API would refuse later, in the middle of a tournament."""
+        if self.provider == "http" and not (self.url and self.secret):
+            raise ValueError(f"{self.id}: an http player needs url and secret")
+        if self.provider != "http" and (self.url or self.secret):
+            raise ValueError(f"{self.id}: url and secret are for http players only")
         if self.tool_choice not in ("forced", "auto"):
             raise ValueError(f"{self.id}: tool_choice must be forced or auto")
         if self.thinking_mode not in ("default", "between_tools"):
@@ -117,6 +124,9 @@ def config_hash(cfg: PlayerConfig) -> str:
         return f"random-{cfg.seed}"
     if cfg.provider == "bot":
         return f"bot-{cfg.model}-{cfg.seed}"
+    if cfg.provider == "http":
+        # The endpoint is the identity; the agent behind it may change, as a human's would.
+        return "http-" + hashlib.sha256(cfg.url.encode()).hexdigest()[:16]
     return identity_hash(
         cfg.provider,
         cfg.model,
@@ -147,6 +157,9 @@ class PlayerFactory:
         # record_dir/<vendor>-<timestamp>.jsonl (RecordingProvider), for test fixtures.
         self._record_dir = record_dir
         self._providers: dict[str, Provider] = {}
+        # Remote agents: one HTTP client per process, one circuit breaker per agent URL.
+        self._http_client = None
+        self._breakers: dict[str, object] = {}
 
     def with_token_sources(self, token_sources: dict[str, TokenSource]) -> PlayerFactory:
         """Same roster and keys, with shared (e.g. Postgres) request-rate buckets."""
@@ -189,6 +202,20 @@ class PlayerFactory:
             return RandomPlayer(cfg.id, cfg.seed), FREE
         if cfg.provider == "bot":
             return build_bot(cfg.model, cfg.id, cfg.seed), FREE
+        if cfg.provider == "http":
+            from arena.players.remote import CircuitBreaker, RemotePlayer
+
+            if self._http_client is None:
+                import httpx2
+
+                self._http_client = httpx2.AsyncClient()
+            breaker = self._breakers.setdefault(cfg.url, CircuitBreaker())
+            return (
+                RemotePlayer(
+                    cfg.id, cfg.url, cfg.secret, client=self._http_client, breaker=breaker
+                ),
+                FREE,
+            )
         player = LLMPlayer(
             cfg.id,
             self._provider(cfg.provider),
