@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$39.79**: $37.43 across 1,311 recorded games and 29.4 million tokens, plus $2.36 on 89 in-memory
+**$53.41**: $48.97 across 1,361 recorded games and 30.3 million tokens, plus $4.44 on 96 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -23,9 +23,9 @@ Each game tests something different, and the details follow below.
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
 | Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%) |
-| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%) |
+| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges |
 | Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated |
-| Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets |
+| Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
 | Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
 | Word Link | Shared meaning between two partners | Three teams came out level. Models guessed right 64.5% of the time (60.8-68.0%), and the bots 85.6% (80.5-89.6%), with a shared table |
 
@@ -264,6 +264,28 @@ Haiku and won 27% of games to Haiku's 1%. An earlier attempt at this test failed
 `max_tokens` 1024, because both models think by default when they aren't forced to answer with the
 tool, and that ran them out of tokens before they answered.
 
+### The most capable model played like the bots
+
+Claude Fable 5.1 is Anthropic's most capable widely released model, at $10 per million input
+tokens and $50 per million output, five times Sonnet 5.5. Free checks confirmed its ID and that it
+refuses forced tool use, so it answered with `tool_choice` auto. It thought about 220 tokens a turn
+in Liar's Dice and about 1,500 a guess in Code Break.
+
+**Liar's Dice, 40 games against the tuned bot:** Fable won 24, 60.0% (44.6-73.7%), the only model
+to beat it. It never once challenged a bid its own dice proved true, 0 of 194 (0.0-1.9%), against
+3.3% for Sonnet 5.5 (p = 0.006) and 15.6% for Haiku 5.5, and won 56% of its challenges against
+Sonnet 5.5's 36%. Against Sonnet 5.5's 28 of 100 with the same prompt, its win rate is a clear
+step up (p = 0.0008).
+
+**Code Break, 5 games each against Sonnet 5 and Haiku 5.5:** Fable solved all 10, in 4.3 guesses
+on average, where the minimax solver needed 4.6 on the same secrets. Its opponents solved none of
+their 10. Only 5 of its 43 guesses contradicted its own feedback, 11.6%, below the solver's 18%,
+which does it deliberately. Ten games is a small sample, but the gap from Sonnet 5 and Haiku is
+not subtle.
+
+The cost was the catch: $0.22 a game in Liar's Dice and $0.29 a game in Code Break, where Haiku
+5.5 spends under a cent. This was the one run where every prediction I wrote down held.
+
 ### Code Break: neither model could keep track of its own clues
 
 Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
@@ -390,10 +412,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Word Link, Sonnet 5, Haiku 5.5 and the bot team | 90 | 1,654,265 | $2.1885 |
 | Liar's Dice, Sonnet 5.5 effort sweep against v2 | 90 | 1,500,815 | $3.1094 |
 | Liar's Dice, v1 against v2-prob, Haiku 5.5 and Sonnet 5.5 | 400 | 6,975,322 | $10.8822 |
-| **Total** | **1,311** | **29,449,161** | **$37.43** |
+| Fable 5.1: Liar's Dice against v2, Code Break against Sonnet 5 and Haiku 5.5 | 50 | 849,173 | $11.5452 |
+| **Total** | **1,361** | **30,298,334** | **$48.97** |
 
-89 in-memory test games cost another $2.36. They never reach the turn log, so the project total
-is about $39.79.
+96 in-memory test games cost another $4.44. They never reach the turn log, so the project total
+is about $53.41.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -567,5 +590,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25 --matches 116,142   # the static site
 ```
