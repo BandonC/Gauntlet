@@ -70,6 +70,7 @@ python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no d
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 python -m arena.solvers.c4_grade --tournament 3   # grade Connect 4 moves by perfect play, read only
 python -m arena.solvers.liars_dice_cfr --iterations 600 --threshold 0   # retrain the CFR bot's policy
+python -m arena.analysis.wolf_detector   # TF-IDF wolf detector over every Werewolf game, read only
 ```
 
 `tests/test_store_db.py` DROPS the public schema. Only ever point it at `testdb` (:5433)
@@ -387,7 +388,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       exploitability is below a stated threshold (report the curve); bot
       `liars-dice-cfr`. Then haiku-5.5, sonnet-5 and Fable 5.1 vs it, 40 games each.
       Budget: $8 (raised from $3 on 2026-11-02 to add Fable).
-- [ ] Wolf detector: messages and speaker roles from all Werewolf tournaments;
+- [x] Wolf detector: messages and speaker roles from all Werewolf tournaments;
       TF-IDF + logistic regression with cross-validation grouped by match. Report AUC,
       and whether the classifier's top suspect beats the LLM villagers' votes, day by day.
 - [ ] README: an "ML analysis" section.
@@ -449,6 +450,20 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Wolf detector (`arena/analysis/wolf_detector.py`, 2026-11-03, free). Rows are `WWState.messages`
+  from final states replayed with `iter_states` (options passed), not cancelled; 121 games, 2,828
+  messages, 31.2% wolf. TF-IDF 1-2 grams (min_df 2, sublinear) + balanced logistic regression,
+  `GroupKFold(5)` by match; a test plants a per-match wolf token and requires out-of-fold AUC near
+  0.5, which fails if folds share games. Message AUC 0.727 (0.703-0.748, matches resampled 1,000
+  times), seat AUC 0.828. "Alive at day d's vote" excludes deaths before day d and night d's kill;
+  village votes are living non-wolves'. Detector top suspect a wolf / village plurality a wolf, same
+  table-days: day 1 71/121 vs 44/121 (McNemar 46/19, p = 0.001), day 2 74/101 vs 41/101 (43/10),
+  day 3 32/37 vs 19/37 (15/2, p = 0.002). Chance as a spectator about 30-33%. The detector may
+  suspect any living seat and learned from other games' outcomes, so it isn't a villager's view.
+  Top wolf terms: loss, think, let, hurts, is gone; village: wolf, among, wolves, player villager
+  (Haiku 5.5's "Player N here, villager"). No prediction was written first. scikit-learn is in the
+  `dev` and `ml` extras; the module imports it only inside functions.
 
 - Liar's Dice CFR (tournaments 30-32, 2026-11-03, $2.8481 plus 9 test games $0.2128, so $3.06 of
   the $8; 454 attempts matching recordings, 1 rejected (Haiku), 0 forfeits, no `max_tokens` stop,
