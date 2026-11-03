@@ -16,8 +16,8 @@
  "games": [
   {
    "game": "liars_dice",
-   "place": 12,
-   "field": 13,
+   "place": 13,
+   "field": 14,
    "ordinal": 0.96,
    "games": 100,
    "won": 2,

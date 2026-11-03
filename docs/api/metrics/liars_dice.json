@@ -1,5 +1,19 @@
 [
  {
+  "player_id": "fable-5.1/ld-v1",
+  "turns": 482,
+  "attempts": 482,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 3046.5,
+  "latency_p95_ms": 10447.5,
+  "completed_games": 40,
+  "cost_per_game_usd": 0.216472,
+  "cache_hit_rate": 0.7817
+ },
+ {
   "player_id": "haiku-4.5/ld-v1",
   "turns": 183,
   "attempts": 183,
@@ -71,15 +85,15 @@
  },
  {
   "player_id": "liars-dice-bot-v2",
-  "turns": 4872,
-  "attempts": 4872,
+  "turns": 5298,
+  "attempts": 5298,
   "illegal_attempts": 0,
   "illegal_move_rate": 0.0,
   "forfeits": 0,
   "auto_fills": 0,
   "latency_p50_ms": 0.0,
   "latency_p95_ms": 0.0,
-  "completed_games": 550,
+  "completed_games": 590,
   "cost_per_game_usd": 0.0,
   "cache_hit_rate": null
  },

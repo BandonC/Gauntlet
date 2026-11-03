@@ -2,37 +2,72 @@
  "player_id": "haiku-5.5/cb-v2",
  "model": "haiku-5.5",
  "overall": {
-  "games": 120,
+  "games": 125,
   "won": 4,
   "drew": 47,
-  "lost": 69,
-  "win_rate": 0.03333333333333333,
-  "cost_usd": 0.07765,
-  "cost_per_game": 0.0006470833333333333,
-  "illegal_rate": 0.00245398773006135,
-  "cache_hit": 0.7626555413574744,
-  "latency_ms": 2059.758917589176
+  "lost": 74,
+  "win_rate": 0.032,
+  "cost_usd": 0.079717,
+  "cost_per_game": 0.000637736,
+  "illegal_rate": 0.0023923444976076554,
+  "cache_hit": 0.762120100295337,
+  "latency_ms": 2030.7470023980816
  },
  "games": [
   {
    "game": "code_break",
    "place": 3,
-   "field": 3,
-   "ordinal": 7.74,
-   "games": 120,
+   "field": 4,
+   "ordinal": 7.27,
+   "games": 125,
    "won": 4,
    "drew": 47,
-   "lost": 69,
-   "win_rate": 0.03333333333333333,
-   "cost_usd": 0.07765,
-   "cost_per_game": 0.0006470833333333333,
-   "illegal_rate": 0.00245398773006135,
-   "cache_hit": 0.7626555413574744,
-   "latency_ms": 2059.758917589176
+   "lost": 74,
+   "win_rate": 0.032,
+   "cost_usd": 0.079717,
+   "cost_per_game": 0.000637736,
+   "illegal_rate": 0.0023923444976076554,
+   "cache_hit": 0.762120100295337,
+   "latency_ms": 2030.7470023980816
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1527,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000275
+  },
+  {
+   "id": 1526,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000464
+  },
+  {
+   "id": 1525,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000369
+  },
+  {
+   "id": 1524,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000466
+  },
+  {
+   "id": 1523,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.000493
+  },
   {
    "id": 717,
    "game": "code_break",
