@@ -277,9 +277,9 @@ to beat it. It never once challenged a bid its own dice proved true, 0 of 194 (0
 Sonnet 5.5's 36%. Against Sonnet 5.5's 28 of 100 with the same prompt, its win rate is a clear
 step up (p = 0.0008).
 
-**Code Break, 5 games each against Sonnet 5 and Haiku 5.5:** Fable solved all 10, in 4.3 guesses
-on average, where the minimax solver needed 4.6 on the same secrets. Its opponents solved none of
-their 10. Only 5 of its 43 guesses contradicted its own feedback, 11.6%, below the solver's 18%,
+**Code Break, 5 games each against Sonnet 5 and Haiku 5.5:** Fable solved all 10 games, average 4.3
+guesses against the solver's 4.6 on the same secrets (a small sample, within luck). Its opponents
+solved none of their 10. Only 5 of its 43 guesses contradicted its own feedback, 11.6%, below the solver's 18%,
 which does it deliberately. Ten games is a small sample, but the gap from Sonnet 5 and Haiku is
 not subtle.
 
