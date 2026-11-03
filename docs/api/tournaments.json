@@ -1,5 +1,47 @@
 [
  {
+  "id": 32,
+  "game": "liars_dice_small",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 3.6,
+  "spent_usd": 2.298216,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
+  "id": 31,
+  "game": "liars_dice_small",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 0.8,
+  "spent_usd": 0.524392,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
+  "id": 30,
+  "game": "liars_dice_small",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 0.1,
+  "spent_usd": 0.025537,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
   "id": 29,
   "game": "word_link",
   "format": "tables",

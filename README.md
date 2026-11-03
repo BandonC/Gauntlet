@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$61.95**: $56.56 across 1,425 recorded games and 31.1 million tokens, plus $5.40 on 102 in-memory
+**$65.02**: $59.41 across 1,545 recorded games and 31.7 million tokens, plus $5.61 on 111 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -23,7 +23,7 @@ Each game tests something different, and the details follow below.
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
 | Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%). Graded by a perfect-play solver, both Haikus found the best move 43-44% of the time and blundered on 27-29% |
-| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges |
+| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
 | Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated |
 | Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
 | Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
@@ -299,6 +299,39 @@ other, each partnered with Sonnet 5 or Haiku 5.5. The team with Fable giving clu
 each, against 1.31 when the partner gave clues to Fable, and guess accuracy was the same either way,
 about 72%. That points to clue-giving as where it adds more, though 16 games can't establish it.
 
+### A solved Liar's Dice: no model beat the equilibrium
+
+The full game is too big to solve, so `liars_dice_small` is **a reduced variant of the main game**:
+two players, 2 dice each, faces 1 to 4, same rules otherwise, and the same prompt with the numbers
+changed through the rules text. That is small enough to solve exactly. Each round starts from a
+public state with fresh dice, so each round is its own game whose payoffs are the values of the
+rounds after it; inside a round, every bid sequence is a node, 65,536 in the opening round.
+CFR+ (`arena/solvers/liars_dice_cfr.py`) ran with perfect recall, and exploitability was measured
+exactly in the game's payoff, the probability of winning: half of what two best responders, one
+in each seat, would gain over the game's value.
+
+| Iterations (opening round) | 25 | 50 | 100 | 200 | 400 | 600 |
+|---|---|---|---|---|---|---|
+| Exploitability | 0.0094 | 0.0034 | 0.00097 | 0.00030 | 0.000076 | 0.000036 |
+
+The threshold, set before training, was 0.001: crossed at 100 iterations, and the final policy
+sits at 0.000036. The bot plays it rounded to steps of 1/255, which measures 0.00031, still under.
+Training peaked at an estimated 325 MiB. The opener wins 50.5% under the solution, so a player
+alternating seats can expect at best about 50% against it, and that's a ceiling, not a target:
+the equilibrium never loses ground, but it doesn't hunt for mistakes either.
+
+| Against the CFR bot, 40 games, seats alternating | Won | Challenges proved true by own dice | Cost |
+|---|---|---|---|
+| Haiku 5.5 | 16, 40.0% (26.3-55.4%) | 22 of 84, 26.2% (18.0-36.5%) | $0.03 |
+| Sonnet 5 | 14, 35.0% (22.1-50.5%) | 0 of 37 | $0.52 |
+| Fable 5.1 | 18, 45.0% (30.7-60.2%) | 0 of 63 | $2.30 |
+
+Pooled, the models won 48 of 120, 40.0% (31.7-48.9%), p = 0.035 against an even split. No single
+model is separable from 50% at 40 games, and none from the others. Haiku's habit of challenging a
+bid its own dice already proved true came back at 26%, against 15.6% in the full game. Fable's
+bids were true 88% of the time against Sonnet 5's 58%. My predictions, written before the run,
+were 30%, 35% and 45% wins and about $4.10; all three held, and it cost $2.85.
+
 
 ### Code Break: neither model could keep track of its own clues
 
@@ -447,10 +480,11 @@ game more than the whole game.
 | Liar's Dice, v1 against v2-prob, Haiku 5.5 and Sonnet 5.5 | 400 | 6,975,322 | $10.8822 |
 | Fable 5.1: Liar's Dice against v2, Code Break against Sonnet 5 and Haiku 5.5 | 50 | 849,173 | $11.5452 |
 | Fable 5.1: Split the Deal against Sonnet 5 and Haiku 5.5, Word Link in mixed teams | 64 | 834,741 | $7.5819 |
-| **Total** | **1,425** | **31,133,075** | **$56.56** |
+| Liar's Dice (small), Haiku 5.5, Sonnet 5 and Fable 5.1 against the CFR bot | 120 | 608,662 | $2.8481 |
+| **Total** | **1,545** | **31,741,737** | **$59.41** |
 
-102 in-memory test games cost another $5.40. They never reach the turn log, so the project total
-is about $61.95.
+111 in-memory test games cost another $5.61. They never reach the turn log, so the project total
+is about $65.02.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -624,5 +658,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32 --matches 116,142   # the static site
 ```
