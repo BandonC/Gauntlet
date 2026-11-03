@@ -64,7 +64,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -380,7 +380,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       challenge blunders with 95% intervals, and where it sits between Sonnet 5.5 and Fable.
       Budget: $12 (added 2026-11-03, to run before Phase 13). The project's $72 stop line leaves
       $6.98, so the run's --budget stays under that unless the user raises the line.
-- [ ] Opus 5.5 extension, pre-registered 2026-11-03 before any game: 120 more games against
+- [x] Opus 5.5 extension, pre-registered 2026-11-03 before any game: 120 more games against
       liars-dice-bot-v2, same player id (`opus-5.5/ld-v1`, already gated), seed 2027, pooled with
       tournament 33's 40 for 160. Claim "beats the bot more than half the time" only if the pooled
       95% Wilson interval's lower bound is above 50% (about 93 wins of 160); otherwise report it as
@@ -499,6 +499,15 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   85.2%. Thinking 195.6 a turn; $0.0888 a game, Fable $0.216. Predicted 45% wins (outside the
   interval, just), 1.5% blunders and $0.095 a game (held). New seeds, not Fable's: tournaments
   don't store their creation seed, and t23's match seeds differ from t21's.
+- Opus 5.5 extension (tournament 34, seed 2027, pre-registered in commit 0e3df2f before any game;
+  $10.6592 against $11, $0.0888 a game). 72/120 (60.0%, 51.1-68.3), seat 0 37/60, seat 1 35/60;
+  against tournament 33 p = 0.85. Pooled 97/160 (60.6%, 52.9-67.9, binomial p = 0.009): the rule
+  (lower bound above 50%) is met. Challenges 573, won 57.8%, proved true by own dice 0 (pooled 0/757,
+  0.0-0.5%); bids true 84.9%. 1,631 attempts matching recordings, 3 rejected, 0 forfeits, output max
+  1,279 of 2,048, thinking 190.6 a turn. Killed for low memory at 82/120; resumed on the user's OK,
+  3 matches on run attempt 2. Turns in flight at the kill were re-asked, and their first replies
+  never reached the log or the recordings: at most a few cents unseen. The user raised the stop line
+  to $80 for this run; the project is at about $79.50, so nothing paid fits under the $80 cap now.
 
 - Remote players (`players/remote.py`, roster `provider = "http"`, `url`, `secret`): the protocol
   is in the module docstring. The signature covers `"<timestamp>." + body`; `verify` is for agents
