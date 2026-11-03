@@ -126,38 +126,6 @@ fills it in and flags the turn, because every turn allows only one kind of actio
 would have been losing turns to a formatting quirk. 6 of its 439 replies also hit `max_tokens = 1024`
 mid-thought, all recovered on retry, so that limit is thin for this game. There were no forfeits.
 
-### A word counter spotted wolves better than the villagers did
-
-Every discussion message from all 121 Werewolf games (tournaments 5, 6, 7 and 10, both rulesets),
-2,828 in all, 31.2% written by wolves, went into a plain text classifier: TF-IDF over words and word
-pairs, then logistic regression (`arena/analysis/wolf_detector.py`). Every score is out of fold,
-with the folds split by game, so no game was scored by a model that had seen it; a test plants a
-wolf word unique to each game and checks that it can't leak.
-
-Scoring single messages, it ranked a wolf's above a villager's 72.7% of the time (AUC 0.727,
-0.703-0.748 with games resampled); averaging each seat's messages in a game, 0.828. Then, at
-every day's vote, its top suspect among the living was the seat with the highest average score so
-far, set against what the village chose at the same table:
-
-| Day | Detector's top suspect a wolf | Village's most-voted seat a wolf | Only one right: detector / village | Chance |
-|---|---|---|---|---|
-| 1 | 71 of 121, 58.7% (49.8-67.1%) | 44 of 121, 36.4% (28.3-45.2%) | 46 / 19, p = 0.001 | 30% |
-| 2 | 74 of 101, 73.3% (63.9-80.9%) | 41 of 101, 40.6% (31.5-50.3%) | 43 / 10, p < 0.0001 | 33% |
-| 3 | 32 of 37, 86.5% (72.0-94.1%) | 19 of 37, 51.4% (35.9-66.6%) | 15 / 2, p = 0.002 | 32% |
-
-p is McNemar's exact test on the same table-days. Counting individual votes rather than tables,
-villagers voted for a wolf 41.5%, 49.8% and 61.5% of the time on days 1 to 3.
-
-The words that gave wolves away were sympathy and steering: "loss", "hurts", "is gone" (mourning
-the night's victim), "think", "let's", "look at", "before we". The village-like ones were about
-wolves: "wolf", "wolves", "among", "voting", and the literal "Player N here, villager" that Haiku 5.5
-villagers say and wolves mostly don't. So the wolves' tell is in how they talk, not in what they
-claim. Two caveats: the detector learned from other games' outcomes, which no player gets, and it
-names one suspect a table with nothing at stake, so this says the evidence was in the transcripts,
-not that a villager could have read it the same way. The first comparison counted single votes;
-the paired one by table was added after seeing it, to compare like with like. No figures were
-predicted beforehand.
-
 ### Liar's Dice: a short probability bot beat both Haikus 16-4
 
 Over 30 matches, the bot went **16-4** (interval 58-92%). The Haikus finished level at 7-13, 5-5
@@ -331,40 +299,6 @@ other, each partnered with Sonnet 5 or Haiku 5.5. The team with Fable giving clu
 each, against 1.31 when the partner gave clues to Fable, and guess accuracy was the same either way,
 about 72%. That points to clue-giving as where it adds more, though 16 games can't establish it.
 
-### A solved Liar's Dice: no model beat the equilibrium
-
-The full game is too big to solve, so `liars_dice_small` is **a reduced variant of the main game**:
-two players, 2 dice each, faces 1 to 4, same rules otherwise, and the same prompt with the numbers
-changed through the rules text. That is small enough to solve exactly. Each round starts from a
-public state with fresh dice, so each round is its own game whose payoffs are the values of the
-rounds after it; inside a round, every bid sequence is a node, 65,536 in the opening round.
-CFR+ (`arena/solvers/liars_dice_cfr.py`) ran with perfect recall, and exploitability was measured
-exactly in the game's payoff, the probability of winning: half of what two best responders, one
-in each seat, would gain over the game's value.
-
-| Iterations (opening round) | 25 | 50 | 100 | 200 | 400 | 600 |
-|---|---|---|---|---|---|---|
-| Exploitability | 0.0094 | 0.0034 | 0.00097 | 0.00030 | 0.000076 | 0.000036 |
-
-The threshold, set before training, was 0.001: crossed at 100 iterations, and the final policy
-sits at 0.000036. The bot plays it rounded to steps of 1/255, which measures 0.00031, still under.
-Training peaked at an estimated 325 MiB. The opener wins 50.5% under the solution, so a player
-alternating seats can expect at best about 50% against it, and that's a ceiling, not a target:
-the equilibrium never loses ground, but it doesn't hunt for mistakes either.
-
-| Against the CFR bot, 40 games, seats alternating | Won | Challenges proved true by own dice | Cost |
-|---|---|---|---|
-| Haiku 5.5 | 16, 40.0% (26.3-55.4%) | 22 of 84, 26.2% (18.0-36.5%) | $0.03 |
-| Sonnet 5 | 14, 35.0% (22.1-50.5%) | 0 of 37 | $0.52 |
-| Fable 5.1 | 18, 45.0% (30.7-60.2%) | 0 of 63 | $2.30 |
-
-Pooled, the models won 48 of 120, 40.0% (31.7-48.9%), p = 0.035 against an even split. No single
-model is separable from 50% at 40 games, and none from the others. Haiku's habit of challenging a
-bid its own dice already proved true came back at 26%, against 15.6% in the full game. Fable's
-bids were true 88% of the time against Sonnet 5's 58%. My predictions, written before the run,
-were 30%, 35% and 45% wins and about $4.10; all three held, and it cost $2.85.
-
-
 ### Code Break: neither model could keep track of its own clues
 
 Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
@@ -470,26 +404,8 @@ and Haiku 4.5 never did. All 56 rejections were the same one, "column 3 is full"
 the prompt lists the legal columns.
 
 The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first player won 16 of
-20, so seat order drowns out the models. Separating them would take hundreds of games.
-
-**Graded against perfect play, the two Haikus were equally weak.** A Connect 4 solver
-(`arena/solvers/`, bitboard negamax with alpha-beta and a transposition table, checked move by
-move against brute force on small boards) graded every recorded move. A move is optimal if it
-keeps the best score available, a blunder if it changes the result (a win thrown to a draw or a
-loss, or a draw to a loss), and an inaccuracy otherwise. Both models opened in the centre all 10
-times, the only winning first move. Of the other 340 moves, 198 solved within 5 seconds; the 142
-that didn't, almost all in the first 12 moves, are left ungraded rather than guessed.
-
-| | Graded moves | Optimal | Blunders |
-|---|---|---|---|
-| Haiku 4.5 | 112 | 42.9% (34.1-52.1%) | 28.6% (21.0-37.5%) |
-| Haiku 5.5 | 106 | 44.3% (35.2-53.8%) | 27.4% (19.8-36.5%) |
-
-No difference (p = 0.83 and 0.84). In the middle game, moves 12 to 23, both found the best move
-30% of the time and blundered on 37-39%: about three blunders a game, so the winner swung back and
-forth within a game. 21 blunders left a win in one on the board (Haiku 4.5 14, Haiku 5.5
-7), and 3 missed a block. Since ungraded moves are mostly openings, these rates describe the middle
-game more than the whole game.
+20, so seat order drowns out the models. Separating them would take hundreds of games. Grading
+every move against perfect play didn't separate them either: see [ML analysis](#ml-analysis).
 
 ### Cost
 
@@ -526,6 +442,105 @@ didn't follow price: the two were never clearly separated overall.
 
 The two Sonnets cost about the same for different reasons. Thinking was 59% of Sonnet 5.5's bill,
 offset by cached prompts, while Sonnet 5 had no cache reads at all.
+
+## ML analysis
+
+Three analyses of the recorded games, none of which spends anything on models except the last
+step of the second. Each one checks itself against something simpler: the Connect 4 solver
+against brute force, the Liar's Dice solver against plain recursion, and the wolf detector against
+a planted signal that would only show up if a game leaked across folds.
+
+| Analysis | Method | Finding (95% interval) |
+|---|---|---|
+| Connect 4 move grading | Bitboard negamax with alpha-beta and a transposition table; every recorded move graded optimal, inaccuracy or blunder | Both Haikus played the best move 43-44% of the time and blundered on 27-29%, no difference (p = 0.83) |
+| Liar's Dice, solved | CFR+ with perfect recall on a reduced variant, exploitability measured exactly | Solved to 0.000036 in win probability. Haiku 5.5, Sonnet 5 and Fable 5.1 won 48 of 120 against it, 40.0% (31.7-48.9%) |
+| Wolf detector | TF-IDF and logistic regression over 2,828 Werewolf messages, folds grouped by game | AUC 0.727 (0.703-0.748). Its top suspect was a wolf on 58.7% of first days, the village's most-voted seat 36.4% (p = 0.001) |
+
+### Connect 4: every move graded against perfect play
+
+Graded against perfect play, the two Haikus of tournament 3 were equally weak. A Connect 4 solver
+(`arena/solvers/`, bitboard negamax with alpha-beta and a transposition table, checked move by
+move against brute force on small boards) graded every recorded move. A move is optimal if it
+keeps the best score available, a blunder if it changes the result (a win thrown to a draw or a
+loss, or a draw to a loss), and an inaccuracy otherwise. Both models opened in the centre all 10
+times, the only winning first move. Of the other 340 moves, 198 solved within 5 seconds; the 142
+that didn't, almost all in the first 12 moves, are left ungraded rather than guessed.
+
+| | Graded moves | Optimal | Blunders |
+|---|---|---|---|
+| Haiku 4.5 | 112 | 42.9% (34.1-52.1%) | 28.6% (21.0-37.5%) |
+| Haiku 5.5 | 106 | 44.3% (35.2-53.8%) | 27.4% (19.8-36.5%) |
+
+No difference (p = 0.83 and 0.84). In the middle game, moves 12 to 23, both found the best move
+30% of the time and blundered on 37-39%: about three blunders a game, so the winner swung back and
+forth within a game. 21 blunders left a win in one on the board (Haiku 4.5 14, Haiku 5.5
+7), and 3 missed a block. Since ungraded moves are mostly openings, these rates describe the middle
+game more than the whole game.
+
+### A solved Liar's Dice: no model beat the equilibrium
+
+The full game is too big to solve, so `liars_dice_small` is **a reduced variant of the main game**:
+two players, 2 dice each, faces 1 to 4, same rules otherwise, and the same prompt with the numbers
+changed through the rules text. That is small enough to solve exactly. Each round starts from a
+public state with fresh dice, so each round is its own game whose payoffs are the values of the
+rounds after it; inside a round, every bid sequence is a node, 65,536 in the opening round.
+CFR+ (`arena/solvers/liars_dice_cfr.py`) ran with perfect recall, and exploitability was measured
+exactly in the game's payoff, the probability of winning: half of what two best responders, one
+in each seat, would gain over the game's value.
+
+| Iterations (opening round) | 25 | 50 | 100 | 200 | 400 | 600 |
+|---|---|---|---|---|---|---|
+| Exploitability | 0.0094 | 0.0034 | 0.00097 | 0.00030 | 0.000076 | 0.000036 |
+
+The threshold, set before training, was 0.001: crossed at 100 iterations, and the final policy
+sits at 0.000036. The bot plays it rounded to steps of 1/255, which measures 0.00031, still under.
+Training peaked at an estimated 325 MiB. The opener wins 50.5% under the solution, so a player
+alternating seats can expect at best about 50% against it, and that's a ceiling, not a target:
+the equilibrium never loses ground, but it doesn't hunt for mistakes either.
+
+| Against the CFR bot, 40 games, seats alternating | Won | Challenges proved true by own dice | Cost |
+|---|---|---|---|
+| Haiku 5.5 | 16, 40.0% (26.3-55.4%) | 22 of 84, 26.2% (18.0-36.5%) | $0.03 |
+| Sonnet 5 | 14, 35.0% (22.1-50.5%) | 0 of 37 | $0.52 |
+| Fable 5.1 | 18, 45.0% (30.7-60.2%) | 0 of 63 | $2.30 |
+
+Pooled, the models won 48 of 120, 40.0% (31.7-48.9%), p = 0.035 against an even split. No single
+model is separable from 50% at 40 games, and none from the others. Haiku's habit of challenging a
+bid its own dice already proved true came back at 26%, against 15.6% in the full game. Fable's
+bids were true 88% of the time against Sonnet 5's 58%. My predictions, written before the run,
+were 30%, 35% and 45% wins and about $4.10; all three held, and it cost $2.85.
+
+### A word counter spotted wolves better than the villagers did
+
+Every discussion message from all 121 Werewolf games (tournaments 5, 6, 7 and 10, both rulesets),
+2,828 in all, 31.2% written by wolves, went into a plain text classifier: TF-IDF over words and word
+pairs, then logistic regression (`arena/analysis/wolf_detector.py`). Every score is out of fold,
+with the folds split by game, so no game was scored by a model that had seen it; a test plants a
+wolf word unique to each game and checks that it can't leak.
+
+Scoring single messages, it ranked a wolf's above a villager's 72.7% of the time (AUC 0.727,
+0.703-0.748 with games resampled); averaging each seat's messages in a game, 0.828. Then, at
+every day's vote, its top suspect among the living was the seat with the highest average score so
+far, set against what the village chose at the same table:
+
+| Day | Detector's top suspect a wolf | Village's most-voted seat a wolf | Only one right: detector / village | Chance |
+|---|---|---|---|---|
+| 1 | 71 of 121, 58.7% (49.8-67.1%) | 44 of 121, 36.4% (28.3-45.2%) | 46 / 19, p = 0.001 | 30% |
+| 2 | 74 of 101, 73.3% (63.9-80.9%) | 41 of 101, 40.6% (31.5-50.3%) | 43 / 10, p < 0.0001 | 33% |
+| 3 | 32 of 37, 86.5% (72.0-94.1%) | 19 of 37, 51.4% (35.9-66.6%) | 15 / 2, p = 0.002 | 32% |
+
+p is McNemar's exact test on the same table-days. Counting individual votes rather than tables,
+villagers voted for a wolf 41.5%, 49.8% and 61.5% of the time on days 1 to 3.
+
+The words that gave wolves away were sympathy and steering: "loss", "hurts", "is gone" (mourning
+the night's victim), "think", "let's", "look at", "before we". The village-like ones were about
+wolves: "wolf", "wolves", "among", "voting", and the literal "Player N here, villager" that Haiku 5.5
+villagers say and wolves mostly don't. So the wolves' tell is in how they talk, not in what they
+claim. Two caveats: the detector learned from other games' outcomes, which no player gets, and it
+names one suspect a table with nothing at stake, so this says the evidence was in the transcripts,
+not that a villager could have read it the same way. The first comparison counted single votes;
+the paired one by table was added after seeing it, to compare like with like. No figures were
+predicted beforehand.
 
 ## Crash recovery in practice
 
