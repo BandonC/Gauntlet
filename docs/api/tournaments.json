@@ -1,5 +1,19 @@
 [
  {
+  "id": 34,
+  "game": "liars_dice",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 11.0,
+  "spent_usd": 10.659197,
+  "total": 120,
+  "completed": 120,
+  "failed": 0
+ },
+ {
   "id": 33,
   "game": "liars_dice",
   "format": "round_robin",
