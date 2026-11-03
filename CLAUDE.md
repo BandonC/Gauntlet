@@ -64,7 +64,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -375,6 +375,11 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] Frontier row part 2: Fable in Split the Deal and Word Link (vs sonnet-5 and
       haiku-5.5; Word Link teams mixed so Fable plays both clue-giver and guesser).
       Test games first. Budget: $10.
+- [x] Opus 5.5 in Liar's Dice vs liars-dice-bot-v2, 40 games, tool_choice auto, max_tokens
+      2048. Verify its ID and price first (free checks only), then a test game. Report win rate,
+      challenge blunders with 95% intervals, and where it sits between Sonnet 5.5 and Fable.
+      Budget: $12 (added 2026-11-03, to run before Phase 13). The project's $72 stop line leaves
+      $6.98, so the run's --budget stays under that unless the user raises the line.
 - [x] [human] Optional if the reserve allows: larger Werewolf comparison.
       Declined 2026-11-02: the cost isn't worth the likely precision, since team games
       stayed inconclusive at 40 tables.
@@ -474,6 +479,19 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Opus 5.5 in Liar's Dice (tournament 33, 2026-11-03, seed 2026, $3.5535 plus 3 test games $0.2694,
+  so $3.82 of the $12; the project's $72 stop line left $6.98, so --budget was $6.00). Free checks:
+  `models.retrieve` 1M / 128K; `count_tokens` 200 with auto, 400 forced ("tool_choice: type "tool"
+  and "any" are not supported for this model"). Prices from the claude-api skill's models.md: $4 /
+  $20, cache read $0.20; cache write $5.00 is the standard 1.25x. Effort left at its default
+  (medium per the docs). 536 attempts matching recordings, 1 rejected, 0 forfeits, every
+  `stop_reason` `tool_use`, output max 1,027 of 2,048. Wins 25/40 (62.5%, 47.0-75.8), seat 0 11/20,
+  seat 1 14/20; against Sonnet 5.5's 28/100 p = 0.0002, against Fable's 24/40 p = 1.0. Challenges
+  184, won 56.5%, proved true by its own dice 0 (0.0-2.0%), Sonnet 5.5 18/545 p = 0.01; bids true
+  85.2%. Thinking 195.6 a turn; $0.0888 a game, Fable $0.216. Predicted 45% wins (outside the
+  interval, just), 1.5% blunders and $0.095 a game (held). New seeds, not Fable's: tournaments
+  don't store their creation seed, and t23's match seeds differ from t21's.
 
 - Remote players (`players/remote.py`, roster `provider = "http"`, `url`, `secret`): the protocol
   is in the module docstring. The signature covers `"<timestamp>." + body`; `verify` is for agents
