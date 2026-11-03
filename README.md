@@ -22,7 +22,7 @@ Each game tests something different, and the details follow below.
 
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
-| Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%) |
+| Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%). Graded by a perfect-play solver, both Haikus found the best move 43-44% of the time and blundered on 27-29% |
 | Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges |
 | Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated |
 | Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
@@ -406,6 +406,25 @@ the prompt lists the legal columns.
 
 The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first player won 16 of
 20, so seat order drowns out the models. Separating them would take hundreds of games.
+
+**Graded against perfect play, the two Haikus were equally weak.** A Connect 4 solver
+(`arena/solvers/`, bitboard negamax with alpha-beta and a transposition table, checked move by
+move against brute force on small boards) graded every recorded move. A move is optimal if it
+keeps the best score available, a blunder if it changes the result (a win thrown to a draw or a
+loss, or a draw to a loss), and an inaccuracy otherwise. Both models opened in the centre all 10
+times, the only winning first move. Of the other 340 moves, 198 solved within 5 seconds; the 142
+that didn't, almost all in the first 12 moves, are left ungraded rather than guessed.
+
+| | Graded moves | Optimal | Blunders |
+|---|---|---|---|
+| Haiku 4.5 | 112 | 42.9% (34.1-52.1%) | 28.6% (21.0-37.5%) |
+| Haiku 5.5 | 106 | 44.3% (35.2-53.8%) | 27.4% (19.8-36.5%) |
+
+No difference (p = 0.83 and 0.84). In the middle game, moves 12 to 23, both found the best move
+30% of the time and blundered on 37-39%: about three blunders a game, so the winner swung back and
+forth within a game. 21 blunders left a win in one on the board (Haiku 4.5 14, Haiku 5.5
+7), and 3 missed a block. Since ungraded moves are mostly openings, these rates describe the middle
+game more than the whole game.
 
 ### Cost
 

@@ -67,6 +67,7 @@ arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own d
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
+python -m arena.solvers.c4_grade --tournament 3   # grade Connect 4 moves by perfect play, read only
 ```
 
 `tests/test_store_db.py` DROPS the public schema. Only ever point it at `testdb` (:5433)
@@ -117,6 +118,7 @@ arena/
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
   tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
   balance.py            Werewolf what-if rulesets, simulated; not a game, nothing plays them
+  solvers/              perfect-play analysis of recorded games (Connect 4 solver and grader)
 migrations/             forward-only SQL, applied in filename order
 ```
 
@@ -375,7 +377,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 
 ### Phase 11: ML on collected data (no API spend except the CFR follow-up)
 New dependencies pre-approved: numpy, scikit-learn. No torch.
-- [ ] Connect 4 perfect-play evaluator (bitboard negamax, alpha-beta, transposition
+- [x] Connect 4 perfect-play evaluator (bitboard negamax, alpha-beta, transposition
       table; verify on known positions). Grade every recorded move: optimal /
       inaccuracy / blunder. Report move accuracy per model.
 - [ ] Liar's Dice CFR: game id liars_dice_small (2 dice each). CFR+ until
@@ -444,6 +446,21 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Connect 4 grading (`arena/solvers/`, 2026-11-03, tournament 3, free). The solver follows Pascal
+  Pons's design and is about 100x slower in Python: late positions solve instantly, a balanced
+  12-move one took 2.1M nodes and 22 s, and a full opening solve takes minutes and filled a gigabyte
+  of table, which got a test run killed for memory. So tests use small boards or late positions,
+  the grader caps the table at 1M entries, and a solve past `--time-limit` (5 s) is "unsolved". The
+  first move comes from theory (Pons's scores -2 -1 0 1 0 -1 -2). Two bugs were caught only by
+  brute force with one shared table: Python's `//` floors negatives where C++ truncates, so write
+  `-((n) // 2)`, and a cached lower bound reaching beta must return. Result: 360 moves, 20 first
+  moves all centre, 198 searched, 142 unsolved (plies 1-11); optimal Haiku 4.5 48/112 42.9%, Haiku
+  5.5 47/106 44.3% (p = 0.83); blunders 28.6% / 27.4% (p = 0.84); plies 12-23 optimal 30%, blunders
+  37-39%. 18 missed wins in one graded inaccuracy, correctly: 14 left two winning cells, 4 a stacked
+  threat. A blunder means the result changed, so a lost position can't blunder, only be inaccurate.
+  A forfeit ends the grading of that game (Haiku 5.5 forfeited twice). No prediction was written
+  first: this was free analysis, not a run.
 
 - Frontier row part 2 (tournaments 26-29, 2026-11-02, $7.5819 plus test games $0.9610, so $8.54 of
   the $10; 502 attempts matching recordings, 0 rejected, 0 forfeits, no credit errors). Split the Deal
