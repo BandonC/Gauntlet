@@ -407,6 +407,27 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       Declined 2026-11-03: the monthly cost and the public attack surface aren't worth it. The
       protocol is demonstrated locally and documented for self-hosting.
 
+### Phase 13: Polish (no API spend; suitable for scheduled runs)
+- [ ] GitHub Actions CI: ruff, ruff format --check, mypy, pytest, and pytest -m db with
+      a Postgres service container, on every PR and push to main. Add a status badge
+      to the README.
+- [ ] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
+      core modules); add to scripts/check.sh and CI.
+- [ ] Clean-up review: list duplication, dead code, inconsistent patterns and
+      unclear names across arena/, ranked by value. Then fix them one PR per area,
+      with behaviour unchanged (tests stay green, turn-log replays identical).
+- [ ] README front page: a 30-second summary at the top (what it is, 4–5 headline
+      findings with numbers and intervals, an architecture diagram, links); move the
+      detail into docs/ pages. Keep every claim's caveats.
+- [ ] docs/design-decisions.md: an ADR for each of: event-sourced turn log + replay;
+      lease fencing; Postgres queue vs Redis/Kafka; exact vs sharded spend counters;
+      gates and budgets for paid runs; Bradley-Terry final ratings vs live ratings.
+      Each: context, decision, alternatives, consequences, evidence from this repo.
+- [ ] One-command stack: docker compose profile that runs db + migrate + API + worker
+      + a bot tournament, so `docker compose --profile demo up` shows a live replay.
+- [ ] [human] Real outside-agent test: run examples/agent.py on another machine or
+      through a tunnel and enter it in a bot tournament.
+
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
       (`python -X importtime`) and lazy-load heavy modules.
