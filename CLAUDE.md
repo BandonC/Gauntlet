@@ -391,7 +391,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] Wolf detector: messages and speaker roles from all Werewolf tournaments;
       TF-IDF + logistic regression with cross-validation grouped by match. Report AUC,
       and whether the classifier's top suspect beats the LLM villagers' votes, day by day.
-- [ ] README: an "ML analysis" section.
+- [x] README: an "ML analysis" section.
 
 ### Phase 12: Bring your own agent (backend)
 - [ ] Remote HTTP player type: roster url + secret; HMAC-SHA256 signed POST (timestamp
