@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$68.84**: $62.96 across 1,585 recorded games and 32.5 million tokens, plus $5.88 on 114 in-memory
+**$79.50**: $73.62 across 1,705 recorded games and 34.7 million tokens, plus $5.88 on 114 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -23,7 +23,7 @@ Each game tests something different, and the details follow below.
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
 | Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%). Graded by a perfect-play solver, both Haikus found the best move 43-44% of the time and blundered on 27-29% |
-| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 won 24 of 40 against it (60.0%, 44.6-73.7%) and Opus 5.5 25 of 40 (62.5%, 47.0-75.8%), neither establishing more than half the time, with no blunders in 194 and 184 challenges. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
+| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 won 24 of 40 against it (60.0%, 44.6-73.7%) and Opus 5.5 25 of 40 (62.5%, 47.0-75.8%), neither establishing more than half the time, with no blunders in 194 and 184 challenges. A pre-registered 120 more games took Opus to 97 of 160 (60.6%, 52.9-67.9%): above half, established. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
 | Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated. A text classifier's top suspect was a wolf on 58.7% of first days, where the village's most-voted seat was one 36.4% of the time |
 | Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
 | Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
@@ -289,6 +289,14 @@ at its default effort. I predicted 45% wins, which fell just outside the interva
 of about 1.5% blunders and $0.095 a game held. These games used new seeds, not Fable's, since the
 seed Fable's tournament was created with wasn't recorded.
 
+**Then 120 more games settled it.** Before playing them I committed the rule: same player, same
+bot, new seed, pooled with the first 40, and the claim stands only if the pooled 95% interval sits
+above 50%. Opus won 72 of 120 (60.0%, 51.1-68.3%), in line with the first batch (p = 0.85), so
+pooled it won **97/160 (60.6%, 95% CI 52.9–67.9%, p = 0.009 against an even split)**: it does beat
+this bot more than half the time. It never challenged a bid its own dice proved true in 757
+challenges (0.0-0.5%). Fable's 24/40 remains unestablished; the two are still level (p = 1.0). The
+extension cost $10.66, $0.089 a game, and survived a memory kill at game 82 without a lost turn.
+
 **Code Break, 5 games each against Sonnet 5 and Haiku 5.5:** Fable solved all 10 games, average 4.3
 guesses against the solver's 4.6 on the same secrets (a small sample, within luck). Its opponents
 solved none of their 10. Only 5 of its 43 guesses contradicted its own feedback, 11.6%, below the solver's 18%,
@@ -442,10 +450,11 @@ every move against perfect play didn't separate them either: see [ML analysis](#
 | Fable 5.1: Split the Deal against Sonnet 5 and Haiku 5.5, Word Link in mixed teams | 64 | 834,741 | $7.5819 |
 | Liar's Dice (small), Haiku 5.5, Sonnet 5 and Fable 5.1 against the CFR bot | 120 | 608,662 | $2.8481 |
 | Opus 5.5: Liar's Dice against v2 | 40 | 737,297 | $3.5535 |
-| **Total** | **1,585** | **32,479,034** | **$62.96** |
+| Opus 5.5: Liar's Dice against v2, pre-registered extension | 120 | 2,236,152 | $10.6592 |
+| **Total** | **1,705** | **34,715,186** | **$73.62** |
 
 114 in-memory test games cost another $5.88. They never reach the turn log, so the project total
-is about $68.84.
+is about $79.50.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -718,7 +727,7 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 --matches 116,142   # the static site
 ```
 
 ## Enter your own agent
