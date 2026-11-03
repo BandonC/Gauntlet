@@ -149,6 +149,8 @@ class PlayerFactory:
         api_keys: dict[str, str | None],
         token_sources: dict[str, TokenSource] | None = None,
         record_dir: Path | None = None,
+        http_client=None,
+        remote_options: dict | None = None,
     ):
         self.roster = roster
         self._api_keys = api_keys
@@ -158,16 +160,27 @@ class PlayerFactory:
         self._record_dir = record_dir
         self._providers: dict[str, Provider] = {}
         # Remote agents: one HTTP client per process, one circuit breaker per agent URL.
-        self._http_client = None
+        # Tests inject a client (a mock or ASGI transport) and RemotePlayer options.
+        self._http_client = http_client
+        self._remote_options = remote_options or {}
         self._breakers: dict[str, object] = {}
+
+    def _copy(self, **changes) -> PlayerFactory:
+        args = {
+            "token_sources": self._token_sources,
+            "record_dir": self._record_dir,
+            "http_client": self._http_client,
+            "remote_options": self._remote_options,
+        } | changes
+        return PlayerFactory(self.roster, self._api_keys, **args)
 
     def with_token_sources(self, token_sources: dict[str, TokenSource]) -> PlayerFactory:
         """Same roster and keys, with shared (e.g. Postgres) request-rate buckets."""
-        return PlayerFactory(self.roster, self._api_keys, token_sources, self._record_dir)
+        return self._copy(token_sources=token_sources)
 
     def with_record_dir(self, record_dir: Path) -> PlayerFactory:
         """Same roster, keys and rate sources, recording every completion to record_dir."""
-        return PlayerFactory(self.roster, self._api_keys, self._token_sources, record_dir)
+        return self._copy(record_dir=record_dir)
 
     def _provider(self, name: str) -> Provider:
         if name not in self._providers:
@@ -210,12 +223,15 @@ class PlayerFactory:
 
                 self._http_client = httpx2.AsyncClient()
             breaker = self._breakers.setdefault(cfg.url, CircuitBreaker())
-            return (
-                RemotePlayer(
-                    cfg.id, cfg.url, cfg.secret, client=self._http_client, breaker=breaker
-                ),
-                FREE,
+            remote = RemotePlayer(
+                cfg.id,
+                cfg.url,
+                cfg.secret,
+                client=self._http_client,
+                breaker=breaker,
+                **self._remote_options,
             )
+            return remote, FREE
         player = LLMPlayer(
             cfg.id,
             self._provider(cfg.provider),
