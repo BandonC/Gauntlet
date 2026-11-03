@@ -51,16 +51,16 @@
    "players": [
     "opus-5.5/ld-v1"
    ],
-   "games": 40,
-   "won": 25,
+   "games": 160,
+   "won": 97,
    "drew": 0,
-   "lost": 15,
-   "win_rate": 0.625,
-   "cost_usd": 3.553541,
-   "cost_per_game": 0.088838525,
-   "illegal_rate": 0.0018656716417910447,
-   "cache_hit": 0.7833985272449511,
-   "latency_ms": 4124.383177570094
+   "lost": 63,
+   "win_rate": 0.60625,
+   "cost_usd": 14.212738,
+   "cost_per_game": 0.0888296125,
+   "illegal_rate": 0.0018458698661744347,
+   "cache_hit": 0.7819288916238193,
+   "latency_ms": 3998.667128987517
   },
   {
    "model": "haiku-5.5",
@@ -255,16 +255,16 @@
     },
     {
      "model": "opus-5.5",
-     "games": 40,
-     "won": 25,
+     "games": 160,
+     "won": 97,
      "drew": 0,
-     "lost": 15,
-     "win_rate": 0.625,
-     "cost_usd": 3.553541,
-     "cost_per_game": 0.088838525,
-     "illegal_rate": 0.0018656716417910447,
-     "cache_hit": 0.7833985272449511,
-     "latency_ms": 4124.383177570094
+     "lost": 63,
+     "win_rate": 0.60625,
+     "cost_usd": 14.212738,
+     "cost_per_game": 0.0888296125,
+     "illegal_rate": 0.0018458698661744347,
+     "cache_hit": 0.7819288916238193,
+     "latency_ms": 3998.667128987517
     },
     {
      "model": "haiku-5.5",
