@@ -62,7 +62,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -361,7 +361,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       5 was dropped: it challenged on about 3% of turns in tournament 9, so its blunders are
       too rare to measure. The first gate failed at max_tokens 1024: thinking under auto
       used it all, and every illegal move was a cut-off reply.
-- [ ] Frontier row: verify the top Claude model's ID, price and tool-choice support
+- [x] Frontier row: verify the top Claude model's ID, price and tool-choice support
       (free 400 checks only). Liar's Dice vs bot-v2 (40 games) and Code Break vs
       sonnet-5 and haiku-5.5. Test game first. Budget: $12.
 - [ ] [human] Optional if the reserve allows: larger Werewolf comparison.
@@ -437,6 +437,19 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Frontier row (tournaments 23-25, 2026-11-02). `claude-fable-5-1`, checked free: `models.retrieve`
+  gives 1M input, 128K output; `count_tokens` answers 200 with `auto` and 400 with a forced tool
+  ("tool_choice: type "tool" and "any" are not supported for this model"). Prices from the claude-api
+  skill table: $10 / $50, cache read $0.25; cache write $12.50 is the standard 1.25x, not in that
+  table. Roster `max_tokens` 8192, biggest reply 5,129. Liar's Dice against v2, 40 games: 24 wins,
+  60.0% (44.6-73.7), the first model over 50%; challenges 194, won 56.2%, proved true by its own dice
+  0 (0.0-1.9%), bids true 85.8%; thinking 223.9 a turn (p95 694); $8.6589, $0.216 a game. Code Break
+  5 games each: 5-0 against Sonnet 5 and 5-0 against Haiku 5.5, all 10 solved in 4.3 guesses against
+  the solver's 4.6 on the same secrets, opponents 0 of 10 solved; inconsistent 5 of 43; $1.6228 and
+  $1.2635. 0 rejected, 0 forfeits, every `stop_reason` `tool_use`, recordings equal the log at 568.
+  Test games $2.0709 (7 games, all won). Item $13.62 against $12, approved as a little over, with
+  Code Break cut to 5 games a pairing to hold it there. Predictions (60% wins, all solved in about 5,
+  90% share) all held. Killed for low memory after Liar's Dice; Code Break resumed.
 - Prompt intervention (tournaments 19-22, 2026-11-02, 100 games per arm against `liars-dice-bot-v2`,
   same seed, `tool_choice` auto, `max_tokens` 2048, $10.8822 against a predicted $11.40, test games
   $1.0494 including the failed first gate, so $11.93 of the $12; 4,597 attempts matching recordings,

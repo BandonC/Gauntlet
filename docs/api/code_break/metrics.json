@@ -9,21 +9,30 @@
   "mean_above_solver": 0.0
  },
  {
+  "player_id": "fable-5.1/cb-v2",
+  "games": 10,
+  "solved": 10,
+  "guesses": 43,
+  "inconsistent": 5,
+  "inconsistent_rate": 0.1163,
+  "mean_above_solver": -0.3
+ },
+ {
   "player_id": "haiku-5.5/cb-v2",
-  "games": 120,
+  "games": 125,
   "solved": 6,
-  "guesses": 813,
-  "inconsistent": 600,
-  "inconsistent_rate": 0.738,
+  "guesses": 834,
+  "inconsistent": 613,
+  "inconsistent_rate": 0.735,
   "mean_above_solver": 1.5
  },
  {
   "player_id": "sonnet-5/cb-v2",
-  "games": 120,
+  "games": 125,
   "solved": 12,
-  "guesses": 813,
-  "inconsistent": 626,
-  "inconsistent_rate": 0.77,
+  "guesses": 835,
+  "inconsistent": 641,
+  "inconsistent_rate": 0.7677,
   "mean_above_solver": 2.0
  }
 ]

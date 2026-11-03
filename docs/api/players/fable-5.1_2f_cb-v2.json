@@ -1,0 +1,107 @@
+{
+ "player_id": "fable-5.1/cb-v2",
+ "model": "fable-5.1",
+ "overall": {
+  "games": 10,
+  "won": 10,
+  "drew": 0,
+  "lost": 0,
+  "win_rate": 1.0,
+  "cost_usd": 2.840598,
+  "cost_per_game": 0.2840598,
+  "illegal_rate": 0.0,
+  "cache_hit": 0.8408121480975943,
+  "latency_ms": 19344.232558139534
+ },
+ "games": [
+  {
+   "game": "code_break",
+   "place": 2,
+   "field": 4,
+   "ordinal": 16.32,
+   "games": 10,
+   "won": 10,
+   "drew": 0,
+   "lost": 0,
+   "win_rate": 1.0,
+   "cost_usd": 2.840598,
+   "cost_per_game": 0.2840598,
+   "illegal_rate": 0.0,
+   "cache_hit": 0.8408121480975943,
+   "latency_ms": 19344.232558139534
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 1527,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.090752
+  },
+  {
+   "id": 1526,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.39474
+  },
+  {
+   "id": 1525,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.238086
+  },
+  {
+   "id": 1524,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.24559
+  },
+  {
+   "id": 1523,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.292236
+  },
+  {
+   "id": 1522,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.117552
+  },
+  {
+   "id": 1521,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.31524
+  },
+  {
+   "id": 1520,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.302786
+  },
+  {
+   "id": 1519,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.48359
+  },
+  {
+   "id": 1518,
+   "game": "code_break",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.360026
+  }
+ ]
+}
