@@ -380,6 +380,13 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
       challenge blunders with 95% intervals, and where it sits between Sonnet 5.5 and Fable.
       Budget: $12 (added 2026-11-03, to run before Phase 13). The project's $72 stop line leaves
       $6.98, so the run's --budget stays under that unless the user raises the line.
+- [ ] Opus 5.5 extension, pre-registered 2026-11-03 before any game: 120 more games against
+      liars-dice-bot-v2, same player id (`opus-5.5/ld-v1`, already gated), seed 2027, pooled with
+      tournament 33's 40 for 160. Claim "beats the bot more than half the time" only if the pooled
+      95% Wilson interval's lower bound is above 50% (about 93 wins of 160); otherwise report it as
+      not established, in two lines, with the spend counted like every other run. Budget: $11. The
+      user raised the stop line from $72 to $80 for this run only; this also takes the session past
+      loop.md's $25, approved directly by the user.
 - [x] [human] Optional if the reserve allows: larger Werewolf comparison.
       Declined 2026-11-02: the cost isn't worth the likely precision, since team games
       stayed inconclusive at 40 tables.
