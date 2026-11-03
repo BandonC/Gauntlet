@@ -165,6 +165,8 @@ migrations/             forward-only SQL, applied in filename order
   tournament that contains LLM players.
 - When the user does ask: always pass `--budget`, start with the cheapest model, and
   report tokens and cost from the output afterwards.
+- The Anthropic account's credit is shared with other projects ($44 on 2026-11-02). If any call
+  fails for insufficient credit, stop at once and report it. Don't retry.
 - Total project budget is about $50. Rough split: ~$5 dev/testing, ~$10 a cheap-model
   second game, ~$25 Werewolf, ~$10 buffer.
 
@@ -364,7 +366,12 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] Frontier row: verify the top Claude model's ID, price and tool-choice support
       (free 400 checks only). Liar's Dice vs bot-v2 (40 games) and Code Break vs
       sonnet-5 and haiku-5.5. Test game first. Budget: $12.
-- [ ] [human] Optional if the reserve allows: larger Werewolf comparison.
+- [ ] Frontier row part 2: Fable in Split the Deal and Word Link (vs sonnet-5 and
+      haiku-5.5; Word Link teams mixed so Fable plays both clue-giver and guesser).
+      Test games first. Budget: $10.
+- [x] [human] Optional if the reserve allows: larger Werewolf comparison.
+      Declined 2026-11-02: the cost isn't worth the likely precision, since team games
+      stayed inconclusive at 40 tables.
 
 ### Phase 11: ML on collected data (no API spend except the CFR follow-up)
 New dependencies pre-approved: numpy, scikit-learn. No torch.
@@ -373,7 +380,8 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       inaccuracy / blunder. Report move accuracy per model.
 - [ ] Liar's Dice CFR: game id liars_dice_small (2 dice each). CFR+ until
       exploitability is below a stated threshold (report the curve); bot
-      `liars-dice-cfr`. Then haiku-5.5 and sonnet-5 vs it, 40 games each. Budget: $3.
+      `liars-dice-cfr`. Then haiku-5.5, sonnet-5 and Fable 5.1 vs it, 40 games each.
+      Budget: $8 (raised from $3 on 2026-11-02 to add Fable).
 - [ ] Wolf detector: messages and speaker roles from all Werewolf tournaments;
       TF-IDF + logistic regression with cross-validation grouped by match. Report AUC,
       and whether the classifier's top suspect beats the LLM villagers' votes, day by day.
