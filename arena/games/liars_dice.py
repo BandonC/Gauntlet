@@ -27,12 +27,14 @@ from arena.types import JSON, Action, ActionSpec
 DICE_PER_PLAYER = 5
 FACES = 6
 
-RULES = f"""\
-Liar's Dice. Every player starts with {DICE_PER_PLAYER} dice. Each round all players roll in
+
+def rules_for(dice_per_player: int, faces: int) -> str:
+    return f"""\
+Liar's Dice. Every player starts with {dice_per_player} dice. Each round all players roll in
 secret: you see only your own dice. Ones are NOT wild.
 
 Players act in turn. On your turn either:
-- bid: claim that at least QUANTITY dice showing FACE (1-{FACES}) exist among ALL players'
+- bid: claim that at least QUANTITY dice showing FACE (1-{faces}) exist among ALL players'
   dice combined. Your bid must be higher than the previous bid this round: a higher
   quantity, or the same quantity with a higher face. The first bid of a round can be
   anything. Quantity can't exceed the total number of dice in play.
@@ -42,6 +44,9 @@ On a challenge all dice are revealed. If at least QUANTITY dice show FACE, the b
 true and the challenger loses one die; otherwise the bidder loses one die. The loser
 starts the next round (or the next player with dice, if the loser has none left).
 A player with no dice is out. The last player with dice wins."""
+
+
+RULES = rules_for(DICE_PER_PLAYER, FACES)
 
 
 @dataclass(frozen=True)
@@ -65,9 +70,11 @@ class LDState:
     eliminated: tuple[int, ...] = ()  # seats in the order they ran out of dice
 
 
-def roll(seed: int, round_no: int, dice_counts: tuple[int, ...]) -> tuple[tuple[int, ...], ...]:
+def roll(
+    seed: int, round_no: int, dice_counts: tuple[int, ...], faces: int = FACES
+) -> tuple[tuple[int, ...], ...]:
     rng = random.Random(f"{seed}:{round_no}")
-    return tuple(tuple(sorted(rng.randint(1, FACES) for _ in range(n))) for n in dice_counts)
+    return tuple(tuple(sorted(rng.randint(1, faces) for _ in range(n))) for n in dice_counts)
 
 
 def _next_with_dice(counts: tuple[int, ...], after: int) -> int:
@@ -87,16 +94,27 @@ class LiarsDice(Game):
     name = "liars_dice"
     min_players = 2
     max_players = 6
+    dice_per_player = DICE_PER_PLAYER
+    faces = FACES
 
     def rules_text(self) -> str:
-        return RULES
+        return rules_for(self.dice_per_player, self.faces)
 
     def initial_state(self, num_players: int, seed: int, options: JSON | None = None) -> LDState:
         if not self.min_players <= num_players <= self.max_players:
-            raise ValueError("liars_dice takes 2-6 players")
-        counts = (DICE_PER_PLAYER,) * num_players
+            players = (
+                str(self.min_players)
+                if self.min_players == self.max_players
+                else f"{self.min_players}-{self.max_players}"
+            )
+            raise ValueError(f"{self.name} takes {players} players")
+        counts = (self.dice_per_player,) * num_players
         return LDState(
-            seed=seed, dice_counts=counts, round=1, dice=roll(seed, 1, counts), to_move=0
+            seed=seed,
+            dice_counts=counts,
+            round=1,
+            dice=roll(seed, 1, counts, self.faces),
+            to_move=0,
         )
 
     def current_player(self, state: LDState) -> int:
@@ -184,8 +202,8 @@ class LiarsDice(Game):
                     "face": {
                         "type": "integer",
                         "minimum": 1,
-                        "maximum": FACES,
-                        "description": "For a bid: the face value, 1-6.",
+                        "maximum": self.faces,
+                        "description": f"For a bid: the face value, 1-{self.faces}.",
                     },
                 },
                 "required": ["action"],
@@ -198,7 +216,7 @@ class LiarsDice(Game):
         acts: list[Action] = [
             {"action": "bid", "quantity": q, "face": f}
             for q in range(1, total + 1)
-            for f in range(1, FACES + 1)
+            for f in range(1, self.faces + 1)
             if _raises(state, q, f)
         ]
         if state.bids:
@@ -221,8 +239,8 @@ class LiarsDice(Game):
         if not _is_int(q) or not _is_int(f):
             return "a bid needs integer 'quantity' and 'face'"
         total = sum(state.dice_counts)
-        if not 1 <= f <= FACES:
-            return f"face must be 1-{FACES}"
+        if not 1 <= f <= self.faces:
+            return f"face must be 1-{self.faces}"
         if not 1 <= q <= total:
             return f"quantity must be 1-{total} (dice in play)"
         if not _raises(state, q, f):
@@ -279,7 +297,7 @@ class LiarsDice(Game):
             state,
             dice_counts=counts,
             round=r,
-            dice=roll(state.seed, r, counts),
+            dice=roll(state.seed, r, counts, self.faces),
             to_move=opener,
             bids=(),
         )
@@ -299,6 +317,18 @@ class LiarsDice(Game):
         for rank, seat in enumerate((state.winner, *reversed(state.eliminated)), 1):
             ranks[seat] = rank
         return ranks
+
+
+class LiarsDiceSmall(LiarsDice):
+    """A reduced variant for exact solving: two players, 2 dice each, faces 1-4. Same rules
+    otherwise. Small enough that `arena.solvers.liars_dice_cfr` solves it with perfect recall
+    and measures exploitability exactly; the full game is far beyond that."""
+
+    name = "liars_dice_small"
+    min_players = 2
+    max_players = 2
+    dice_per_player = 2
+    faces = 4
 
 
 def _is_int(x: object) -> bool:

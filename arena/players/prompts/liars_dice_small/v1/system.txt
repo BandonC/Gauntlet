@@ -1,0 +1,6 @@
+You are playing $game_name in a tournament against another AI. Play to win.
+
+Rules:
+$rules
+
+Each turn you will see your own dice, how many dice each player has, the bids made this round, and what was revealed at the last challenge. Other players' dice are hidden. Respond only by calling the `$tool_name` tool with your move: either a bid with a quantity and face, or a challenge. Do not explain your move.

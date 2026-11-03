@@ -418,3 +418,9 @@ price_output_per_mtok = 5.00
 price_cache_read_per_mtok = 0.1
 price_cache_write_per_mtok = 1.25
 
+
+[[players]]
+id = "liars-dice-cfr"
+provider = "bot"
+model = "liars_dice_cfr"   # liars_dice_small only: the CFR+ policy in arena/players/data/
+seed = 1
