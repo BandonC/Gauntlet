@@ -23,7 +23,7 @@ Each game tests something different, and the details follow below.
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
 | Connect 4 | Reading a simple board and following its rules | Too few games to rank models: the first player won 16 of 20 (80%, 58.4-91.9%). Graded by a perfect-play solver, both Haikus found the best move 43-44% of the time and blundered on 27-29% |
-| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 beat it 24-16 (60.0%, 44.6-73.7%) with no blunders in 194 challenges. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
+| Liar's Dice | Reasoning about odds with hidden information | A one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%) and Sonnet 5.5 21-9 (70.0%, 52.1-83.3%). Fable 5.1 won 24 of 40 against it (60.0%, 44.6-73.7%), which doesn't establish winning more than half the time, with no blunders in 194 challenges. In a reduced variant solved exactly, the equilibrium bot won 72 of 120 against three models (60.0%, 51.1-68.3%) |
 | Werewolf | Deceiving others, and detecting deception | Stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%), and no model separated. A text classifier's top suspect was a wolf on 58.7% of first days, where the village's most-voted seat was one 36.4% of the time |
 | Code Break | Deduction: holding every clue in mind | With 10 guesses, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5.5 5 of 60 (8.3%, 3.6-18.1%). A bot that only avoids contradicting itself solved all 1,296 secrets, and Fable 5.1 solved all 10 of its games |
 | Split the Deal | Negotiating with private values | A bot that simply concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%) and Sonnet 5 33-17-10 (63.3%, 50.7-74.4%) |
@@ -88,7 +88,7 @@ Bluffing was nearly all one move. Wolves posed as villagers 65 times in day-firs
 made a matched seer claim. No wolf deliberately leaked its role in either tournament. Claims
 are literal text matches, so paraphrases are missed.
 
-### Stronger models at the same table: the wolves won more, and no model stood out
+### Stronger models at the same table: the wolves won more, though not clearly, and no model stood out
 
 Sonnet 5.5 with reasoning, Sonnet 5 without, and Haiku 5.5 then played 40 more day-first games at
 mixed tables, 35 games per player. **The village won 9 of 40, 22.5%** (interval 12.3-37.5%). I
@@ -271,11 +271,11 @@ tokens and $50 per million output, five times Sonnet 5.5. Free checks confirmed 
 refuses forced tool use, so it answered with `tool_choice` auto. It thought about 220 tokens a turn
 in Liar's Dice and about 1,500 a guess in Code Break.
 
-**Liar's Dice, 40 games against the tuned bot:** Fable won 24, 60.0% (44.6-73.7%), the only model
-to beat it. It never once challenged a bid its own dice proved true, 0 of 194 (0.0-1.9%), against
-3.3% for Sonnet 5.5 (p = 0.006) and 15.6% for Haiku 5.5, and won 56% of its challenges against
-Sonnet 5.5's 36%. Against Sonnet 5.5's 28 of 100 with the same prompt, its win rate is a clear
-step up (p = 0.0008).
+**Liar's Dice, 40 games against the tuned bot:** Fable won 24/40 (60%, 95% CI 45–74%) against the
+tuned bot, clearly ahead of Sonnet 5.5's 28% (p = 0.0008); whether it beats the bot more than half
+the time isn't established at this sample size. It never once challenged a bid its own dice proved
+true, 0 of 194 (0.0-1.9%), against 3.3% for Sonnet 5.5 (p = 0.006) and 15.6% for Haiku 5.5, and won
+56% of its challenges against Sonnet 5.5's 36%.
 
 **Code Break, 5 games each against Sonnet 5 and Haiku 5.5:** Fable solved all 10 games, average 4.3
 guesses against the solver's 4.6 on the same secrets (a small sample, within luck). Its opponents
@@ -334,7 +334,7 @@ own field and added a worked example of feedback to the prompt. Sonnet 5 still s
 letters in one peg, because the API doesn't enforce the schema, but that fell to 2.6% of attempts
 (22 of 831), with 4 lost turns. The rerun gave no sign that the worked example helped.
 
-### Split the Deal: honest, and too quick to settle
+### Split the Deal: honest, and maybe too quick to settle
 
 Two players divide three kinds of item, each knowing only their own values. A deal pays each side
 what their share is worth to them, so both can do well, and no deal pays nothing. The bot is
@@ -506,7 +506,7 @@ the equilibrium never loses ground, but it doesn't hunt for mistakes either.
 
 Pooled, the models won 48 of 120, 40.0% (31.7-48.9%), p = 0.035 against an even split. No single
 model is separable from 50% at 40 games, and none from the others. Haiku's habit of challenging a
-bid its own dice already proved true came back at 26%, against 15.6% in the full game. Fable's
+bid its own dice already proved true came back at 26%, against 15.6% in the full game (p = 0.02). Fable's
 bids were true 88% of the time against Sonnet 5's 58%. My predictions, written before the run,
 were 30%, 35% and 45% wins and about $4.10; all three held, and it cost $2.85.
 

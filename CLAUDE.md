@@ -548,7 +548,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   ("tool_choice: type "tool" and "any" are not supported for this model"). Prices from the claude-api
   skill table: $10 / $50, cache read $0.25; cache write $12.50 is the standard 1.25x, not in that
   table. Roster `max_tokens` 8192, biggest reply 5,129. Liar's Dice against v2, 40 games: 24 wins,
-  60.0% (44.6-73.7), the first model over 50%; challenges 194, won 56.2%, proved true by its own dice
+  60.0% (44.6-73.7), so over 50% not established; challenges 194, won 56.2%, proved true by its own dice
   0 (0.0-1.9%), bids true 85.8%; thinking 223.9 a turn (p95 694); $8.6589, $0.216 a game. Code Break
   5 games each: 5-0 against Sonnet 5 and 5-0 against Haiku 5.5, all 10 solved in 4.3 guesses against
   the solver's 4.6 on the same secrets, opponents 0 of 10 solved; inconsistent 5 of 43; $1.6228 and
