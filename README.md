@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$27.86**: $26.55 across 911 recorded games and 22.5 million tokens, plus $1.31 on 57 in-memory
+**$39.79**: $37.43 across 1,311 recorded games and 29.4 million tokens, plus $2.36 on 89 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -235,6 +235,35 @@ true about 80% of the time at every setting, and challenges won 33%, 32% and 27%
 All three did worse than the 9 of 30 Sonnet 5.5 managed against the same bot in the round-robin, on
 different seeds. That gap isn't proven (p = 0.21 against high effort, which thought about as much).
 
+### Asking for the odds first changed nothing
+
+Could a prompt fix the blunder? `liars_dice/v2-prob` asks the model to estimate, in a sentence,
+how likely the last bid is to be true before it acts, counting its own matching dice and the
+unseen ones. Haiku 5.5 and Sonnet 5.5 each played 100 games against the tuned bot with v1 and
+100 with v2-prob, on the same seeds. Both arms answered with `tool_choice` set to auto, so the
+model had room to write its estimate, and the prompt was the only difference. Sonnet 5 was left
+out because it challenged on only about 3% of its turns in an earlier run, too rarely for its
+blunders to be measured.
+
+| Model and prompt | Blundered challenges | Challenges a game | Wins against v2 | Thinking a turn | Cost |
+|---|---:|---:|---:|---:|---:|
+| Haiku 5.5, v1 | 85 of 545, 15.6% (12.8-18.9%) | 5.45 | 2 of 100 (0.6-7.0%) | 313 | $0.23 |
+| Haiku 5.5, v2-prob | 84 of 550, 15.3% (12.5-18.5%) | 5.50 | 0 of 100 (0.0-3.7%) | 330 | $0.27 |
+| Sonnet 5.5, v1 | 18 of 545, 3.3% (2.1-5.2%) | 5.45 | 28 of 100 (20.1-37.5%) | 210 | $4.33 |
+| Sonnet 5.5, v2-prob | 18 of 559, 3.2% (2.0-5.0%) | 5.59 | 26 of 100 (18.4-35.4%) | 237 | $6.06 |
+
+**The models wrote their estimates and then played exactly as before.** The blunder rates barely
+moved (p = 0.93 for Haiku, 1.0 for Sonnet 5.5), and neither did wins, challenges a game or
+challenges won. A blunder is challenging a bid your own dice already prove true, so writing
+down the count of your own matching dice should have been enough to avoid it. Haiku went on doing
+it about one challenge in six, as it had in earlier games without the prompt. The estimates cost
+Sonnet 5.5 40% more.
+
+The gap between the models is the big effect here: Sonnet 5.5 blundered about a fifth as often as
+Haiku and won 27% of games to Haiku's 1%. An earlier attempt at this test failed its gate at
+`max_tokens` 1024, because both models think by default when they aren't forced to answer with the
+tool, and that ran them out of tokens before they answered.
+
 ### Code Break: neither model could keep track of its own clues
 
 Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
@@ -360,10 +389,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Split the Deal, Sonnet 5, Haiku 5.5 and the bot | 180 | 1,050,980 | $1.2309 |
 | Word Link, Sonnet 5, Haiku 5.5 and the bot team | 90 | 1,654,265 | $2.1885 |
 | Liar's Dice, Sonnet 5.5 effort sweep against v2 | 90 | 1,500,815 | $3.1094 |
-| **Total** | **911** | **22,473,839** | **$26.55** |
+| Liar's Dice, v1 against v2-prob, Haiku 5.5 and Sonnet 5.5 | 400 | 6,975,322 | $10.8822 |
+| **Total** | **1,311** | **29,449,161** | **$37.43** |
 
-57 in-memory test games cost another $1.31. They never reach the turn log, so the project total
-is about $27.86.
+89 in-memory test games cost another $2.36. They never reach the turn log, so the project total
+is about $39.79.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -537,5 +567,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22 --matches 116,142   # the static site
 ```

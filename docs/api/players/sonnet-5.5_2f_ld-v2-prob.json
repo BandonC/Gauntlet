@@ -1,0 +1,737 @@
+{
+ "player_id": "sonnet-5.5/ld-v2-prob",
+ "model": "sonnet-5.5",
+ "overall": {
+  "games": 100,
+  "won": 26,
+  "drew": 0,
+  "lost": 74,
+  "win_rate": 0.26,
+  "cost_usd": 6.061093,
+  "cost_per_game": 0.06061092999999999,
+  "illegal_rate": 0.0007686395080707148,
+  "cache_hit": 0.802842648041584,
+  "latency_ms": 4480.512307692307
+ },
+ "games": [
+  {
+   "game": "liars_dice",
+   "place": 3,
+   "field": 13,
+   "ordinal": 27.86,
+   "games": 100,
+   "won": 26,
+   "drew": 0,
+   "lost": 74,
+   "win_rate": 0.26,
+   "cost_usd": 6.061093,
+   "cost_per_game": 0.06061092999999999,
+   "illegal_rate": 0.0007686395080707148,
+   "cache_hit": 0.802842648041584,
+   "latency_ms": 4480.512307692307
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 1477,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.061047
+  },
+  {
+   "id": 1476,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.04631
+  },
+  {
+   "id": 1475,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.073562
+  },
+  {
+   "id": 1474,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.049684
+  },
+  {
+   "id": 1473,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.08176
+  },
+  {
+   "id": 1472,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.064145
+  },
+  {
+   "id": 1471,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.074423
+  },
+  {
+   "id": 1470,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.068811
+  },
+  {
+   "id": 1469,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.054761
+  },
+  {
+   "id": 1468,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.053739
+  },
+  {
+   "id": 1467,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.048774
+  },
+  {
+   "id": 1466,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.065593
+  },
+  {
+   "id": 1465,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.055185
+  },
+  {
+   "id": 1464,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.042335
+  },
+  {
+   "id": 1463,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.063843
+  },
+  {
+   "id": 1462,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.069057
+  },
+  {
+   "id": 1461,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.054809
+  },
+  {
+   "id": 1460,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.060721
+  },
+  {
+   "id": 1459,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.048241
+  },
+  {
+   "id": 1458,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.055484
+  },
+  {
+   "id": 1457,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.043687
+  },
+  {
+   "id": 1456,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.06811
+  },
+  {
+   "id": 1455,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.049834
+  },
+  {
+   "id": 1454,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.047354
+  },
+  {
+   "id": 1453,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.066179
+  },
+  {
+   "id": 1452,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.056031
+  },
+  {
+   "id": 1451,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.069949
+  },
+  {
+   "id": 1450,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.063847
+  },
+  {
+   "id": 1449,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.052682
+  },
+  {
+   "id": 1448,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.067176
+  },
+  {
+   "id": 1447,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.080458
+  },
+  {
+   "id": 1446,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.05329
+  },
+  {
+   "id": 1445,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.064953
+  },
+  {
+   "id": 1444,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.053511
+  },
+  {
+   "id": 1443,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.057178
+  },
+  {
+   "id": 1442,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.066669
+  },
+  {
+   "id": 1441,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.069706
+  },
+  {
+   "id": 1440,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.065969
+  },
+  {
+   "id": 1439,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.073664
+  },
+  {
+   "id": 1438,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.05481
+  },
+  {
+   "id": 1437,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.063168
+  },
+  {
+   "id": 1436,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.068423
+  },
+  {
+   "id": 1435,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.056086
+  },
+  {
+   "id": 1434,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.073637
+  },
+  {
+   "id": 1433,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.052073
+  },
+  {
+   "id": 1432,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.068881
+  },
+  {
+   "id": 1431,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.057006
+  },
+  {
+   "id": 1430,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.053371
+  },
+  {
+   "id": 1429,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.082502
+  },
+  {
+   "id": 1428,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.051206
+  },
+  {
+   "id": 1427,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.065935
+  },
+  {
+   "id": 1426,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.052021
+  },
+  {
+   "id": 1425,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.067076
+  },
+  {
+   "id": 1424,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.048864
+  },
+  {
+   "id": 1423,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.046217
+  },
+  {
+   "id": 1422,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.054892
+  },
+  {
+   "id": 1421,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.084226
+  },
+  {
+   "id": 1420,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.076373
+  },
+  {
+   "id": 1419,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.067987
+  },
+  {
+   "id": 1418,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.064656
+  },
+  {
+   "id": 1417,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.068235
+  },
+  {
+   "id": 1416,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.076998
+  },
+  {
+   "id": 1415,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.047968
+  },
+  {
+   "id": 1414,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.072102
+  },
+  {
+   "id": 1413,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.062774
+  },
+  {
+   "id": 1412,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.046638
+  },
+  {
+   "id": 1411,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.064725
+  },
+  {
+   "id": 1410,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.070582
+  },
+  {
+   "id": 1409,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.07116
+  },
+  {
+   "id": 1408,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.043841
+  },
+  {
+   "id": 1407,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.056938
+  },
+  {
+   "id": 1406,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.051577
+  },
+  {
+   "id": 1405,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.063949
+  },
+  {
+   "id": 1404,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.069297
+  },
+  {
+   "id": 1403,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.047003
+  },
+  {
+   "id": 1402,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.064871
+  },
+  {
+   "id": 1401,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.053001
+  },
+  {
+   "id": 1400,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.053031
+  },
+  {
+   "id": 1399,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.064816
+  },
+  {
+   "id": 1398,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.091602
+  },
+  {
+   "id": 1397,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.047326
+  },
+  {
+   "id": 1396,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.049865
+  },
+  {
+   "id": 1395,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.060016
+  },
+  {
+   "id": 1394,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.055801
+  },
+  {
+   "id": 1393,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.050733
+  },
+  {
+   "id": 1392,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.075561
+  },
+  {
+   "id": 1391,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.065593
+  },
+  {
+   "id": 1390,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.045433
+  },
+  {
+   "id": 1389,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.063279
+  },
+  {
+   "id": 1388,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.066058
+  },
+  {
+   "id": 1387,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.063618
+  },
+  {
+   "id": 1386,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.059877
+  },
+  {
+   "id": 1385,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.065502
+  },
+  {
+   "id": 1384,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.037193
+  },
+  {
+   "id": 1383,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.062849
+  },
+  {
+   "id": 1382,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.063912
+  },
+  {
+   "id": 1381,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.047214
+  },
+  {
+   "id": 1380,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.060406
+  },
+  {
+   "id": 1379,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.071758
+  },
+  {
+   "id": 1378,
+   "game": "liars_dice",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.03605
+  }
+ ]
+}
