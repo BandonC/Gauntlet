@@ -1,0 +1,70 @@
+[
+ {
+  "player_id": "liars-dice-cfr",
+  "rating": 1579.4,
+  "rd": 61.7,
+  "low": 1456.0,
+  "high": 1702.8,
+  "ordinal": 20.92,
+  "mu": 28.06,
+  "sigma": 2.38,
+  "elo": 1558.0,
+  "games": 120,
+  "points": 72.0,
+  "final": {
+   "rating": 1517.4,
+   "low": 1463.3,
+   "high": 1571.5
+  },
+  "final_tournament_id": 32
+ },
+ {
+  "player_id": "fable-5.1/lds-v1",
+  "rating": 1550.6,
+  "rd": 67.4,
+  "low": 1415.7,
+  "high": 1685.4,
+  "ordinal": 17.59,
+  "mu": 26.96,
+  "sigma": 3.12,
+  "elo": 1534.4,
+  "games": 40,
+  "points": 18.0,
+  "final": {
+   "rating": 1482.6,
+   "low": 1428.5,
+   "high": 1536.7
+  },
+  "final_tournament_id": 32
+ },
+ {
+  "player_id": "haiku-5.5/lds-v1",
+  "rating": 1471.0,
+  "rd": 70.7,
+  "low": 1329.6,
+  "high": 1612.3,
+  "ordinal": 11.98,
+  "mu": 23.23,
+  "sigma": 3.75,
+  "elo": 1465.5,
+  "games": 40,
+  "points": 16.0,
+  "final": null,
+  "final_tournament_id": 32
+ },
+ {
+  "player_id": "sonnet-5/lds-v1",
+  "rating": 1428.0,
+  "rd": 68.5,
+  "low": 1291.0,
+  "high": 1565.1,
+  "ordinal": 11.89,
+  "mu": 21.77,
+  "sigma": 3.29,
+  "elo": 1442.1,
+  "games": 40,
+  "points": 14.0,
+  "final": null,
+  "final_tournament_id": 32
+ }
+]

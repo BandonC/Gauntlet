@@ -21,6 +21,8 @@ from arena.providers.mock import RecordingProvider
 from arena.providers.ratelimit import RateLimiter, TokenSource
 from arena.providers.retry import RetryingProvider
 
+FREE_PROVIDERS = ("random", "bot")  # every other provider must list its prices
+
 
 @dataclass(frozen=True)
 class PlayerConfig:
@@ -88,6 +90,13 @@ def load_roster(path: str | Path) -> Roster:
     for p in data.get("players", []):
         if p.get("temperature") == "omit":  # TOML has no null; send no temperature at all
             p["temperature"] = None
+        if p.get("provider") not in FREE_PROVIDERS and not (
+            "price_input_per_mtok" in p and "price_output_per_mtok" in p
+        ):
+            # A paid player with no prices would cost $0 and no budget cap could stop it.
+            raise ValueError(
+                f"player {p.get('id')!r} needs price_input_per_mtok and price_output_per_mtok"
+            )
         pricing = Pricing(
             input_per_mtok=p.pop("price_input_per_mtok", 0.0),
             output_per_mtok=p.pop("price_output_per_mtok", 0.0),

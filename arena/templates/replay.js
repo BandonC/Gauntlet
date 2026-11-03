@@ -255,7 +255,7 @@ function timeline(game, frames, seats) {
       });
     });
   }
-  if (game === "liars_dice") {
+  if (game === "liars_dice" || game === "liars_dice_small") {
     let round = null;
     frames.forEach((f, i) => {
       const r = f.last_reveal;
@@ -645,6 +645,7 @@ function initBlind(doc, data) {
 }
 
 RENDERERS.werewolf_dayfirst = RENDERERS.werewolf;
+RENDERERS.liars_dice_small = RENDERERS.liars_dice;
 if (typeof document !== "undefined") {
   initReplay(document);
   initBlind(document, JSON.parse(document.getElementById("replay-data").textContent));

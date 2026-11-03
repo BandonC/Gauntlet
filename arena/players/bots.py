@@ -5,7 +5,11 @@ from __future__ import annotations
 import json
 import math
 import random
-from itertools import product
+import zlib
+from dataclasses import dataclass
+from functools import cache
+from itertools import combinations_with_replacement, product
+from pathlib import Path
 
 from arena.balance import DEFAULT_P, vote_target
 from arena.games.code_break import (
@@ -103,6 +107,75 @@ class LiarsDiceBot:
             return Decision(action={"action": "challenge"})
         _, q, neg_f = min(options)
         return Decision(action={"action": "bid", "quantity": q, "face": -neg_f})
+
+
+CFR_POLICY_PATH = Path(__file__).resolve().parent / "data" / "liars_dice_small_cfr.bin"
+
+
+@dataclass(frozen=True)
+class CFRPolicy:
+    """The trained `liars_dice_small` policy (see `arena.solvers.liars_dice_cfr`), read with the
+    stdlib only: per round state, uint8 probabilities indexed by (node, mover's roll, action)."""
+
+    faces: int
+    dice: int
+    rounds: dict[tuple[int, int, int], tuple[int, int, int]]  # state -> (offset, k, a)
+    data: bytes
+
+    def probabilities(self, state: tuple[int, int, int], node: int, roll: int) -> list[int]:
+        offset, k, a = self.rounds[state]
+        start = offset + (node * k + roll) * a
+        return list(self.data[start : start + a])
+
+
+@cache
+def load_cfr_policy(path: Path = CFR_POLICY_PATH) -> CFRPolicy:
+    raw = zlib.decompress(path.read_bytes())
+    size = int.from_bytes(raw[:4], "big")
+    header = json.loads(raw[4 : 4 + size])
+    body = raw[4 + size :]
+    rounds = {tuple(r["state"]): (r["offset"], r["k"], r["a"]) for r in header["rounds"]}
+    return CFRPolicy(header["faces"], header["dice"], rounds, body)  # type: ignore[arg-type]
+
+
+class LiarsDiceCFRBot:
+    """`liars-dice-cfr`: plays the CFR+ average strategy for `liars_dice_small`. Stateless: the
+    round state, the bid sequence and its own roll all come from the view; the opener is whoever
+    bid first, or this seat if nobody has. Samples with an RNG keyed on (seed, view, attempt), so
+    a resumed match decides the same way. All-zero stored rows (probabilities rounded away) fall
+    back to uniform over legal moves, as the trainer's evaluation does."""
+
+    def __init__(
+        self, player_id: str = "liars-dice-cfr", seed: int = 0, path: Path = CFR_POLICY_PATH
+    ):
+        self.player_id = player_id
+        self.seed = seed
+        self.path = path
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        policy = load_cfr_policy(self.path)
+        v = ctx.view
+        me, counts, bids = v["you"], v["dice_counts"], v["bids"]
+        faces = policy.faces
+        opener = bids[0]["seat"] if bids else me
+        state = (counts[0], counts[1], opener)
+        node = 0
+        for b in bids:
+            node |= 1 << ((b["quantity"] - 1) * faces + b["face"] - 1)
+        roll = list(combinations_with_replacement(range(1, faces + 1), counts[me]))
+        r = roll.index(tuple(sorted(v["your_dice"])))
+        weights = policy.probabilities(state, node, r)
+        nb = len(weights) - 1
+        last = max(((b["quantity"] - 1) * faces + b["face"] - 1 for b in bids), default=-1)
+        legal = [a for a in range(nb) if a > last] + ([nb] if bids else [])
+        w = [weights[a] for a in legal]
+        if not any(w):
+            w = [1] * len(legal)
+        rng = random.Random(f"{self.seed}|{json.dumps(v, sort_keys=True)}|{ctx.attempt}")
+        a = rng.choices(legal, weights=w)[0]
+        if a == nb:
+            return Decision(action={"action": "challenge"})
+        return Decision(action={"action": "bid", "quantity": a // faces + 1, "face": a % faces + 1})
 
 
 class WerewolfBot:
@@ -294,6 +367,8 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return LiarsDiceBot(player_id)
     if kind == "liars_dice_v2":
         return LiarsDiceBot(player_id, LIARS_DICE_V2_THRESHOLD)
+    if kind == "liars_dice_cfr":
+        return LiarsDiceCFRBot(player_id, seed)
     if kind == "split_deal":
         return SplitDealBot(player_id)
     if kind == "word_link_clue":
@@ -308,7 +383,7 @@ def build_bot(kind: str, player_id: str, seed: int) -> Player:
         return CodeBreakRandomBot(player_id, seed)
     raise ValueError(
         f"unknown bot {kind!r}; known: code_break, code_break_random, liars_dice, "
-        "liars_dice_v2, split_deal, werewolf, word_link_clue, word_link_guess, "
+        "liars_dice_cfr, liars_dice_v2, split_deal, werewolf, word_link_clue, word_link_guess, "
         "word_link_random"
     )
 
