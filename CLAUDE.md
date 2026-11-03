@@ -62,7 +62,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -366,7 +366,7 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] Frontier row: verify the top Claude model's ID, price and tool-choice support
       (free 400 checks only). Liar's Dice vs bot-v2 (40 games) and Code Break vs
       sonnet-5 and haiku-5.5. Test game first. Budget: $12.
-- [ ] Frontier row part 2: Fable in Split the Deal and Word Link (vs sonnet-5 and
+- [x] Frontier row part 2: Fable in Split the Deal and Word Link (vs sonnet-5 and
       haiku-5.5; Word Link teams mixed so Fable plays both clue-giver and guesser).
       Test games first. Budget: $10.
 - [x] [human] Optional if the reserve allows: larger Werewolf comparison.
@@ -445,6 +445,21 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Frontier row part 2 (tournaments 26-29, 2026-11-02, $7.5819 plus test games $0.9610, so $8.54 of
+  the $10; 502 attempts matching recordings, 0 rejected, 0 forfeits, no credit errors). Split the Deal
+  24 games each: against Sonnet 5 8-11-5 (43.8% share, 26.2-63.1%), mean scores 0.692 / 0.704, deals
+  24/24, efficiency 0.94; against Haiku 16-4-4 (75.0%, 55.1-88.0%), 0.771 / 0.546, deals 24/24. Fable
+  value claims 9 true, 1 false ("I don't need the book" with the book worth 1). Tournament 26 hit its
+  $1.90 cap at 22 of 24 (Sonnet 5 games ran $0.09 against $0.08 tested); the cap was raised to $2.25
+  inside the item budget to finish. Haiku hit `max_tokens` 256 once in tournament 27, with a usable
+  tool call. Word Link 8 games each, Fable as clue-giver on one team and guesser on the other:
+  clue-giving team won 4-4 with Sonnet 5, 6-2 with Haiku, 10/16 62.5% (38.6-81.5%); own words per clue
+  1.59 with Fable giving clues, 1.31 with Fable guessing; accuracy 72.9% / 72.4%. Fable cost $2.11,
+  $1.04, $2.16, $1.69 of the four. Predicted 70% against Sonnet 5 in Split the Deal: outside the
+  interval. 80% against Haiku, ~100% deals, ~0 lies and 60% for Fable's clue team held.
+- A non-retryable `ProviderError` (any 4xx, insufficient credit among them) now fails its match on
+  the first run attempt, which pauses the tournament. Before, the worker re-queued it up to
+  `max_run_attempts` times while other matches kept calling. Transient errors are unchanged.
 - Frontier row (tournaments 23-25, 2026-11-02). `claude-fable-5-1`, checked free: `models.retrieve`
   gives 1M input, 128K output; `count_tokens` answers 200 with `auto` and 400 with a forced tool
   ("tool_choice: type "tool" and "any" are not supported for this model"). Prices from the claude-api

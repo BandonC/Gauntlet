@@ -11,49 +11,60 @@
   "elo": 1632.9,
   "games": 120,
   "points": 97.3,
-  "final": {
-   "rating": 1658.4,
-   "low": 1606.2,
-   "high": 1710.6
-  },
-  "final_tournament_id": 14
+  "final": null,
+  "final_tournament_id": 27
  },
  {
   "player_id": "sonnet-5/sd-v1",
-  "rating": 1494.4,
-  "rd": 64.0,
-  "low": 1366.4,
-  "high": 1622.4,
-  "ordinal": 18.62,
-  "mu": 25.77,
-  "sigma": 2.38,
-  "elo": 1538.8,
-  "games": 120,
-  "points": 85.99999999999997,
+  "rating": 1525.5,
+  "rd": 62.8,
+  "low": 1399.9,
+  "high": 1651.1,
+  "ordinal": 19.62,
+  "mu": 26.31,
+  "sigma": 2.23,
+  "elo": 1547.8,
+  "games": 144,
+  "points": 102.89999999999996,
+  "final": null,
+  "final_tournament_id": 27
+ },
+ {
+  "player_id": "fable-5.1/sd-v1",
+  "rating": 1485.1,
+  "rd": 67.0,
+  "low": 1351.1,
+  "high": 1619.1,
+  "ordinal": 16.38,
+  "mu": 25.15,
+  "sigma": 2.92,
+  "elo": 1531.5,
+  "games": 48,
+  "points": 35.100000000000016,
   "final": {
-   "rating": 1514.4,
-   "low": 1468.1,
-   "high": 1560.7
+   "rating": 1595.4,
+   "low": 1515.2,
+   "high": 1675.7
   },
-  "final_tournament_id": 14
+  "final_tournament_id": 27
  },
  {
   "player_id": "haiku-5.5/sd-v1",
-  "rating": 1284.7,
-  "rd": 69.6,
-  "low": 1145.6,
-  "high": 1423.9,
-  "ordinal": 9.21,
-  "mu": 17.18,
-  "sigma": 2.66,
-  "elo": 1328.3,
-  "games": 120,
-  "points": 68.49999999999999,
+  "rating": 1256.3,
+  "rd": 65.1,
+  "low": 1126.0,
+  "high": 1386.6,
+  "ordinal": 8.61,
+  "mu": 15.76,
+  "sigma": 2.38,
+  "elo": 1287.8,
+  "games": 144,
+  "points": 81.6,
   "final": {
-   "rating": 1327.2,
-   "low": 1273.4,
-   "high": 1381.0
+   "rating": 1404.6,
+   "low": 1324.3,
+   "high": 1484.8
   },
-  "final_tournament_id": 14
+  "final_tournament_id": 27
  }
 ]
