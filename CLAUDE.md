@@ -399,7 +399,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       + body, 5-min replay window); 10s timeout; retries with backoff on 5xx/timeout
       (infrastructure errors, never the player's fault); per-agent circuit breaker;
       idempotency key per (match, turn, attempt); invalid action = invalid attempt.
-- [ ] Example agent (FastAPI, ~50 lines) in examples/, and a chaos test with slow,
+- [x] Example agent (FastAPI, ~50 lines) in examples/, and a chaos test with slow,
       flaky and garbage-returning agents. Invariants must hold.
 - [ ] README: "Enter your own agent", with the protocol spec, signature code and a
       curl example.
@@ -464,6 +464,13 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   fails fast with `retry_after`. Identity is `http-` + the URL's hash, so the agent behind a URL
   can change; the secret and URL never reach the players table. `http` is a free provider (no
   prices), so `--budget` doesn't apply to it.
+- `examples/agent.py` is standalone (no arena import), so it inlines its own signature check.
+  `tests/test_agent_chaos.py` (db) runs it behind `httpx2.ASGITransport` with a seeded fault layer
+  per agent (slow: 15% time out; flaky: 25% 503 plus a 4-call outage at the start; garbage: 30%
+  HTML), a Connect 4 round-robin of 12 matches in `arena_bench`. It needs `PlayerFactory`'s
+  `http_client` and `remote_options` (short backoff). It asserts `check_invariants`, every fault
+  kind, a match on run attempt 2 (the outage), and no rejections or forfeits except the garbage
+  agent's. The outage costs the worker's 10 s re-queue backoff, so the test takes about 12 s.
 
 - Wolf detector (`arena/analysis/wolf_detector.py`, 2026-11-03, free). Rows are `WWState.messages`
   from final states replayed with `iter_states` (options passed), not cancelled; 121 games, 2,828
