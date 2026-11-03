@@ -171,7 +171,7 @@ class MatchRunner:
             if turn_no >= self.max_turns:
                 raise MatchTooLong(f"{spec.match_id} exceeded {self.max_turns} turns")
             seat = self.game.current_player(state)
-            record, next_state = await self._play_turn(state, seat, turn_no)
+            record, next_state = await self._play_turn(state, seat, turn_no, spec.match_id)
             # Persist first; only advance in-memory state once the write is accepted.
             await self.store.append_turn(spec.match_id, record)
             turns.append(record)
@@ -185,7 +185,9 @@ class MatchRunner:
 
         return self._outcome(spec, state, turns)
 
-    async def _play_turn(self, state: State, seat: int, turn_no: int) -> tuple[TurnRecord, State]:
+    async def _play_turn(
+        self, state: State, seat: int, turn_no: int, match_id: str = ""
+    ) -> tuple[TurnRecord, State]:
         player = self.players[seat]
         view = self.game.player_view(state, seat)
         usage = Usage()
@@ -207,6 +209,8 @@ class MatchRunner:
                 legal_actions_hint=self.game.legal_actions_hint(state, seat),
                 attempt=attempt,
                 previous_error=error,
+                match_id=match_id,
+                turn_no=turn_no,
             )
             decision = await player.act(ctx)
             usage += decision.usage
