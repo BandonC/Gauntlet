@@ -1,0 +1,12 @@
+{
+ "liars-dice-cfr": {
+  "rating": 1535.2,
+  "low": 1480.3,
+  "high": 1590.2
+ },
+ "haiku-5.5/lds-v1": {
+  "rating": 1464.8,
+  "low": 1409.8,
+  "high": 1519.7
+ }
+}
