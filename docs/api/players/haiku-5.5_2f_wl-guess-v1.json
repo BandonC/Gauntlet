@@ -2,37 +2,93 @@
  "player_id": "haiku-5.5/wl-guess-v1",
  "model": "haiku-5.5",
  "overall": {
-  "games": 60,
+  "games": 68,
   "won": 0,
-  "drew": 28,
-  "lost": 32,
+  "drew": 34,
+  "lost": 34,
   "win_rate": 0.0,
-  "cost_usd": 0.071777,
-  "cost_per_game": 0.0011962833333333332,
-  "illegal_rate": 0.00267379679144385,
-  "cache_hit": 0.0018384347041661671,
-  "latency_ms": 2351.839142091153
+  "cost_usd": 0.081476,
+  "cost_per_game": 0.0011981764705882355,
+  "illegal_rate": 0.002352941176470588,
+  "cache_hit": 0.0016193843322051288,
+  "latency_ms": 2180.1650943396226
  },
  "games": [
   {
    "game": "word_link",
-   "place": 4,
-   "field": 6,
-   "ordinal": 13.85,
-   "games": 60,
+   "place": 2,
+   "field": 8,
+   "ordinal": 15.45,
+   "games": 68,
    "won": 0,
-   "drew": 28,
-   "lost": 32,
+   "drew": 34,
+   "lost": 34,
    "win_rate": 0.0,
-   "cost_usd": 0.071777,
-   "cost_per_game": 0.0011962833333333332,
-   "illegal_rate": 0.00267379679144385,
-   "cache_hit": 0.0018384347041661671,
-   "latency_ms": 2351.839142091153
+   "cost_usd": 0.081476,
+   "cost_per_game": 0.0011981764705882355,
+   "illegal_rate": 0.002352941176470588,
+   "cache_hit": 0.0016193843322051288,
+   "latency_ms": 2180.1650943396226
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1591,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.001138
+  },
+  {
+   "id": 1590,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.001322
+  },
+  {
+   "id": 1589,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.00115
+  },
+  {
+   "id": 1588,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.001138
+  },
+  {
+   "id": 1587,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.001339
+  },
+  {
+   "id": 1586,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.000938
+  },
+  {
+   "id": 1585,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.001327
+  },
+  {
+   "id": 1584,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.001347
+  },
   {
    "id": 987,
    "game": "word_link",

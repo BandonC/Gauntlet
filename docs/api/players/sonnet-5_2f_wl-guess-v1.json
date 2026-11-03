@@ -2,37 +2,93 @@
  "player_id": "sonnet-5/wl-guess-v1",
  "model": "sonnet-5",
  "overall": {
-  "games": 60,
+  "games": 68,
   "won": 0,
-  "drew": 32,
-  "lost": 28,
+  "drew": 36,
+  "lost": 32,
   "win_rate": 0.0,
-  "cost_usd": 1.461228,
-  "cost_per_game": 0.0243538,
+  "cost_usd": 1.680111,
+  "cost_per_game": 0.024707514705882352,
   "illegal_rate": 0.0,
   "cache_hit": 0.0,
-  "latency_ms": 2233.0476190476193
+  "latency_ms": 2101.327188940092
  },
  "games": [
   {
    "game": "word_link",
-   "place": 2,
-   "field": 6,
-   "ordinal": 14.64,
-   "games": 60,
+   "place": 3,
+   "field": 8,
+   "ordinal": 14.62,
+   "games": 68,
    "won": 0,
-   "drew": 32,
-   "lost": 28,
+   "drew": 36,
+   "lost": 32,
    "win_rate": 0.0,
-   "cost_usd": 1.461228,
-   "cost_per_game": 0.0243538,
+   "cost_usd": 1.680111,
+   "cost_per_game": 0.024707514705882352,
    "illegal_rate": 0.0,
    "cache_hit": 0.0,
-   "latency_ms": 2233.0476190476193
+   "latency_ms": 2101.327188940092
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1583,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.030789
+  },
+  {
+   "id": 1582,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.02374
+  },
+  {
+   "id": 1581,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.030892
+  },
+  {
+   "id": 1580,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.026836
+  },
+  {
+   "id": 1579,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.027566
+  },
+  {
+   "id": 1578,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.01976
+  },
+  {
+   "id": 1577,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.02768
+  },
+  {
+   "id": 1576,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.03162
+  },
   {
    "id": 987,
    "game": "word_link",

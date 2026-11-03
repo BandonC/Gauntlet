@@ -1,0 +1,373 @@
+{
+ "player_id": "fable-5.1/sd-v1",
+ "model": "fable-5.1",
+ "overall": {
+  "games": 48,
+  "won": 24,
+  "drew": 9,
+  "lost": 15,
+  "win_rate": 0.5,
+  "cost_usd": 3.147466,
+  "cost_per_game": 0.06557220833333334,
+  "illegal_rate": 0.0,
+  "cache_hit": 0.4714440670039815,
+  "latency_ms": 6166.92380952381
+ },
+ "games": [
+  {
+   "game": "split_deal",
+   "place": 3,
+   "field": 4,
+   "ordinal": 16.38,
+   "games": 48,
+   "won": 24,
+   "drew": 9,
+   "lost": 15,
+   "win_rate": 0.5,
+   "cost_usd": 3.147466,
+   "cost_per_game": 0.06557220833333334,
+   "illegal_rate": 0.0,
+   "cache_hit": 0.4714440670039815,
+   "latency_ms": 6166.92380952381
+  }
+ ],
+ "roles": null,
+ "recent": [
+  {
+   "id": 1575,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.117187
+  },
+  {
+   "id": 1574,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.08468
+  },
+  {
+   "id": 1573,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.066984
+  },
+  {
+   "id": 1572,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.081321
+  },
+  {
+   "id": 1571,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.020266
+  },
+  {
+   "id": 1570,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.053783
+  },
+  {
+   "id": 1569,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.027727
+  },
+  {
+   "id": 1568,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.07888
+  },
+  {
+   "id": 1567,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.055833
+  },
+  {
+   "id": 1566,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.025657
+  },
+  {
+   "id": 1565,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.012887
+  },
+  {
+   "id": 1564,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.016657
+  },
+  {
+   "id": 1563,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.011867
+  },
+  {
+   "id": 1562,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.026667
+  },
+  {
+   "id": 1561,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.007017
+  },
+  {
+   "id": 1560,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.032293
+  },
+  {
+   "id": 1559,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.028723
+  },
+  {
+   "id": 1558,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.058103
+  },
+  {
+   "id": 1557,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.022987
+  },
+  {
+   "id": 1556,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.043293
+  },
+  {
+   "id": 1555,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.020137
+  },
+  {
+   "id": 1554,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.036543
+  },
+  {
+   "id": 1553,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.055783
+  },
+  {
+   "id": 1552,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.054534
+  },
+  {
+   "id": 1551,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.154754
+  },
+  {
+   "id": 1550,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.155174
+  },
+  {
+   "id": 1549,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.102691
+  },
+  {
+   "id": 1548,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.103424
+  },
+  {
+   "id": 1547,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.075724
+  },
+  {
+   "id": 1546,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.145814
+  },
+  {
+   "id": 1545,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.160741
+  },
+  {
+   "id": 1544,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.108597
+  },
+  {
+   "id": 1543,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.119707
+  },
+  {
+   "id": 1542,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.069357
+  },
+  {
+   "id": 1541,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.018067
+  },
+  {
+   "id": 1540,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.066227
+  },
+  {
+   "id": 1539,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.03067
+  },
+  {
+   "id": 1538,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.125661
+  },
+  {
+   "id": 1537,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.01963
+  },
+  {
+   "id": 1536,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.05839
+  },
+  {
+   "id": 1535,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.05961
+  },
+  {
+   "id": 1534,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.05962
+  },
+  {
+   "id": 1533,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.0209
+  },
+  {
+   "id": 1532,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.06951
+  },
+  {
+   "id": 1531,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.089741
+  },
+  {
+   "id": 1530,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.096547
+  },
+  {
+   "id": 1529,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.133644
+  },
+  {
+   "id": 1528,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.063457
+  }
+ ]
+}

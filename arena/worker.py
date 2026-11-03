@@ -5,7 +5,8 @@ Failure handling:
   write nothing. Another worker owns the match and resumes from the turn log.
 - ProviderError (API down / rate limited past retries) or an unexpected bug: release
   the match for retry with exponential backoff; after N run attempts it is marked
-  'failed' with last_error set.
+  'failed' with last_error set. A non-retryable ProviderError (a 4xx, such as insufficient
+  credit) fails the match at once, which pauses its tournament: retrying only makes calls.
 - Worker killed (SIGKILL, crash, laptop lid): nothing to do. The lease expires and
   another worker re-claims the match.
 - Graceful stop (SIGTERM / first Ctrl-C, see install_stop_signals): stop claiming, let
@@ -156,7 +157,18 @@ async def _run_claimed(
         if await queue.release_on_shutdown(pool, claimed.id, worker_id):
             log.info("match %s handed back at the budget cap", claimed.id)
     except ProviderError as e:
-        await _release(pool, claimed, worker_id, f"provider: {e}", cfg)
+        if not e.retryable:
+            # A 4xx such as insufficient credit won't fix itself, and every retry would make
+            # another call. Fail the match now: that pauses its tournament, so nothing more
+            # is claimed until someone resumes it.
+            status = await queue.release_for_retry(
+                pool, claimed.id, worker_id, f"provider: {e}", max_attempts=1, backoff_seconds=0
+            )
+            if status == "failed":
+                MATCHES_FAILED.inc()
+            log.error("match %s failed on a permanent provider error: %s", claimed.id, e)
+        else:
+            await _release(pool, claimed, worker_id, f"provider: {e}", cfg)
     except Exception as e:
         log.exception("match %s crashed", claimed.id)
         await _release(pool, claimed, worker_id, f"{type(e).__name__}: {e}", cfg)

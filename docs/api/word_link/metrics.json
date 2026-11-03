@@ -1,10 +1,32 @@
 [
  {
+  "player_id": "fable-5.1/wl-clue-v1",
+  "games": 16,
+  "wins": 10,
+  "clues": 44,
+  "words_per_clue": 1.5909,
+  "bad_clues": 0,
+  "guesses": 0,
+  "accuracy": null,
+  "trap_hits": 0
+ },
+ {
+  "player_id": "fable-5.1/wl-guess-v1",
+  "games": 16,
+  "wins": 6,
+  "clues": 0,
+  "words_per_clue": null,
+  "bad_clues": 0,
+  "guesses": 76,
+  "accuracy": 0.7237,
+  "trap_hits": 2
+ },
+ {
   "player_id": "haiku-5.5/wl-clue-v1",
-  "games": 60,
-  "wins": 28,
-  "clues": 180,
-  "words_per_clue": 1.2667,
+  "games": 68,
+  "wins": 30,
+  "clues": 200,
+  "words_per_clue": 1.26,
   "bad_clues": 2,
   "guesses": 0,
   "accuracy": null,
@@ -12,21 +34,21 @@
  },
  {
   "player_id": "haiku-5.5/wl-guess-v1",
-  "games": 60,
-  "wins": 28,
+  "games": 68,
+  "wins": 34,
   "clues": 0,
   "words_per_clue": null,
   "bad_clues": 0,
-  "guesses": 356,
-  "accuracy": 0.6404,
-  "trap_hits": 15
+  "guesses": 401,
+  "accuracy": 0.6534,
+  "trap_hits": 17
  },
  {
   "player_id": "sonnet-5/wl-clue-v1",
-  "games": 60,
-  "wins": 32,
-  "clues": 188,
-  "words_per_clue": 1.117,
+  "games": 68,
+  "wins": 36,
+  "clues": 210,
+  "words_per_clue": 1.1476,
   "bad_clues": 3,
   "guesses": 0,
   "accuracy": null,
@@ -34,14 +56,14 @@
  },
  {
   "player_id": "sonnet-5/wl-guess-v1",
-  "games": 60,
-  "wins": 32,
+  "games": 68,
+  "wins": 36,
   "clues": 0,
   "words_per_clue": null,
   "bad_clues": 0,
-  "guesses": 323,
-  "accuracy": 0.6502,
-  "trap_hits": 12
+  "guesses": 374,
+  "accuracy": 0.6578,
+  "trap_hits": 14
  },
  {
   "player_id": "word-link-clue-bot",
