@@ -403,7 +403,9 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       flaky and garbage-returning agents. Invariants must hold.
 - [x] README: "Enter your own agent", with the protocol spec, signature code and a
       curl example.
-- [ ] [human] Decide whether to host an open arena (monthly cost).
+- [x] [human] Decide whether to host an open arena (monthly cost).
+      Declined 2026-11-03: the monthly cost and the public attack surface aren't worth it. The
+      protocol is demonstrated locally and documented for self-hosting.
 
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
