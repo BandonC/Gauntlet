@@ -20,6 +20,8 @@ class TurnContext:
     legal_actions_hint: list[Action] | None
     attempt: int = 1
     previous_error: str | None = None  # why the last attempt this turn was rejected
+    match_id: str = ""  # with turn_no and attempt, identifies this request (remote players)
+    turn_no: int = 0
 
 
 @dataclass(frozen=True)

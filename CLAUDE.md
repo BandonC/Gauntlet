@@ -30,6 +30,7 @@ Optimise for correctness and clear failure semantics over features.
 | Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
 | Split the Deal (negotiation), conceding bot, value-claim metrics | Done, db-tested, replay renderer, proven by a real run (tournament 14, see Gotchas) |
 | Word Link (team word game), Weng-Lin team ratings, team tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 15, see Gotchas) |
+| Remote HTTP players (`provider = "http"`): signed requests, retries, circuit breaker | Done, tested on a mock transport and through `MatchRunner`; no real agent yet |
 | `liars_dice_small` (2 dice, faces 1-4), CFR+ solver with exact exploitability, `liars-dice-cfr` bot | Done, tested against plain recursion, proven by real runs (tournaments 30-32, see Gotchas) |
 
 ## Commands
@@ -394,7 +395,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] README: an "ML analysis" section.
 
 ### Phase 12: Bring your own agent (backend)
-- [ ] Remote HTTP player type: roster url + secret; HMAC-SHA256 signed POST (timestamp
+- [x] Remote HTTP player type: roster url + secret; HMAC-SHA256 signed POST (timestamp
       + body, 5-min replay window); 10s timeout; retries with backoff on 5xx/timeout
       (infrastructure errors, never the player's fault); per-agent circuit breaker;
       idempotency key per (match, turn, attempt); invalid action = invalid attempt.
@@ -450,6 +451,19 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Remote players (`players/remote.py`, roster `provider = "http"`, `url`, `secret`): the protocol
+  is in the module docstring. The signature covers `"<timestamp>." + body`; `verify` is for agents
+  and enforces the 5-minute window. `Idempotency-Key` is `match_id:turn:attempt`, the same on every
+  retry of one attempt, so `TurnContext` now carries `match_id` and `turn_no` (empty and 0 outside
+  `MatchRunner`). Timeouts (10 s), transport errors, 5xx and 429 are retried with backoff, then
+  raised as a retryable `ProviderError`: the worker re-queues the match and no attempt is used,
+  which is invariant 5. Anything else the agent sends is its move: a 4xx, a non-JSON body or no
+  `action` object is an invalid attempt, never retried. One circuit breaker per URL per
+  `PlayerFactory` (5 failures in a row opens it for 30 s, then one trial call); an open breaker
+  fails fast with `retry_after`. Identity is `http-` + the URL's hash, so the agent behind a URL
+  can change; the secret and URL never reach the players table. `http` is a free provider (no
+  prices), so `--budget` doesn't apply to it.
 
 - Wolf detector (`arena/analysis/wolf_detector.py`, 2026-11-03, free). Rows are `WWState.messages`
   from final states replayed with `iter_states` (options passed), not cancelled; 121 games, 2,828
