@@ -375,6 +375,11 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] Frontier row part 2: Fable in Split the Deal and Word Link (vs sonnet-5 and
       haiku-5.5; Word Link teams mixed so Fable plays both clue-giver and guesser).
       Test games first. Budget: $10.
+- [ ] Opus 5.5 in Liar's Dice vs liars-dice-bot-v2, 40 games, tool_choice auto, max_tokens
+      2048. Verify its ID and price first (free checks only), then a test game. Report win rate,
+      challenge blunders with 95% intervals, and where it sits between Sonnet 5.5 and Fable.
+      Budget: $12 (added 2026-11-03, to run before Phase 13). The project's $72 stop line leaves
+      $6.98, so the run's --budget stays under that unless the user raises the line.
 - [x] [human] Optional if the reserve allows: larger Werewolf comparison.
       Declined 2026-11-02: the cost isn't worth the likely precision, since team games
       stayed inconclusive at 40 tables.
