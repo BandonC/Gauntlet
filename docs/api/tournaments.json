@@ -1,5 +1,47 @@
 [
  {
+  "id": 25,
+  "game": "code_break",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 2.0,
+  "spent_usd": 1.263471,
+  "total": 5,
+  "completed": 5,
+  "failed": 0
+ },
+ {
+  "id": 24,
+  "game": "code_break",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 2.0,
+  "spent_usd": 1.622803,
+  "total": 5,
+  "completed": 5,
+  "failed": 0
+ },
+ {
+  "id": 23,
+  "game": "liars_dice",
+  "format": "round_robin",
+  "status": "completed",
+  "rounds": null,
+  "current_round": 0,
+  "last_error": null,
+  "budget_usd": 9.0,
+  "spent_usd": 8.65889,
+  "total": 40,
+  "completed": 40,
+  "failed": 0
+ },
+ {
   "id": 22,
   "game": "liars_dice",
   "format": "round_robin",

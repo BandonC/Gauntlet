@@ -2,37 +2,72 @@
  "player_id": "sonnet-5/cb-v2",
  "model": "sonnet-5",
  "overall": {
-  "games": 120,
+  "games": 125,
   "won": 10,
   "drew": 47,
-  "lost": 63,
-  "win_rate": 0.08333333333333333,
-  "cost_usd": 1.594908,
-  "cost_per_game": 0.0132909,
-  "illegal_rate": 0.026474127557160047,
-  "cache_hit": 0.773587937234661,
-  "latency_ms": 2711.029520295203
+  "lost": 68,
+  "win_rate": 0.08,
+  "cost_usd": 1.638517,
+  "cost_per_game": 0.013108136,
+  "illegal_rate": 0.02579132473622509,
+  "cache_hit": 0.7730648515299071,
+  "latency_ms": 2675.2958083832336
  },
  "games": [
   {
    "game": "code_break",
-   "place": 2,
-   "field": 3,
-   "ordinal": 8.0,
-   "games": 120,
+   "place": 4,
+   "field": 4,
+   "ordinal": 7.24,
+   "games": 125,
    "won": 10,
    "drew": 47,
-   "lost": 63,
-   "win_rate": 0.08333333333333333,
-   "cost_usd": 1.594908,
-   "cost_per_game": 0.0132909,
-   "illegal_rate": 0.026474127557160047,
-   "cache_hit": 0.773587937234661,
-   "latency_ms": 2711.029520295203
+   "lost": 68,
+   "win_rate": 0.08,
+   "cost_usd": 1.638517,
+   "cost_per_game": 0.013108136,
+   "illegal_rate": 0.02579132473622509,
+   "cache_hit": 0.7730648515299071,
+   "latency_ms": 2675.2958083832336
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1522,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.005533
+  },
+  {
+   "id": 1521,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009319
+  },
+  {
+   "id": 1520,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.007394
+  },
+  {
+   "id": 1519,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009379
+  },
+  {
+   "id": 1518,
+   "game": "code_break",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.011984
+  },
   {
    "id": 717,
    "game": "code_break",
