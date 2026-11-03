@@ -2,37 +2,205 @@
  "player_id": "sonnet-5/sd-v1",
  "model": "sonnet-5",
  "overall": {
-  "games": 120,
-  "won": 54,
-  "drew": 18,
-  "lost": 48,
-  "win_rate": 0.45,
-  "cost_usd": 1.183279,
-  "cost_per_game": 0.009860658333333333,
+  "games": 144,
+  "won": 65,
+  "drew": 23,
+  "lost": 56,
+  "win_rate": 0.4513888888888889,
+  "cost_usd": 1.446321,
+  "cost_per_game": 0.010043895833333333,
   "illegal_rate": 0.0,
-  "cache_hit": 0.4627903558050692,
-  "latency_ms": 2668.789308176101
+  "cache_hit": 0.4432679916732752,
+  "latency_ms": 2536.4514435695537
  },
  "games": [
   {
    "game": "split_deal",
    "place": 2,
-   "field": 3,
-   "ordinal": 18.62,
-   "games": 120,
-   "won": 54,
-   "drew": 18,
-   "lost": 48,
-   "win_rate": 0.45,
-   "cost_usd": 1.183279,
-   "cost_per_game": 0.009860658333333333,
+   "field": 4,
+   "ordinal": 19.62,
+   "games": 144,
+   "won": 65,
+   "drew": 23,
+   "lost": 56,
+   "win_rate": 0.4513888888888889,
+   "cost_usd": 1.446321,
+   "cost_per_game": 0.010043895833333333,
    "illegal_rate": 0.0,
-   "cache_hit": 0.4627903558050692,
-   "latency_ms": 2668.789308176101
+   "cache_hit": 0.4432679916732752,
+   "latency_ms": 2536.4514435695537
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1551,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.014863
+  },
+  {
+   "id": 1550,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.015377
+  },
+  {
+   "id": 1549,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.008376
+  },
+  {
+   "id": 1548,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.014113
+  },
+  {
+   "id": 1547,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.008945
+  },
+  {
+   "id": 1546,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.015255
+  },
+  {
+   "id": 1545,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.018082
+  },
+  {
+   "id": 1544,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.011732
+  },
+  {
+   "id": 1543,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.011222
+  },
+  {
+   "id": 1542,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.013213
+  },
+  {
+   "id": 1541,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.007161
+  },
+  {
+   "id": 1540,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.013093
+  },
+  {
+   "id": 1539,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.004892
+  },
+  {
+   "id": 1538,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.018176
+  },
+  {
+   "id": 1537,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.004862
+  },
+  {
+   "id": 1536,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.005144
+  },
+  {
+   "id": 1535,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.00557
+  },
+  {
+   "id": 1534,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.00523
+  },
+  {
+   "id": 1533,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.004972
+  },
+  {
+   "id": 1532,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.007789
+  },
+  {
+   "id": 1531,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.018004
+  },
+  {
+   "id": 1530,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.011488
+  },
+  {
+   "id": 1529,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "won",
+   "cost_usd": 0.012608
+  },
+  {
+   "id": 1528,
+   "game": "split_deal",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.012875
+  },
   {
    "id": 897,
    "game": "split_deal",

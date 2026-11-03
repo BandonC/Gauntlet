@@ -1397,3 +1397,55 @@ async def test_a_team_tournament_refuses_a_player_on_two_teams(pool):
     b = PlayerConfig("g1", "bot", model="word_link_guess", seed=2)
     with pytest.raises(ValueError, match="two teams"):
         await create_team_tournament(pool, "word_link", [[a, b], [a, b]], 2, None)
+
+
+async def test_a_permanent_provider_error_fails_the_match_at_once_and_pauses(pool):
+    """Insufficient credit is a 400. The worker must not keep calling the API."""
+    from arena.providers.base import ProviderError
+
+    class Broke:
+        def __init__(self, player_id):
+            self.player_id = player_id
+            self.calls = 0
+
+        async def act(self, ctx):
+            self.calls += 1
+            raise ProviderError("400 credit balance is too low", retryable=False)
+
+    players = {}
+
+    class Factory:
+        def build(self, player_id):
+            players[player_id] = players.get(player_id) or Broke(player_id)
+            return players[player_id], FREE
+
+    tid, n = await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=2, budget_usd=None)
+    assert n > 1
+    await run_worker(pool, Factory(), FAST, exit_when_idle=True)
+
+    rows = await pool.fetch("SELECT status, run_attempts, last_error FROM matches ORDER BY id")
+    assert sum(r["status"] == "failed" for r in rows) == 1
+    assert all(r["status"] == "queued" for r in rows if r["status"] != "failed")
+    failed = next(r for r in rows if r["status"] == "failed")
+    assert failed["run_attempts"] == 1 and "credit" in failed["last_error"]
+    assert await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", tid) == "paused"
+    assert sum(p.calls for p in players.values()) == 1
+
+
+async def test_a_transient_provider_error_is_still_retried(pool):
+    from arena.providers.base import ProviderError
+
+    class Flaky:
+        player_id = "r1"
+
+        async def act(self, ctx):
+            raise ProviderError("529 overloaded", retryable=True)
+
+    class Factory:
+        def build(self, player_id):
+            return Flaky(), FREE
+
+    await create_round_robin(pool, "connect4", PLAYERS, games_per_pair=1, budget_usd=None)
+    assert await run_one(pool, Factory(), "A", FAST)
+    row = await pool.fetchrow("SELECT status, available_at > now() AS later FROM matches")
+    assert row["status"] == "queued" and row["later"]
