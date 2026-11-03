@@ -401,7 +401,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       idempotency key per (match, turn, attempt); invalid action = invalid attempt.
 - [x] Example agent (FastAPI, ~50 lines) in examples/, and a chaos test with slow,
       flaky and garbage-returning agents. Invariants must hold.
-- [ ] README: "Enter your own agent", with the protocol spec, signature code and a
+- [x] README: "Enter your own agent", with the protocol spec, signature code and a
       curl example.
 - [ ] [human] Decide whether to host an open arena (monthly cost).
 
