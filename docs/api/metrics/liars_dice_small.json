@@ -1,0 +1,58 @@
+[
+ {
+  "player_id": "fable-5.1/lds-v1",
+  "turns": 147,
+  "attempts": 147,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2933.0,
+  "latency_p95_ms": 8900.7,
+  "completed_games": 40,
+  "cost_per_game_usd": 0.057455,
+  "cache_hit_rate": 0.8071
+ },
+ {
+  "player_id": "haiku-5.5/lds-v1",
+  "turns": 142,
+  "attempts": 143,
+  "illegal_attempts": 1,
+  "illegal_move_rate": 0.007,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 1942.0,
+  "latency_p95_ms": 5128.5,
+  "completed_games": 40,
+  "cost_per_game_usd": 0.000638,
+  "cache_hit_rate": 0.8119
+ },
+ {
+  "player_id": "liars-dice-cfr",
+  "turns": 407,
+  "attempts": 407,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 0.0,
+  "latency_p95_ms": 0.0,
+  "completed_games": 120,
+  "cost_per_game_usd": 0.0,
+  "cache_hit_rate": null
+ },
+ {
+  "player_id": "sonnet-5/lds-v1",
+  "turns": 164,
+  "attempts": 164,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2376.5,
+  "latency_p95_ms": 2832.3,
+  "completed_games": 40,
+  "cost_per_game_usd": 0.01311,
+  "cache_hit_rate": 0.0
+ }
+]

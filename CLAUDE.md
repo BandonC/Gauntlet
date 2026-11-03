@@ -30,6 +30,7 @@ Optimise for correctness and clear failure semantics over features.
 | Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
 | Split the Deal (negotiation), conceding bot, value-claim metrics | Done, db-tested, replay renderer, proven by a real run (tournament 14, see Gotchas) |
 | Word Link (team word game), Weng-Lin team ratings, team tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 15, see Gotchas) |
+| `liars_dice_small` (2 dice, faces 1-4), CFR+ solver with exact exploitability, `liars-dice-cfr` bot | Done, tested against plain recursion, proven by real runs (tournaments 30-32, see Gotchas) |
 
 ## Commands
 
@@ -62,12 +63,13 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 python -m arena.solvers.c4_grade --tournament 3   # grade Connect 4 moves by perfect play, read only
+python -m arena.solvers.liars_dice_cfr --iterations 600 --threshold 0   # retrain the CFR bot's policy
 ```
 
 `tests/test_store_db.py` DROPS the public schema. Only ever point it at `testdb` (:5433)
@@ -380,7 +382,8 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] Connect 4 perfect-play evaluator (bitboard negamax, alpha-beta, transposition
       table; verify on known positions). Grade every recorded move: optimal /
       inaccuracy / blunder. Report move accuracy per model.
-- [ ] Liar's Dice CFR: game id liars_dice_small (2 dice each). CFR+ until
+- [x] Liar's Dice CFR: game id liars_dice_small (2 dice each, faces 1-4: decided 2026-11-03 so it
+      solves exactly; peak memory estimated first and kept under 1 GB). CFR+ until
       exploitability is below a stated threshold (report the curve); bot
       `liars-dice-cfr`. Then haiku-5.5, sonnet-5 and Fable 5.1 vs it, 40 games each.
       Budget: $8 (raised from $3 on 2026-11-02 to add Fable).
@@ -446,6 +449,31 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Liar's Dice CFR (tournaments 30-32, 2026-11-03, $2.8481 plus 9 test games $0.2128, so $3.06 of
+  the $8; 454 attempts matching recordings, 1 rejected (Haiku), 0 forfeits, no `max_tokens` stop,
+  no credit errors, all 120 replayed to their scores). `liars_dice_small` is `LiarsDice` with class
+  attributes `dice_per_player = 2`, `faces = 4`, exactly 2 players; `liars_dice` keeps its rules
+  text, schema and dice byte for byte, and a test holds that. Its prompt `liars_dice_small/v1` is a
+  byte copy of `liars_dice/v1`. Solver: rounds start from public states, so each is solved alone,
+  children first, with later rounds' values as payoffs; nodes are bid-sequence bitmasks (65,536 in
+  the opening round), processed a layer at a time over all rolls in numpy. A challenge is a leaf,
+  so the opponent's probability of challenging must be applied at it: missing that gave "win
+  probabilities" above 1 on the first run. Exploitability (BR_0 + BR_1 - 1) / 2 in win probability,
+  checked against plain recursion. Curve 0.0094 at 25 iterations, 0.00097 at 100 (under the stated
+  0.001), 0.000036 at 600, 0.00031 as stored at 1/255 steps; 1.5 s an iteration, peak estimate 325
+  MiB. Opener wins 50.46%. Values: (1,1) opener loses 9/16. The policy file is 0.31 MiB, read with
+  the stdlib; numpy is in the `dev` and `ml` extras only. Results against the bot, alternating
+  seats: Haiku 5.5 16/40 (40.0%, 26.3-55.4), Sonnet 5 14/40 (35.0%, 22.1-50.5), Fable 18/40 (45.0%,
+  30.7-60.2), pooled 48/120 (40.0%, 31.7-48.9, p = 0.035). Challenges proved true by own dice: Haiku
+  22/84 (26.2%), Sonnet 5 0/37, Fable 0/63, bot 0. Bids true: Haiku 96.6%, Sonnet 5 57.5%, Fable
+  88.1%. Thinking a turn Haiku 231.8, Fable 189.2. Cost a game $0.0006 / $0.0131 / $0.0575. Each
+  model used its Liar's Dice player's settings (Haiku auto 2048, Sonnet 5 forced 256, Fable auto
+  8192). Predictions 30 / 35 / 45% wins and about $4.10 all held; it cost $2.85. `LiarsDiceBot`
+  assumes six faces, so it can't play this variant.
+- A paid roster player with no `price_input_per_mtok` / `price_output_per_mtok` is now refused at
+  load (`roster.FREE_PROVIDERS` are exempt). Before, it loaded at $0, so `--budget` couldn't stop it:
+  the first CFR test game ran that way and was priced by hand ($0.00033).
 
 - Connect 4 grading (`arena/solvers/`, 2026-11-03, tournament 3, free). The solver follows Pascal
   Pons's design and is about 100x slower in Python: late positions solve instantly, a balanced
