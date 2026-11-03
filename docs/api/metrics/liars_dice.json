@@ -28,6 +28,34 @@
   "cache_hit_rate": 0.7064
  },
  {
+  "player_id": "haiku-5.5/ld-v1-auto",
+  "turns": 1010,
+  "attempts": 1011,
+  "illegal_attempts": 1,
+  "illegal_move_rate": 0.001,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2129.5,
+  "latency_p95_ms": 4495.6,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.002261,
+  "cache_hit_rate": 0.7911
+ },
+ {
+  "player_id": "haiku-5.5/ld-v2-prob",
+  "turns": 1016,
+  "attempts": 1016,
+  "illegal_attempts": 0,
+  "illegal_move_rate": 0.0,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 2366.5,
+  "latency_p95_ms": 4659.8,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.002677,
+  "cache_hit_rate": 0.8074
+ },
+ {
   "player_id": "liars-dice-bot",
   "turns": 1082,
   "attempts": 1082,
@@ -43,15 +71,15 @@
  },
  {
   "player_id": "liars-dice-bot-v2",
-  "turns": 1602,
-  "attempts": 1602,
+  "turns": 4872,
+  "attempts": 4872,
   "illegal_attempts": 0,
   "illegal_move_rate": 0.0,
   "forfeits": 0,
   "auto_fills": 0,
   "latency_p50_ms": 0.0,
   "latency_p95_ms": 0.0,
-  "completed_games": 150,
+  "completed_games": 550,
   "cost_per_game_usd": 0.0,
   "cache_hit_rate": null
  },
@@ -96,6 +124,20 @@
   "completed_games": 2,
   "cost_per_game_usd": 0.0,
   "cache_hit_rate": null
+ },
+ {
+  "player_id": "sonnet-5.5/ld-v1-auto2048",
+  "turns": 1267,
+  "attempts": 1269,
+  "illegal_attempts": 2,
+  "illegal_move_rate": 0.0016,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 3341.0,
+  "latency_p95_ms": 6647.4,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.043273,
+  "cache_hit_rate": 0.787
  },
  {
   "player_id": "sonnet-5.5/ld-v1-high",
@@ -152,6 +194,20 @@
   "completed_games": 100,
   "cost_per_game_usd": 0.036029,
   "cache_hit_rate": 0.7874
+ },
+ {
+  "player_id": "sonnet-5.5/ld-v2-prob",
+  "turns": 1300,
+  "attempts": 1301,
+  "illegal_attempts": 1,
+  "illegal_move_rate": 0.0008,
+  "forfeits": 0,
+  "auto_fills": 0,
+  "latency_p50_ms": 3993.5,
+  "latency_p95_ms": 8074.6,
+  "completed_games": 100,
+  "cost_per_game_usd": 0.060611,
+  "cache_hit_rate": 0.8028
  },
  {
   "player_id": "sonnet-5/ld-v1",

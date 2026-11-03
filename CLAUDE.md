@@ -62,7 +62,7 @@ docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090
 arena leaderboard --game connect4
 arena serve                              # http://localhost:8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18 --matches 116,142   # only those pages
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
 python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
@@ -354,9 +354,13 @@ best bot. Budget per game tournament: $4. Same Game contract; no invariant chang
 - [x] Effort sweep: sonnet-5.5 Liar's Dice vs liars-dice-bot-v2 at effort low, medium,
       high (tool_choice auto, max_tokens 2048), 30 games each. Report win rate, challenge
       blunders and thinking tokens. Budget: $8.
-- [ ] Prompt intervention: liars_dice/v2-prob (estimate the probability the bid is true
-      before acting). haiku-5.5 and sonnet-5 with v2-prob vs v1, 40 games each vs
-      bot-v2. Report the change in challenge blunders. Budget: $4.
+- [x] Prompt intervention: liars_dice/v2-prob (estimate the probability the bid is true
+      before acting). haiku-5.5 and sonnet-5.5 (thinking), v1 vs v2-prob, both tool_choice
+      auto, max_tokens 2048, 100 games per arm vs bot-v2. Report the change in challenge
+      blunders. Budget: $12 (raised from $4 on 2026-11-02, a little over is acceptable). Sonnet
+      5 was dropped: it challenged on about 3% of turns in tournament 9, so its blunders are
+      too rare to measure. The first gate failed at max_tokens 1024: thinking under auto
+      used it all, and every illegal move was a cut-off reply.
 - [ ] Frontier row: verify the top Claude model's ID, price and tool-choice support
       (free 400 checks only). Liar's Dice vs bot-v2 (40 games) and Code Break vs
       sonnet-5 and haiku-5.5. Test game first. Budget: $12.
@@ -433,6 +437,19 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 ## Gotchas
 
+- Prompt intervention (tournaments 19-22, 2026-11-02, 100 games per arm against `liars-dice-bot-v2`,
+  same seed, `tool_choice` auto, `max_tokens` 2048, $10.8822 against a predicted $11.40, test games
+  $1.0494 including the failed first gate, so $11.93 of the $12; 4,597 attempts matching recordings,
+  3 rejected, 0 forfeits, every `stop_reason` `tool_use`, output max 1,853). Haiku v1 / v2-prob /
+  Sonnet 5.5 v1 / v2-prob: blunders 85/545 15.6% (12.8-18.9), 84/550 15.3% (12.5-18.5), 18/545 3.3%
+  (2.1-5.2), 18/559 3.2% (2.0-5.0), v1 against v2 p = 0.93 and 1.0. Challenges a game 5.45, 5.50, 5.45,
+  5.59; won 14.9%, 13.6%, 36.0%, 33.1%. Wins 2, 0, 28, 26 of 100. Thinking a turn 313, 330, 210, 237;
+  output 385, 463, 286, 410. Cost $0.2261, $0.2677, $4.3273, $6.0611. Bids true 88-90% and 84-87%.
+  I predicted blunders of 12% / 7% / 3% / 2%: both Haiku arms fell outside their intervals, both
+  Sonnet arms held. Haiku 5.5 and Haiku under auto think by default (313 tokens a turn), which is
+  why 1024 failed the first gate: every illegal move there was a cut-off reply. Sonnet 5 was dropped
+  from the design because it challenged on about 3% of turns in tournament 9. Killed for low memory
+  at 367 of 400; tournament 22 resumed, 2 matches on run attempt 2.
 - Effort sweep (tournaments 16-18, 2026-11-02, Sonnet 5.5 against `liars-dice-bot-v2`, 30 games each,
   same seed, `max_tokens` 2048, $3.1094 against a predicted $2.50, 1,145 attempts matching recordings,
   0 forfeits, 3 rejected, every `stop_reason` `tool_use`, output max 1,036): low / medium / high wins
