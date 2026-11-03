@@ -2,7 +2,7 @@
 
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
-**$53.41**: $48.97 across 1,361 recorded games and 30.3 million tokens, plus $4.44 on 96 in-memory
+**$61.95**: $56.56 across 1,425 recorded games and 31.1 million tokens, plus $5.40 on 102 in-memory
 test games. The site counts the recorded games only.
 
 **[Leaderboards and replays](https://bandonc.github.io/Gauntlet/)**, including one
@@ -286,6 +286,20 @@ not subtle.
 The cost was the catch: $0.22 a game in Liar's Dice and $0.29 a game in Code Break, where Haiku
 5.5 spends under a cent. This was the one run where every prediction I wrote down held.
 
+**Negotiation was another story.** In Split the Deal, Fable beat Haiku 5.5 16-4 with 4 ties (a 75.0%
+share, 55.1-88.0%), but against Sonnet 5 it went 8-11 with 5 ties (43.8%, 26.2-63.1%), mean scores
+0.69 to 0.70. Every one of the 48 games ended in a deal. So at reasoning about odds and deduction,
+Fable stood apart; at dividing a pie with a capable opponent, it didn't, and it spent eight times
+as much as Sonnet 5 doing it. Its messages stated its own values literally 10 times, 9 of them
+truthfully. I expected it to beat Sonnet 5 about 70% of the time, and that fell outside the interval.
+
+**In Word Link, Fable played both roles in every game:** clue-giver for one team and guesser for the
+other, each partnered with Sonnet 5 or Haiku 5.5. The team with Fable giving clues won 10 of 16,
+62.5% (38.6-81.5%): 4-4 with Sonnet 5 and 6-2 with Haiku. Its clues earned 1.59 of its team's words
+each, against 1.31 when the partner gave clues to Fable, and guess accuracy was the same either way,
+about 72%. That points to clue-giving as where it adds more, though 16 games can't establish it.
+
+
 ### Code Break: neither model could keep track of its own clues
 
 Code Break is a race to crack one secret of 4 pegs from 6 colours, each player seeing only their
@@ -413,10 +427,11 @@ The results themselves say little. Haiku 4.5 won 12-8 (p = 0.34), and the first 
 | Liar's Dice, Sonnet 5.5 effort sweep against v2 | 90 | 1,500,815 | $3.1094 |
 | Liar's Dice, v1 against v2-prob, Haiku 5.5 and Sonnet 5.5 | 400 | 6,975,322 | $10.8822 |
 | Fable 5.1: Liar's Dice against v2, Code Break against Sonnet 5 and Haiku 5.5 | 50 | 849,173 | $11.5452 |
-| **Total** | **1,361** | **30,298,334** | **$48.97** |
+| Fable 5.1: Split the Deal against Sonnet 5 and Haiku 5.5, Word Link in mixed teams | 64 | 834,741 | $7.5819 |
+| **Total** | **1,425** | **31,133,075** | **$56.56** |
 
-96 in-memory test games cost another $4.44. They never reach the turn log, so the project total
-is about $53.41.
+102 in-memory test games cost another $5.40. They never reach the turn log, so the project total
+is about $61.95.
 
 Haiku 4.5 cost about 10 times as much as Haiku 5.5, mainly because its list price is 10 times
 higher. Missing cache hits add to that: Haiku 4.5 never cached at these prompt lengths and Haiku
@@ -590,5 +605,5 @@ Add `ANTHROPIC_API_KEY` to `.env`, and give every tournament a `--budget`:
 ```bash
 arena tournament --game connect4 --players random,haiku-5.5/c4-v1 --games-per-pair 10 --budget 2
 arena worker --concurrency 4
-arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25 --matches 116,142   # the static site
+arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29 --matches 116,142   # the static site
 ```

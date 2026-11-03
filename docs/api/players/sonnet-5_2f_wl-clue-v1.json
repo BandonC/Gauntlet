@@ -2,37 +2,93 @@
  "player_id": "sonnet-5/wl-clue-v1",
  "model": "sonnet-5",
  "overall": {
-  "games": 60,
+  "games": 68,
   "won": 0,
-  "drew": 32,
-  "lost": 28,
+  "drew": 36,
+  "lost": 32,
   "win_rate": 0.0,
-  "cost_usd": 0.641342,
-  "cost_per_game": 0.010689033333333332,
-  "illegal_rate": 0.015706806282722512,
+  "cost_usd": 0.715128,
+  "cost_per_game": 0.010516588235294118,
+  "illegal_rate": 0.014084507042253521,
   "cache_hit": 0.0,
-  "latency_ms": 2533.622340425532
+  "latency_ms": 2405.3571428571427
  },
  "games": [
   {
    "game": "word_link",
    "place": 1,
-   "field": 6,
-   "ordinal": 14.64,
-   "games": 60,
+   "field": 8,
+   "ordinal": 15.62,
+   "games": 68,
    "won": 0,
-   "drew": 32,
-   "lost": 28,
+   "drew": 36,
+   "lost": 32,
    "win_rate": 0.0,
-   "cost_usd": 0.641342,
-   "cost_per_game": 0.010689033333333332,
-   "illegal_rate": 0.015706806282722512,
+   "cost_usd": 0.715128,
+   "cost_per_game": 0.010516588235294118,
+   "illegal_rate": 0.014084507042253521,
    "cache_hit": 0.0,
-   "latency_ms": 2533.622340425532
+   "latency_ms": 2405.3571428571427
   }
  ],
  "roles": null,
  "recent": [
+  {
+   "id": 1583,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.010288
+  },
+  {
+   "id": 1582,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.006708
+  },
+  {
+   "id": 1581,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013372
+  },
+  {
+   "id": 1580,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.009918
+  },
+  {
+   "id": 1579,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.006642
+  },
+  {
+   "id": 1578,
+   "game": "word_link",
+   "role": null,
+   "outcome": "drew",
+   "cost_usd": 0.003284
+  },
+  {
+   "id": 1577,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.010008
+  },
+  {
+   "id": 1576,
+   "game": "word_link",
+   "role": null,
+   "outcome": "lost",
+   "cost_usd": 0.013566
+  },
   {
    "id": 987,
    "game": "word_link",
