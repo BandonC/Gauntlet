@@ -47,6 +47,22 @@
    "latency_ms": 2540.937373737374
   },
   {
+   "model": "opus-5.5",
+   "players": [
+    "opus-5.5/ld-v1"
+   ],
+   "games": 40,
+   "won": 25,
+   "drew": 0,
+   "lost": 15,
+   "win_rate": 0.625,
+   "cost_usd": 3.553541,
+   "cost_per_game": 0.088838525,
+   "illegal_rate": 0.0018656716417910447,
+   "cache_hit": 0.7833985272449511,
+   "latency_ms": 4124.383177570094
+  },
+  {
    "model": "haiku-5.5",
    "players": [
     "haiku-5.5/c4-v1",
@@ -236,6 +252,19 @@
      "illegal_rate": 0.0,
      "cache_hit": 0.0,
      "latency_ms": 1865.7755102040817
+    },
+    {
+     "model": "opus-5.5",
+     "games": 40,
+     "won": 25,
+     "drew": 0,
+     "lost": 15,
+     "win_rate": 0.625,
+     "cost_usd": 3.553541,
+     "cost_per_game": 0.088838525,
+     "illegal_rate": 0.0018656716417910447,
+     "cache_hit": 0.7833985272449511,
+     "latency_ms": 4124.383177570094
     },
     {
      "model": "haiku-5.5",
