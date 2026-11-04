@@ -420,7 +420,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       protocol is demonstrated locally and documented for self-hosting.
 
 ### Phase 13: Polish (no API spend; suitable for scheduled runs)
-- [ ] GitHub Actions CI: ruff, ruff format --check, mypy, pytest, and pytest -m db with
+- [x] GitHub Actions CI: ruff, ruff format --check, mypy, pytest, and pytest -m db with
       a Postgres service container, on every PR and push to main. Add a status badge
       to the README.
 - [ ] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
@@ -486,6 +486,12 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- CI (`.github/workflows/ci.yml`): the `checks` job runs `scripts/check.sh` itself, on Python 3.12
+  and 3.14, against a `postgres:16` service published on 5433 with database `arena_test` (the name
+  check.sh insists on), with Node 20 for the replay tests. Slow tests (chaos, Docker pauses) don't
+  run in CI. `typecheck` runs `mypy arena` with `continue-on-error`, because it reported 30 errors
+  when CI was added; the mypy item makes it required and adds it to check.sh.
 
 - Opus 5.5 in Liar's Dice (tournament 33, 2026-11-03, seed 2026, $3.5535 plus 3 test games $0.2694,
   so $3.82 of the $12; the project's $72 stop line left $6.98, so --budget was $6.00). Free checks:
