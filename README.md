@@ -1,5 +1,7 @@
 # LLM Arena
 
+[![CI](https://github.com/BandonC/Gauntlet/actions/workflows/ci.yml/badge.svg)](https://github.com/BandonC/Gauntlet/actions/workflows/ci.yml)
+
 Tournaments between LLM players across turn-based games, with every move logged, every token
 priced, and every game replayable. The total real spend behind everything below is about
 **$79.50**: $73.62 across 1,705 recorded games and 34.7 million tokens, plus $5.88 on 114 in-memory
