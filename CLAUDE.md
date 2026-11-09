@@ -493,7 +493,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   and 3.14, against a `postgres:16` service published on 5433 with database `arena_test` (the name
   check.sh insists on), with Node 20 for the replay tests. Slow tests (chaos, Docker pauses) don't
   run in CI. `typecheck` runs `mypy arena` with `continue-on-error`, because it reported 30 errors
-  when CI was added; the mypy item makes it required and adds it to check.sh.
+  when CI was added; the mypy item adds it to scripts/check.sh only, and the [human] item after
+  it adds the mypy job to CI and makes it required.
 
 - Opus 5.5 in Liar's Dice (tournament 33, 2026-11-03, seed 2026, $3.5535 plus 3 test games $0.2694,
   so $3.82 of the $12; the project's $72 stop line left $6.98, so --budget was $6.00). Free checks:
