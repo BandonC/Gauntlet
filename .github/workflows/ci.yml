@@ -44,10 +44,8 @@ jobs:
       - run: scripts/check.sh
 
   typecheck:
-    # Not yet required: mypy reports 30 errors today. Phase 13's second item fixes them, adds mypy
-    # to scripts/check.sh, and removes continue-on-error here.
+    # mypy on its own, so a type error shows by name in the checks list. check.sh runs it too.
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

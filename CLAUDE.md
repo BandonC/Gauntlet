@@ -425,7 +425,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       to the README.
 - [x] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
       core modules) and add it to scripts/check.sh. Do not touch .github/workflows/.
-- [ ] [human] Add the mypy job to the CI workflow and make it required (local,
+- [x] [human] Add the mypy job to the CI workflow and make it required (local,
       after the item above merges).
 - [ ] Clean-up review: list duplication, dead code, inconsistent patterns and
       unclear names across arena/, ranked by value. Then fix them one PR per area,
@@ -494,9 +494,9 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 - CI (`.github/workflows/ci.yml`): the `checks` job runs `scripts/check.sh` itself, on Python 3.12
   and 3.14, against a `postgres:16` service published on 5433 with database `arena_test` (the name
   check.sh insists on), with Node 20 for the replay tests. Slow tests (chaos, Docker pauses) don't
-  run in CI. `typecheck` runs `mypy arena` with `continue-on-error`, because it reported 30 errors
-  when CI was added; the mypy item adds it to scripts/check.sh only, and the [human] item after
-  it adds the mypy job to CI and makes it required.
+  run in CI. `typecheck` runs `mypy arena` and fails CI on any error; check.sh runs it too, so the
+  `checks` jobs fail on it as well, and the separate job names the cause. `main` has no branch
+  protection, so no check is required in GitHub's sense: a red CI doesn't block a push or merge.
 
 - Opus 5.5 in Liar's Dice (tournament 33, 2026-11-03, seed 2026, $3.5535 plus 3 test games $0.2694,
   so $3.82 of the $12; the project's $72 stop line left $6.98, so --budget was $6.00). Free checks:
