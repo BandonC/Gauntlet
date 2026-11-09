@@ -424,7 +424,9 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       a Postgres service container, on every PR and push to main. Add a status badge
       to the README.
 - [ ] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
-      core modules); add to scripts/check.sh and CI.
+      core modules) and add it to scripts/check.sh. Do not touch .github/workflows/.
+- [ ] [human] Add the mypy job to the CI workflow and make it required (local,
+      after the item above merges).
 - [ ] Clean-up review: list duplication, dead code, inconsistent patterns and
       unclear names across arena/, ranked by value. Then fix them one PR per area,
       with behaviour unchanged (tests stay green, turn-log replays identical).
