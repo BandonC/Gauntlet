@@ -101,7 +101,11 @@ async def _run_claimed(
         built = [factory.build(pid) for pid in claimed.seats]
         sharded = claimed.spend_mode == SHARDED
         players = [p for p, _ in built]
-        if sharded and claimed.has_budget and claimed.tournament_id is not None:
+        if sharded and claimed.has_budget:
+            # Never skip the guard silently: an unguarded match could overrun the cap.
+            # Raising here fails the match as a setup error, with the reason on record.
+            if claimed.tournament_id is None:
+                raise RuntimeError("sharded budgeted match without tournament_id")
             players = [BudgetGuard(p, pool, claimed.tournament_id) for p in players]
         runner = MatchRunner(
             game,
