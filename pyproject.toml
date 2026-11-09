@@ -57,3 +57,10 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 python_version = "3.12"
 strict_optional = true
 ignore_missing_imports = true
+
+# Core modules carry the invariants, so they get the strict settings: every function typed,
+# no bare generics (`dict`, `list` with no parameters).
+[[tool.mypy.overrides]]
+module = ["arena.types", "arena.games.*", "arena.engine.*", "arena.players.*", "arena.ratings.*", "arena.costs"]
+disallow_untyped_defs = true
+disallow_any_generics = true

@@ -56,7 +56,7 @@ class RetryingProvider:
 
     async def _call(self, req: CompletionRequest, attempt: int) -> Completion:
         """One API call in one span, inside the rate limiter so it times only the vendor."""
-        attributes = {
+        attributes: dict[str, str | int] = {
             "arena.provider": self.name,
             "arena.model": req.model,
             "arena.call_attempt": attempt,

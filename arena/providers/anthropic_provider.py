@@ -4,6 +4,7 @@ disabled so RetryingProvider is the single retry layer."""
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import anthropic
 import httpx2 as httpx  # the SDKs ship their HTTP client as `httpx2`
@@ -89,7 +90,7 @@ class AnthropicProvider:
         )
 
 
-def _block(block: object) -> dict:
+def _block(block: Any) -> dict:
     """One content block for the log: its type and size. Only text blocks keep their words;
     thinking is size only, and its signature is never stored."""
     kind = getattr(block, "type", "unknown")

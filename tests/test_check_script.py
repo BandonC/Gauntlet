@@ -18,6 +18,7 @@ exit 0
 """
 RUFF = "-m ruff check arena tests"
 FORMAT = "-m ruff format --check arena tests"
+MYPY = "-m mypy arena"
 PYTEST = "-m pytest -q -m not slow and not db"
 DB = "-m pytest -m db -q"
 GOOD_URL = "postgresql://arena:arena@localhost:5433/arena_test"
@@ -62,12 +63,12 @@ def steps(env):
 
 def test_every_step_runs_and_db_tests_need_a_database_url(env):
     assert check(env).returncode == 0
-    assert steps(env) == [RUFF, FORMAT, PYTEST]
+    assert steps(env) == [RUFF, FORMAT, MYPY, PYTEST]
 
 
 def test_db_tests_run_on_a_test_database(env):
     assert check(env, DATABASE_URL=GOOD_URL).returncode == 0
-    assert steps(env) == [RUFF, FORMAT, PYTEST, DB]
+    assert steps(env) == [RUFF, FORMAT, MYPY, PYTEST, DB]
 
 
 @pytest.mark.parametrize(
@@ -75,8 +76,9 @@ def test_db_tests_run_on_a_test_database(env):
     [
         (RUFF, [RUFF]),
         (FORMAT, [RUFF, FORMAT]),
-        (PYTEST, [RUFF, FORMAT, PYTEST]),
-        (DB, [RUFF, FORMAT, PYTEST, DB]),
+        (MYPY, [RUFF, FORMAT, MYPY]),
+        (PYTEST, [RUFF, FORMAT, MYPY, PYTEST]),
+        (DB, [RUFF, FORMAT, MYPY, PYTEST, DB]),
     ],
 )
 def test_the_first_failure_fails_the_script_and_stops_it(env, failing, ran):
@@ -129,7 +131,7 @@ def test_the_hook_blocks_a_commit_when_a_check_fails(repo, env):
 def test_the_hook_lets_a_passing_commit_through(repo, env):
     assert install(repo, env).returncode == 0
     assert git(repo, env, "commit", "-qm", "good").returncode == 0
-    assert steps(env) == [RUFF, FORMAT, PYTEST]
+    assert steps(env) == [RUFF, FORMAT, MYPY, PYTEST]
 
 
 def test_installing_twice_is_fine_but_someone_elses_hook_is_left_alone(repo, env):

@@ -119,6 +119,7 @@ async def export_site(
         data(f"tournaments/{t['id']}/final.json", await ratings.final_ratings(pool, t["id"]))
     for match_id in sorted(m_ids):
         detail = await read.match_detail(pool, match_id)
+        assert detail is not None  # ids come from the matches table
         page(FILE_URLS("match", id=match_id), web.match_html(urls, detail))
         data(f"matches/{match_id}.json", detail)
 

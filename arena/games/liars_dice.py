@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, replace
+from typing import TypeGuard
 
 from arena.games.base import Game
 from arena.types import JSON, Action, ActionSpec
@@ -331,7 +332,7 @@ class LiarsDiceSmall(LiarsDice):
     faces = 4
 
 
-def _is_int(x: object) -> bool:
+def _is_int(x: object) -> TypeGuard[int]:
     return isinstance(x, int) and not isinstance(x, bool)
 
 

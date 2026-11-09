@@ -77,7 +77,7 @@ async def run_one(
         on_claim(time.perf_counter() - started)
     MATCHES_CLAIMED.inc()
     log.info("claimed match %s (attempt %s)", claimed.id, claimed.run_attempts)
-    attributes = {
+    attributes: dict[str, str | int] = {
         "arena.match": claimed.id,
         "arena.game": claimed.game,
         "arena.run_attempt": claimed.run_attempts,
@@ -101,7 +101,7 @@ async def _run_claimed(
         built = [factory.build(pid) for pid in claimed.seats]
         sharded = claimed.spend_mode == SHARDED
         players = [p for p, _ in built]
-        if sharded and claimed.has_budget:
+        if sharded and claimed.has_budget and claimed.tournament_id is not None:
             players = [BudgetGuard(p, pool, claimed.tournament_id) for p in players]
         runner = MatchRunner(
             game,
