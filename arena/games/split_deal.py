@@ -27,6 +27,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from functools import cache
 from itertools import product
+from typing import TypeGuard
 
 from arena.games.base import Game, placements_from_scores
 from arena.types import JSON, Action, ActionSpec
@@ -92,13 +93,15 @@ def worth(values: Sequence[int], items: Sequence[int]) -> int:
 def value_sets(quantities: tuple[int, int, int]) -> tuple[tuple[int, int, int], ...]:
     """Every set of whole per-unit values that makes the full table worth exactly 10."""
     ranges = [range(TOTAL_VALUE // q + 1) for q in quantities]
-    return tuple(v for v in product(*ranges) if worth(v, quantities) == TOTAL_VALUE)
+    return tuple(
+        (a, b, c) for a, b, c in product(*ranges) if worth((a, b, c), quantities) == TOTAL_VALUE
+    )
 
 
 def tables() -> list[tuple[int, int, int]]:
     """Quantities that allow two different value sets. Some can't: 4, 4, 4 never totals 10."""
     sizes = range(MIN_QUANTITY, MAX_QUANTITY + 1)
-    return [q for q in product(sizes, repeat=3) if len(value_sets(q)) >= 2]
+    return [(a, b, c) for a, b, c in product(sizes, repeat=3) if len(value_sets((a, b, c))) >= 2]
 
 
 def deal_table(seed: int) -> tuple[tuple[int, int, int], tuple[tuple[int, int, int], ...]]:
@@ -124,7 +127,7 @@ def _items_text(items: Sequence[int]) -> str:
     )
 
 
-def _is_int(x: object) -> bool:
+def _is_int(x: object) -> TypeGuard[int]:
     return isinstance(x, int) and not isinstance(x, bool)
 
 

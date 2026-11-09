@@ -17,7 +17,7 @@ returns None rather than inventing one with a prior.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 
 RATING_SCALE = 400 / math.log(10)  # the Elo scale: 400 points is 10:1 odds
@@ -92,7 +92,7 @@ def _maximise(wins: list[list[float]], games: list[list[float]]) -> list[float]:
 def _strongly_connected(wins: list[list[float]]) -> bool:
     k = len(wins)
 
-    def reach(edge) -> set[int]:
+    def reach(edge: Callable[[int, int], float]) -> set[int]:
         seen, todo = {0}, [0]
         while todo:
             i = todo.pop()

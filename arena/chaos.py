@@ -151,6 +151,7 @@ async def _spawn(dsn: str, players: int) -> asyncio.subprocess.Process:
         env=os.environ | {DSN_ENV: dsn},
         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
     )
+    assert proc.stdout is not None  # started with stdout=PIPE
     if (await proc.stdout.readline()).strip() != b"ready":
         raise BenchError("a worker process died during start-up")
     return proc

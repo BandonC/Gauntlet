@@ -7,6 +7,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+from typing import Any
 
 from arena.players.base import Decision, TurnContext
 from arena.players.prompting import PromptTemplate
@@ -24,7 +25,7 @@ def identity_hash(
     thinking_mode: str = "default",
     effort: str | None = None,
 ) -> str:
-    cfg: dict = {
+    cfg: dict[str, Any] = {
         "provider": provider,
         "model": model,
         "prompt": prompt.key,

@@ -77,10 +77,12 @@ async def play(players: list[Player], seed: int) -> int:
         view = game.player_view(state, seat)
         ctx = TurnContext("liars_dice", seat, "", view, "", game.action_spec(state, seat), None)
         action = (await players[seat].act(ctx)).action
+        assert action is not None
         error = game.validate_action(state, seat, action)
         if error:
             raise ValueError(f"seed {seed}: {players[seat].player_id} played {action}: {error}")
         state = game.apply(state, seat, action)
+    assert state.winner is not None  # the loop ended on a terminal state
     return state.winner
 
 

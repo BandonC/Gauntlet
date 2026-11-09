@@ -47,7 +47,7 @@ class TracedPlayer:
         self._game = game
 
     async def act(self, ctx: TurnContext) -> Decision:
-        attributes = {
+        attributes: dict[str, str | int] = {
             "arena.game": self._game,
             "arena.player": self.player_id,
             "arena.seat": ctx.seat,

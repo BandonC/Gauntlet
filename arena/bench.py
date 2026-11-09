@@ -168,6 +168,7 @@ async def spawn_workers(
             )
         )
     for proc in procs:
+        assert proc.stdout is not None  # started with stdout=PIPE
         if (await proc.stdout.readline()).strip() != b"ready":
             raise BenchError("a worker process died during start-up")
     return procs
@@ -220,6 +221,7 @@ async def run_once(
         try:
             go = await _clock(dsn)
             for proc in procs:
+                assert proc.stdin is not None  # started with stdin=PIPE
                 proc.stdin.write(b"go\n")
                 await proc.stdin.drain()
             codes = await asyncio.gather(*(proc.wait() for proc in procs))

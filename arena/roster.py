@@ -11,6 +11,7 @@ import time
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from arena.costs import FREE, Pricing
 from arena.players.base import Player
@@ -21,6 +22,9 @@ from arena.providers.base import Provider
 from arena.providers.mock import RecordingProvider
 from arena.providers.ratelimit import RateLimiter, TokenSource
 from arena.providers.retry import RetryingProvider
+
+if TYPE_CHECKING:
+    from arena.players.remote import CircuitBreaker
 
 FREE_PROVIDERS = ("random", "bot", "http")  # every other provider must list its prices
 
@@ -163,7 +167,7 @@ class PlayerFactory:
         # Tests inject a client (a mock or ASGI transport) and RemotePlayer options.
         self._http_client = http_client
         self._remote_options = remote_options or {}
-        self._breakers: dict[str, object] = {}
+        self._breakers: dict[str, CircuitBreaker] = {}
 
     def _copy(self, **changes) -> PlayerFactory:
         args = {

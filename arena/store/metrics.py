@@ -186,7 +186,7 @@ async def word_link_metrics(pool: asyncpg.Pool, tournament_id: int | None = None
         spec = MatchSpec(str(m["id"]), m["game"], m["seed"], seats, m["options"])
         turns = await store.load_turns(str(m["id"]))
         *_, final = iter_states(get_game(m["game"]), spec, turns)
-        rejected = Counter()
+        rejected: Counter[int] = Counter()
         for turn in turns:
             rejected[turn.seat] += len(turn.rejections)
         for team in (0, 1):

@@ -235,6 +235,7 @@ class CodeBreak(Game):
 
     def apply(self, state: CBState, seat: int, action: Action) -> CBState:
         code = code_of(action)
+        assert code is not None  # validate_action already required it
         guess = Guess(code, *feedback(code, state.secret))
         return self._record(state, seat, guess)
 
@@ -306,11 +307,8 @@ def solver_guesses(secret: str) -> int:
 def seat_stats(state: CBState, seat: int) -> JSON:
     """The numbers behind `store.metrics.code_break_metrics`, for one finished seat."""
     guesses = state.guesses[seat]
-    played = [g for g in guesses if g.code is not None]
-    inconsistent = sum(
-        not consistent(g.code, [(p.code, (p.exact, p.colour)) for p in played[:i]])
-        for i, g in enumerate(played)
-    )
+    played = [(g.code, (g.exact, g.colour)) for g in guesses if g.code is not None]
+    inconsistent = sum(not consistent(code, played[:i]) for i, (code, _) in enumerate(played))
     solved = solved_in(guesses)
     return {
         "guesses": len(guesses),

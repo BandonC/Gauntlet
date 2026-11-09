@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from functools import cache
 from itertools import combinations_with_replacement, product
 from pathlib import Path
+from typing import Any
 
 from arena.balance import DEFAULT_P, vote_target
 from arena.games.code_break import (
@@ -355,7 +356,7 @@ class WordLinkRandomGuesser:
         return Decision(action={"action": "guess", "word": rng.choice(hidden)})
 
 
-def _hidden(view: dict) -> set[str]:
+def _hidden(view: dict[str, Any]) -> set[str]:
     return {cell["word"] for cell in view["board"] if not cell["revealed"]}
 
 

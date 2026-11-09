@@ -423,7 +423,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] GitHub Actions CI: ruff, ruff format --check, mypy, pytest, and pytest -m db with
       a Postgres service container, on every PR and push to main. Add a status badge
       to the README.
-- [ ] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
+- [x] mypy: fix errors to pass a reasonable strictness (no implicit Any in arena/
       core modules) and add it to scripts/check.sh. Do not touch .github/workflows/.
 - [ ] [human] Add the mypy job to the CI workflow and make it required (local,
       after the item above merges).
@@ -488,6 +488,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- mypy (`pyproject.toml`, 2026-11-09): `mypy arena` is clean and runs in `scripts/check.sh`. Core modules (`types`, `games`, `engine`, `players`, `ratings`, `costs`) also set `disallow_untyped_defs` and `disallow_any_generics`. Fixes were `TypeGuard` on `_is_int`, asserts where a value is non-None by construction, and no behaviour change. CI's `typecheck` job is still `continue-on-error`: the [human] item flips it.
 
 - CI (`.github/workflows/ci.yml`): the `checks` job runs `scripts/check.sh` itself, on Python 3.12
   and 3.14, against a `postgres:16` service published on 5433 with database `arena_test` (the name

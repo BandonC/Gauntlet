@@ -35,6 +35,8 @@ echo "==> ruff check"
 "$PYTHON" -m ruff check arena tests
 echo "==> ruff format --check"
 "$PYTHON" -m ruff format --check arena tests
+echo "==> mypy"
+"$PYTHON" -m mypy arena
 # Plain pytest would run the db tests too when DATABASE_URL is set, and then again below.
 echo "==> pytest"
 "$PYTHON" -m pytest -q -m "not slow and not db"

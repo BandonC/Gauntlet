@@ -77,7 +77,7 @@ async def run_one(
         on_claim(time.perf_counter() - started)
     MATCHES_CLAIMED.inc()
     log.info("claimed match %s (attempt %s)", claimed.id, claimed.run_attempts)
-    attributes = {
+    attributes: dict[str, str | int] = {
         "arena.match": claimed.id,
         "arena.game": claimed.game,
         "arena.run_attempt": claimed.run_attempts,
@@ -102,6 +102,10 @@ async def _run_claimed(
         sharded = claimed.spend_mode == SHARDED
         players = [p for p, _ in built]
         if sharded and claimed.has_budget:
+            # Never skip the guard silently: an unguarded match could overrun the cap.
+            # Raising here fails the match as a setup error, with the reason on record.
+            if claimed.tournament_id is None:
+                raise RuntimeError("sharded budgeted match without tournament_id")
             players = [BudgetGuard(p, pool, claimed.tournament_id) for p in players]
         runner = MatchRunner(
             game,
