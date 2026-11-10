@@ -20,10 +20,9 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, replace
-from typing import TypeGuard
 
 from arena.games.base import Game
-from arena.types import JSON, Action, ActionSpec
+from arena.types import JSON, Action, ActionSpec, is_int
 
 DICE_PER_PLAYER = 5
 FACES = 6
@@ -237,7 +236,7 @@ class LiarsDice(Game):
         if kind != "bid":
             return "action must be 'bid' or 'challenge'"
         q, f = action.get("quantity"), action.get("face")
-        if not _is_int(q) or not _is_int(f):
+        if not is_int(q) or not is_int(f):
             return "a bid needs integer 'quantity' and 'face'"
         total = sum(state.dice_counts)
         if not 1 <= f <= self.faces:
@@ -330,10 +329,6 @@ class LiarsDiceSmall(LiarsDice):
     max_players = 2
     dice_per_player = 2
     faces = 4
-
-
-def _is_int(x: object) -> TypeGuard[int]:
-    return isinstance(x, int) and not isinstance(x, bool)
 
 
 def _raises(state: LDState, quantity: int, face: int) -> bool:

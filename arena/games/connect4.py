@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 
 from arena.games.base import Game
-from arena.types import JSON, Action, ActionSpec
+from arena.types import JSON, Action, ActionSpec, is_int
 
 COLS = 7
 ROWS = 6
@@ -109,7 +109,7 @@ class Connect4(Game):
         if seat != state.to_move:
             return "it is not your turn"
         col = action.get("column") if isinstance(action, dict) else None
-        if not isinstance(col, int) or isinstance(col, bool):
+        if not is_int(col):
             return "action must be an object with an integer 'column'"
         if not 0 <= col < COLS:
             return f"column {col} is out of range 0-{COLS - 1}"
