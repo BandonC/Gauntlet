@@ -28,7 +28,7 @@ from dataclasses import dataclass, replace
 
 from arena.games.base import Game, placements_from_scores
 from arena.games.word_link_words import WORDS
-from arena.types import JSON, Action, ActionSpec
+from arena.types import JSON, Action, ActionSpec, is_int
 
 BOARD_SIZE = 16
 TEAM_WORDS = 6
@@ -292,7 +292,7 @@ class WordLink(Game):
             if problem:
                 return problem
             number = action.get("number")
-            if not isinstance(number, int) or isinstance(number, bool):
+            if not is_int(number):
                 return "a clue needs a whole number"
             if not 1 <= number <= MAX_NUMBER:
                 return f"the number must be 1 to {MAX_NUMBER}"

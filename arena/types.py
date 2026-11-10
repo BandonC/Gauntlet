@@ -7,7 +7,7 @@ importable and testable without third-party dependencies.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeGuard
 
 JSON = dict[str, Any]
 Action = JSON  # every action is a JSON-serializable dict, e.g. {"column": 3}
@@ -43,3 +43,8 @@ class Usage:
             cache_write_tokens=self.cache_write_tokens + other.cache_write_tokens,
             thinking_tokens=self.thinking_tokens + other.thinking_tokens,
         )
+
+
+def is_int(x: object) -> TypeGuard[int]:
+    """An int that is not a bool (JSON true/false must not pass as 0/1)."""
+    return isinstance(x, int) and not isinstance(x, bool)

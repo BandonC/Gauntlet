@@ -27,10 +27,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass, replace
 from functools import cache
 from itertools import product
-from typing import TypeGuard
 
 from arena.games.base import Game, placements_from_scores
-from arena.types import JSON, Action, ActionSpec
+from arena.types import JSON, Action, ActionSpec, is_int
 
 ITEMS = ("book", "hat", "ball")
 MIN_QUANTITY = 1
@@ -125,10 +124,6 @@ def _items_text(items: Sequence[int]) -> str:
     return ", ".join(
         f"{n} {name}{'' if n == 1 else 's'}" for name, n in zip(ITEMS, items, strict=True)
     )
-
-
-def _is_int(x: object) -> TypeGuard[int]:
-    return isinstance(x, int) and not isinstance(x, bool)
 
 
 def _legal_kinds(state: SDState, seat: int) -> list[str]:
@@ -286,7 +281,7 @@ class SplitDeal(Game):
             return "you have no offers left; accept the standing offer or reject it"
         for item, n in zip(ITEMS, state.quantities, strict=True):
             keep = action.get(item)
-            if not _is_int(keep):
+            if not is_int(keep):
                 return f"an offer needs a whole number for each of {', '.join(ITEMS)}"
             if not 0 <= keep <= n:
                 return f"you can keep 0 to {n} {item}s"

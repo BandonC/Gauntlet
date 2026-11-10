@@ -36,7 +36,7 @@ from dataclasses import dataclass, replace
 from typing import Literal
 
 from arena.games.base import Game
-from arena.types import JSON, Action, ActionSpec
+from arena.types import JSON, Action, ActionSpec, is_int
 
 WOLF = "wolf"
 SEER = "seer"
@@ -426,7 +426,7 @@ class Werewolf(Game):
             return None
         target = action.get("target")
         legal = self._legal_targets(state, seat)
-        if not isinstance(target, int) or isinstance(target, bool) or target not in legal:
+        if not is_int(target) or target not in legal:
             return f"'target' must be one of {legal}"
         return None
 
