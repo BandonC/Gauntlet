@@ -12,7 +12,12 @@ import json
 import httpx2 as httpx  # the SDKs ship their HTTP client as `httpx2`
 import openai
 
-from arena.providers.base import Completion, CompletionRequest, ProviderError
+from arena.providers.base import (
+    Completion,
+    CompletionRequest,
+    ProviderError,
+    retry_after_of,
+)
 from arena.types import Usage
 
 
@@ -55,10 +60,10 @@ class OpenAIProvider:
         try:
             resp = await self._client.chat.completions.create(**kwargs)
         except openai.RateLimitError as e:
-            raise ProviderError(str(e), retryable=True, retry_after=_retry_after(e)) from e
+            raise ProviderError(str(e), retryable=True, retry_after=retry_after_of(e)) from e
         except openai.APIStatusError as e:
             raise ProviderError(
-                str(e), retryable=e.status_code >= 500, retry_after=_retry_after(e)
+                str(e), retryable=e.status_code >= 500, retry_after=retry_after_of(e)
             ) from e
         except openai.APIConnectionError as e:  # includes timeouts
             raise ProviderError(str(e), retryable=True) from e
@@ -94,11 +99,3 @@ class OpenAIProvider:
             stop_reason=resp.choices[0].finish_reason,
             blocks=blocks,
         )
-
-
-def _retry_after(e: openai.APIStatusError) -> float | None:
-    try:
-        value = e.response.headers.get("retry-after")
-        return float(value) if value else None
-    except (AttributeError, ValueError):
-        return None

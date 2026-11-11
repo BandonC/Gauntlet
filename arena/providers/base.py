@@ -15,7 +15,7 @@ Error policy (important for fairness, see CLAUDE.md):
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol
 
 from arena.types import JSON, Action, ActionSpec, Usage
 
@@ -55,3 +55,13 @@ class Provider(Protocol):
     name: str
 
     async def complete(self, req: CompletionRequest) -> Completion: ...
+
+
+def retry_after_of(e: BaseException) -> float | None:
+    """Seconds from a vendor error's `retry-after` header, if it has a readable one."""
+    try:
+        response: Any = getattr(e, "response", None)
+        value = response.headers.get("retry-after")
+        return float(value) if value else None
+    except (AttributeError, ValueError):
+        return None
