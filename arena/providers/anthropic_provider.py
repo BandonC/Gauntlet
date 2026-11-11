@@ -9,7 +9,12 @@ from typing import Any
 import anthropic
 import httpx2 as httpx  # the SDKs ship their HTTP client as `httpx2`
 
-from arena.providers.base import Completion, CompletionRequest, ProviderError
+from arena.providers.base import (
+    Completion,
+    CompletionRequest,
+    ProviderError,
+    retry_after_of,
+)
 from arena.types import Usage
 
 
@@ -60,10 +65,10 @@ class AnthropicProvider:
         try:
             resp = await self._client.messages.create(**kwargs)
         except anthropic.RateLimitError as e:
-            raise ProviderError(str(e), retryable=True, retry_after=_retry_after(e)) from e
+            raise ProviderError(str(e), retryable=True, retry_after=retry_after_of(e)) from e
         except anthropic.APIStatusError as e:
             retryable = e.status_code >= 500 or e.status_code == 529
-            raise ProviderError(str(e), retryable=retryable, retry_after=_retry_after(e)) from e
+            raise ProviderError(str(e), retryable=retryable, retry_after=retry_after_of(e)) from e
         except anthropic.APIConnectionError as e:  # includes timeouts
             raise ProviderError(str(e), retryable=True) from e
 
@@ -114,11 +119,3 @@ def _thinking_tokens(usage: object) -> int:
     """Reasoning inside output_tokens, which stays the billed total. 0 if not reported."""
     details = getattr(usage, "output_tokens_details", None)
     return getattr(details, "thinking_tokens", 0) or 0
-
-
-def _retry_after(e: anthropic.APIStatusError) -> float | None:
-    try:
-        value = e.response.headers.get("retry-after")
-        return float(value) if value else None
-    except (AttributeError, ValueError):
-        return None
