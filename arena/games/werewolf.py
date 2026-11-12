@@ -138,7 +138,7 @@ def _discussion_order(state: WWState) -> tuple[int, tuple[int, ...]]:
     return start, state.alive[i:] + state.alive[:i]
 
 
-def _winner(alive: tuple[int, ...], roles: tuple[str, ...]) -> str | None:
+def winner_of(alive: tuple[int, ...], roles: tuple[str, ...]) -> str | None:
     wolves = sum(roles[s] == WOLF for s in alive)
     if wolves == 0:
         return VILLAGE_WINS
@@ -149,7 +149,7 @@ def _kill(state: WWState, seat: int, cause: Literal["night", "vote"]) -> WWState
     alive = tuple(s for s in state.alive if s != seat)
     death = Death(state.day, seat, state.roles[seat], cause)
     state = replace(state, alive=alive, deaths=state.deaths + (death,))
-    winner = _winner(alive, state.roles)
+    winner = winner_of(alive, state.roles)
     return replace(state, winner=winner, phase="over", queue=()) if winner else state
 
 
