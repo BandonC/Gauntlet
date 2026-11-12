@@ -23,7 +23,14 @@ import random
 from collections import Counter
 from dataclasses import dataclass
 
-from arena.games.werewolf import DISCUSSION_ROUNDS, SEER, VILLAGER, WOLF
+from arena.games.werewolf import (
+    DISCUSSION_ROUNDS,
+    SEER,
+    VILLAGE_WINS,
+    VILLAGER,
+    WOLF,
+    winner_of,
+)
 
 DOCTOR = "doctor"
 DEFAULT_P = 0.54  # tournament 6: 125 of 229 village votes hit a wolf
@@ -98,10 +105,8 @@ def vote_target(
 
 def _winner(roles: list[str], alive: list[int]) -> bool | None:
     """True if the village has won, False if the wolves have, None if the game goes on."""
-    wolves = sum(roles[s] == WOLF for s in alive)
-    if wolves == 0:
-        return True
-    return False if wolves >= len(alive) - wolves else None
+    winner = winner_of(tuple(alive), tuple(roles))
+    return None if winner is None else winner == VILLAGE_WINS
 
 
 def _voted_out(votes: list[int]) -> int | None:

@@ -8,8 +8,8 @@ Ranked by value. Behaviour must stay unchanged; one PR per area.
 2. **Duplicate `_retry_after` in the two vendor adapters** (done, `base.retry_after_of`) (`providers/anthropic_provider.py`,
    `providers/openai_provider.py`): same header parsing over different exception types.
    Share a helper taking the response headers.
-3. **`_child` in `bench.py` and `chaos.py`**: near-identical worker-subprocess entry points.
-4. **`_winner` in `balance.py` and `games/werewolf.py`**: same win rule on different shapes;
+3. **`_child` in `bench.py` and `chaos.py`**: looked at, left alone. They share only the pool and the "ready" line; the stdin wait, claim recording, stop signals, factory and config all differ, so a shared helper would be a one-liner.
+4. **`_winner` in `balance.py` and `games/werewolf.py`** (done, `werewolf.winner_of`): same win rule on different shapes;
    have `balance` reuse the engine's.
 5. **Unused-looking code (vulture, all used by tests or entry points; no dead code found):**
    `EloTable`, `index_of`, `ScriptedPlayer`, `AccuracyVoteBot`, `load_recording`, `verify`.
