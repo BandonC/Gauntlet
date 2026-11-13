@@ -31,7 +31,7 @@ from arena.players.bots import (
     build_bot,
 )
 from arena.ratings.weng_lin import WengLin, rate, rate_teams
-from arena.tournaments import team_round_robin
+from arena.scheduling import team_round_robin
 from arena.web import match_result, move_label
 
 G = WordLink()

@@ -16,9 +16,7 @@ import asyncpg
 from arena.games.registry import get_game
 from arena.ratings.weng_lin import WengLin
 from arena.roster import PlayerConfig, config_hash
-from arena.store import ratings
-from arena.store.spend import EXACT
-from arena.tournaments import (
+from arena.scheduling import (
     BYE_POINTS,
     SwissEntrant,
     assign_roles,
@@ -32,6 +30,8 @@ from arena.tournaments import (
     table_schedule,
     team_round_robin,
 )
+from arena.store import ratings
+from arena.store.spend import EXACT
 
 log = logging.getLogger(__name__)
 

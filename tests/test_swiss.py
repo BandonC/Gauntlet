@@ -1,6 +1,6 @@
 import pytest
 
-from arena.tournaments import (
+from arena.scheduling import (
     SwissEntrant,
     default_swiss_rounds,
     swiss_pairings,
