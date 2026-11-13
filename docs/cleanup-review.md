@@ -13,5 +13,4 @@ Ranked by value. Behaviour must stay unchanged; one PR per area.
    have `balance` reuse the engine's.
 5. **Unused-looking code (vulture, all used by tests or entry points; no dead code found):**
    `EloTable`, `index_of`, `ScriptedPlayer`, `AccuracyVoteBot`, `load_recording`, `verify`.
-6. **Naming:** `store/tournaments.py` and top-level `tournaments.py` share a name; consider
-   renaming the pure one to `scheduling.py`.
+6. **Naming** (done): the pure scheduling module is now `arena/scheduling.py`, no longer sharing a name with `store/tournaments.py`.

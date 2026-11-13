@@ -120,7 +120,7 @@ arena/
   store/spend.py        exact and sharded spend, TOTAL_SPEND_SQL, BudgetGuard
   roster.py             roster.toml → PlayerConfig → Player (+ Pricing)
   costs.py, ratings/{elo,glicko2,weng_lin,bradley_terry}.py, cli.py, config.py
-  tournaments.py        pure scheduling: round_robin, Swiss pairing, table_schedule
+  scheduling.py         pure scheduling: round_robin, Swiss pairing, table_schedule
   balance.py            Werewolf what-if rulesets, simulated; not a game, nothing plays them
   solvers/              perfect-play analysis of recorded games (Connect 4 solver and grader)
 migrations/             forward-only SQL, applied in filename order
@@ -427,7 +427,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       core modules) and add it to scripts/check.sh. Do not touch .github/workflows/.
 - [x] [human] Add the mypy job to the CI workflow and make it required (local,
       after the item above merges).
-- [ ] Clean-up review: list duplication, dead code, inconsistent patterns and
+- [x] Clean-up review: list duplication, dead code, inconsistent patterns and
       unclear names across arena/, ranked by value. Then fix them one PR per area,
       with behaviour unchanged (tests stay green, turn-log replays identical).
 - [ ] README front page: a 30-second summary at the top (what it is, 4–5 headline

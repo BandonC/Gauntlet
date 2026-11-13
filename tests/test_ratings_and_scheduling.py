@@ -6,7 +6,7 @@ import pytest
 from arena.games.base import placements_from_scores, rank_forfeits_last
 from arena.games.werewolf import ROLES
 from arena.ratings.elo import EloTable, expected_score, update
-from arena.tournaments import (
+from arena.scheduling import (
     assign_roles,
     role_counts,
     round_robin,
