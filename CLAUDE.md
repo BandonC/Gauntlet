@@ -430,7 +430,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] Clean-up review: list duplication, dead code, inconsistent patterns and
       unclear names across arena/, ranked by value. Then fix them one PR per area,
       with behaviour unchanged (tests stay green, turn-log replays identical).
-- [ ] README front page: a 30-second summary at the top (what it is, 4–5 headline
+- [x] README front page: a 30-second summary at the top (what it is, 4–5 headline
       findings with numbers and intervals, an architecture diagram, links); move the
       detail into docs/ pages. Keep every claim's caveats.
 - [ ] docs/design-decisions.md: an ADR for each of: event-sourced turn log + replay;
