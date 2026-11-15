@@ -541,10 +541,11 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   `outside-agent` against `random` in Connect 4, 10 games each. An unsigned POST through the public
   URL got 401. Tournament 35: 10/10 completed on run attempt 1, 86 agent turns, 86 attempts, 0
   rejections, 0 forfeits, latency p50 116 ms, p95 146 ms, max 371 ms; the agent logged exactly 86
-  signed 200s. Tournament 36: the agent was killed after 3 matches and restarted about 60 s later.
+  signed 200s. Tournament 36: the agent was killed once 3 matches had finished (a 4th finished as the kill landed) and
+  restarted about 60 s later.
   With the agent down, Cloudflare answers 502, so the in-flight match was retried 4 times and
   released, the breaker opened, and the next five failed fast with no call made, all re-queued.
-  After the restart all 10 completed (6 on run attempt 2); 103 agent turns against 42 + 61 agent
+  After the restart all 10 completed (4 on run attempt 1, 6 on run attempt 2); 103 agent turns against 42 + 61 agent
   log lines, 0 forfeits, 0 extra attempts. Both tournaments' logs are continuous, and all 20 replay
   to their stored scores. Not tested: clock skew (one clock, so the 5-minute window wasn't
   stressed). A quick tunnel's URL changes on every start, so restart the agent, not the tunnel, to
