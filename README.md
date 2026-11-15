@@ -28,12 +28,19 @@ resumable matches, lease fencing, a Postgres job queue, rate limiting and cost a
 
 Headline findings (small samples; details and caveats in [Findings](docs/findings.md)):
 
-- **Liar's Dice:** a one-threshold bot beat Sonnet 5 26-4 (86.7%, 70.3-94.7%). Opus 5.5 beat it
-  97 of 160 (60.6%, 52.9-67.9%) in a pre-registered extension.
-- **Werewolf:** stronger models didn't help the village, which won 9 of 40 (22.5%, 12.3-37.5%).
-  A word-counting classifier named a wolf more often than the village's vote did.
-- **Code Break:** Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%); a bot that never contradicts its
-  clues solved all 1,296 secrets.
+- **Liar's Dice:** a one-threshold bot, tuned on free games, beat Sonnet 5 26-4 (86.7%,
+  70.3-94.7%). That partly reflects the bot's policy: Sonnet 5's bids against it were true only
+  56% of the time, and it rarely challenged. Opus 5.5 beat the same bot in 97 of 160 games (60.6%,
+  52.9-67.9%), which met the rule written before its pre-registered extension (lower bound above
+  50%).
+- **Werewolf:** with Sonnets at the table the village won 9 of 40 (22.5%, 12.3-37.5%), against
+  17 of 40 with Haikus only (p = 0.09, not separated). A TF-IDF classifier's top suspect was a
+  wolf on 71 of 121 first days, the village's vote on 44 (McNemar p = 0.001), but it may suspect
+  any living seat and learned from other games' outcomes, so it doesn't see what a villager sees.
+- **Code Break:** the minimax solver beat Sonnet 5 and Haiku 5.5 59-0-1 each. In games between
+  the two models, Sonnet 5 solved 11 of 60 (18.3%, 10.6-29.9%) and Haiku 5 of 60 (8.3%,
+  3.6-18.1%), p = 0.18, so they aren't separated. A bot guessing at random among codes consistent
+  with its clues solves all 1,296 secrets.
 - **Split the Deal:** a bot that concedes in steps beat Haiku 5.5 55-3-2 (93.3%, 84.1-97.4%).
 - **Reliability:** 2,000 bot matches survived 53 worker kills and 15 Postgres freezes with every
   invariant intact ([details](docs/scale-and-reliability.md)).
@@ -50,7 +57,7 @@ More: [Findings](docs/findings.md) · [Scale & reliability](docs/scale-and-relia
 
 ## What the games showed
 
-Each game tests something different, and the details follow below.
+Each game tests something different; details and caveats are in [Findings](docs/findings.md).
 
 | Game | What it tests | Main finding (95% interval) |
 |---|---|---|
