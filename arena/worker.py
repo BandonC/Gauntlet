@@ -24,13 +24,14 @@ import signal
 import socket
 import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 import asyncpg
 
 from arena.engine.match_runner import LeaseLost, MatchInterrupted, MatchRunner, MatchSpec
 from arena.games.registry import get_game
+from arena.players.base import Decision, Player, TurnContext
 from arena.providers.base import ProviderError
 from arena.roster import PlayerFactory
 from arena.store import queue
@@ -53,6 +54,29 @@ class WorkerConfig:
     heartbeat_seconds: float = 20.0
     max_run_attempts: int = 5
     idle_sleep_seconds: float = 2.0
+    # Wait this long before every turn. Bot matches finish in milliseconds, so the demo
+    # paces them to leave something to watch live. 0 (the default) never sleeps.
+    turn_delay_seconds: float = 0.0
+
+
+class PacedPlayer:
+    """Waits `delay` seconds, then lets the wrapped player act. Only wall-clock pacing:
+    the decision, the turn log and replay are unchanged."""
+
+    def __init__(
+        self,
+        inner: Player,
+        delay: float,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+    ):
+        self.player_id = inner.player_id
+        self._inner = inner
+        self._delay = delay
+        self._sleep = sleep
+
+    async def act(self, ctx: TurnContext) -> Decision:
+        await self._sleep(self._delay)
+        return await self._inner.act(ctx)
 
 
 def new_worker_id() -> str:
@@ -107,6 +131,8 @@ async def _run_claimed(
             if claimed.tournament_id is None:
                 raise RuntimeError("sharded budgeted match without tournament_id")
             players = [BudgetGuard(p, pool, claimed.tournament_id) for p in players]
+        if cfg.turn_delay_seconds > 0:
+            players = [PacedPlayer(p, cfg.turn_delay_seconds) for p in players]
         runner = MatchRunner(
             game,
             [TracedPlayer(p, claimed.game) for p in players],

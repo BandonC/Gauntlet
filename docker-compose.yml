@@ -88,7 +88,8 @@ services:
 
   demo-worker:
     <<: *demo-app
-    command: ["arena", "worker", "--concurrency", "2"]
+    # --turn-delay paces the bots (about 5 minutes in all) so a match can be watched live.
+    command: ["arena", "worker", "--concurrency", "2", "--turn-delay", "1"]
     restart: unless-stopped
     depends_on:
       demo-migrate:

@@ -116,6 +116,16 @@ No Python setup? One command builds and runs the whole stack with a bot tourname
 docker compose --profile demo up --build   # then open http://localhost:8000
 ```
 
+It plays 20 Liar's Dice games between two bots, paced at a second a turn so a match can be
+watched live from its replay page for about five minutes. The demo keeps its own database
+volume. To start it again from nothing, remove only that volume: `docker compose --profile demo
+down` would stop the dev `db` too, and adding `-v` would delete its data.
+
+```bash
+docker compose --profile demo rm -sf demo-db demo-migrate demo-api demo-worker demo-seed
+docker volume rm gauntlet_demodata
+```
+
 Scale and failure tests are free too, and leave your tournaments alone:
 
 ```bash
