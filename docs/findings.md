@@ -42,7 +42,17 @@ With nobody dead and nothing inspected, a day-first first vote is close to a gue
 first vote removed a wolf 30% of the time rather than the predicted 46%. Later days made up the
 difference. The fixed-accuracy model got the total and missed the path, and with 40 games the
 interval is wide enough to fit many other values, so treat 41% against 42.5% as encouraging, not
-as confirmation. Replacing fixed accuracy with per-day accuracy is the next item on the roadmap.
+as confirmation.
+
+The simulator now uses accuracy by nights elapsed instead of one fixed value, fitted from these two
+tournaments: 36.5% (30.1-43.4) before any night, 51.9% (46.2-57.5) after one, 62.6% (52.8-71.5)
+after two. Counting nights rather than days lines the openings up: after one night the original
+rules' day 1 had 54% and day-first's day 2 had 50%. It now reproduces the path, with day-first's
+first vote removing a wolf 30% of the time against a real 30%, but that's in-sample, fitted to the
+same games. The totals got no better: 25.8% for the original rules against a real 17.5%, and 32.3%
+for day-first against 42.5%, both inside their intervals. Even each tournament's own curve misses
+by about 5 points, so the rest of the gap is the model (random kills, a seer with no skill), not the
+accuracy curve. `python -m arena.balance --p 0.54` still gives the fixed-accuracy predictions above.
 
 Three things about the players, in falling order of confidence:
 

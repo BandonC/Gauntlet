@@ -42,7 +42,7 @@ cp .env.example .env && cp roster.example.toml roster.toml   # then edit both
 docker compose up -d db testdb
 scripts/install-hooks.sh                 # pre-commit hook: runs scripts/check.sh
 
-scripts/check.sh                         # ruff, format check, pytest; db tests too if DATABASE_URL is set
+scripts/check.sh                         # ruff, format, mypy, pytest (4 workers); db tests too if DATABASE_URL is set
 pytest                                   # unit tests; db tests skip without DATABASE_URL
 pytest -m slow                           # balance simulations, excluded by default
 DATABASE_URL=postgresql://arena:arena@localhost:5433/arena_test pytest -m db

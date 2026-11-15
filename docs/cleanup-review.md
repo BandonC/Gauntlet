@@ -2,7 +2,7 @@
 
 Ranked by value. Behaviour must stay unchanged; one PR per area.
 
-1. **Duplicate `_is_int` / bool-excluding int checks** (done in this PR): two copies of
+1. **Duplicate `_is_int` / bool-excluding int checks** (done): two copies of
    `_is_int` plus three inline `isinstance(x, int) or isinstance(x, bool)` checks, now
    `arena.types.is_int`.
 2. **Duplicate `_retry_after` in the two vendor adapters** (done, `base.retry_after_of`) (`providers/anthropic_provider.py`,
