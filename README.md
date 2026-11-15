@@ -53,7 +53,7 @@ CLI / API --> Postgres <-- worker(s) --> MatchRunner --> Game engine (pure)
 ```
 
 More: [Findings](docs/findings.md) · [Scale & reliability](docs/scale-and-reliability.md) ·
-[Enter your own agent](docs/enter-your-agent.md) · [Design notes and roadmap](CLAUDE.md)
+[Enter your own agent](docs/enter-your-agent.md) · [Design decisions](docs/design-decisions.md) · [Design notes and roadmap](CLAUDE.md)
 
 ## What the games showed
 
