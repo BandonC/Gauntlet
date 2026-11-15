@@ -451,6 +451,7 @@ def main(argv: list[str] | None = None) -> None:
 
     s = sub.add_parser("serve", help="API + UI")
     s.add_argument("--port", type=int, default=8000)
+    s.add_argument("--host", default="127.0.0.1", help="0.0.0.0 inside a container")
 
     e = sub.add_parser("export", help="render the site to static HTML + JSON files")
     e.add_argument("--out", default="site", help="output directory (default: site)")
@@ -476,7 +477,7 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "serve":
         import uvicorn
 
-        uvicorn.run("arena.api:app", port=args.port)
+        uvicorn.run("arena.api:app", host=args.host, port=args.port)
         return
     handler = {
         "play": _play,

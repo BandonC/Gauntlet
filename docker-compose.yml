@@ -1,4 +1,5 @@
-# Local Postgres only. The app itself runs on the host (`arena ...`) during development.
+# Development: Postgres only, the app runs on the host (`arena ...`).
+# Demo: `docker compose --profile demo up` builds the image and runs everything, bots only.
 services:
   db:
     image: postgres:16
@@ -45,5 +46,62 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # --- demo profile: docker compose --profile demo up --build, then open :8000 -------------
+  # Free: a Liar's Dice bot tournament, no API key. Uses its own database service so the
+  # dev `db` (:5434) is untouched; the app services reach it as demo-db.
+  demo-db:
+    image: postgres:16
+    profiles: [demo]
+    environment:
+      POSTGRES_USER: arena
+      POSTGRES_PASSWORD: arena
+      POSTGRES_DB: arena
+    volumes:
+      - demodata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arena"]
+      interval: 2s
+      retries: 15
+
+  demo-migrate:
+    <<: &demo-app
+      build: .
+      profiles: [demo]
+      environment:
+        DATABASE_URL: postgresql://arena:arena@demo-db:5432/arena
+        ARENA_ROSTER_PATH: /app/roster.toml
+      volumes:
+        - ./roster.example.toml:/app/roster.toml:ro
+    command: ["arena", "migrate"]
+    depends_on:
+      demo-db:
+        condition: service_healthy
+
+  demo-api:
+    <<: *demo-app
+    command: ["arena", "serve", "--host", "0.0.0.0"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      demo-migrate:
+        condition: service_completed_successfully
+
+  demo-worker:
+    <<: *demo-app
+    command: ["arena", "worker", "--concurrency", "2"]
+    restart: unless-stopped
+    depends_on:
+      demo-migrate:
+        condition: service_completed_successfully
+
+  # Queues the tournament once (skips if one exists), then exits.
+  demo-seed:
+    <<: *demo-app
+    command: ["python", "scripts/demo_seed.py"]
+    depends_on:
+      demo-migrate:
+        condition: service_completed_successfully
+
 volumes:
   pgdata:
+  demodata:

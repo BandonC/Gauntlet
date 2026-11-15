@@ -110,6 +110,12 @@ arena serve
 Open http://localhost:8000/matches and pick a match to step through its replay, or see the
 leaderboard at http://localhost:8000.
 
+No Python setup? One command builds and runs the whole stack with a bot tournament:
+
+```bash
+docker compose --profile demo up --build   # then open http://localhost:8000
+```
+
 Scale and failure tests are free too, and leave your tournaments alone:
 
 ```bash
