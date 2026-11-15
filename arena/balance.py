@@ -5,15 +5,20 @@ candidates can be compared before any of them becomes a game. Nothing here is pl
 a ruleset that gets adopted becomes a new game id, so its ratings stay apart from the old.
 `tests/test_balance.py` holds `play` to the real engine on the current rules.
 
-Votes are a model. Each village voter picks a wolf with probability `p`, whatever the
-day or how much has been learned, so a seer's or doctor's skill never shows up in `p`.
+Votes are a model. Each village voter picks a wolf with probability `p`, which is either one
+number for every vote or a curve by nights elapsed: `p[n]` after n nights, the last entry for
+any night beyond it. `FITTED_P` is that curve from tournaments 6 and 7 (see
+`arena.analysis.vote_accuracy`); it's indexed by nights, not days, because a night is when the
+kill and the seer's inspection add information, so one curve covers both openings. A seer's or
+doctor's skill never shows up in `p` beyond what those tournaments already contain.
 `focus` sets how much a table votes together without changing `p`: each day the table has
 one shared target (a wolf with probability p), and each voter follows it with probability
 `focus`, otherwise drawing alone. 0 is fully independent voters. Wolves vote for a non-wolf:
 the table's target if it is one, otherwise one shared counter-target. Kills are uniform
 over living non-wolves, and a doctor protects a uniform living seat.
 
-    python -m arena.balance --games 2000
+    python -m arena.balance --games 2000            # the fitted per-night curve
+    python -m arena.balance --games 2000 --p 0.54   # the old fixed accuracy
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from __future__ import annotations
 import argparse
 import random
 from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from arena.games.werewolf import (
@@ -34,6 +40,19 @@ from arena.games.werewolf import (
 
 DOCTOR = "doctor"
 DEFAULT_P = 0.54  # tournament 6: 125 of 229 village votes hit a wolf
+# Village votes on a wolf after 0, 1 and 2 nights, tournaments 6 and 7 pooled: 73/200,
+# 152/293, 62/99. After 3 nights there were 6 votes, too few to fit, so the last entry holds.
+FITTED_P = (73 / 200, 152 / 293, 62 / 99)
+FITTED_FOCUS = 0.7
+
+Accuracy = float | Sequence[float]
+
+
+def accuracy_after(p: Accuracy, nights: int) -> float:
+    """`p` itself, or the curve's entry after this many nights (its last, past the end)."""
+    if isinstance(p, (int, float)):
+        return float(p)
+    return p[min(nights, len(p) - 1)]
 
 
 @dataclass(frozen=True)
@@ -119,14 +138,16 @@ def protect(rng: random.Random, alive: list[int], doctor: int, last_saved: int |
     return rng.choice([s for s in alive if not (s == doctor == last_saved)])
 
 
-def play(rules: Ruleset, seed: int, p: float = DEFAULT_P, focus: float = 0.0) -> Game:
+def play(rules: Ruleset, seed: int, p: Accuracy = DEFAULT_P, focus: float = 0.0) -> Game:
     rng = random.Random(f"{seed}:game")
     roles = rules.roles()
     rng.shuffle(roles)
     alive = list(range(rules.seats))
     turns, day, night_next, first_vote, last_saved = 0, 1, not rules.day_first, "", None
+    nights = 0
     while True:
         if night_next:
+            nights += 1
             turns += sum(roles[s] != VILLAGER for s in alive)
             victim = rng.choice([s for s in alive if roles[s] != WOLF])
             doctor = next((s for s in alive if roles[s] == DOCTOR), None)
@@ -137,7 +158,8 @@ def play(rules: Ruleset, seed: int, p: float = DEFAULT_P, focus: float = 0.0) ->
                 if won is not None:
                     return Game(won, turns, first_vote)
         turns += len(alive) * (DISCUSSION_ROUNDS + 1)
-        votes = [vote_target(roles, alive, s, day, seed, p, focus) for s in alive]
+        today = accuracy_after(p, nights)
+        votes = [vote_target(roles, alive, s, day, seed, today, focus) for s in alive]
         out = _voted_out(votes)
         if not first_vote:
             first_vote = "tie" if out is None else "wolf" if roles[out] == WOLF else "other"
@@ -149,7 +171,7 @@ def play(rules: Ruleset, seed: int, p: float = DEFAULT_P, focus: float = 0.0) ->
         day, night_next = day + 1, True
 
 
-def simulate(rules: Ruleset, games: int, p: float = DEFAULT_P, focus: float = 0.0) -> Result:
+def simulate(rules: Ruleset, games: int, p: Accuracy = DEFAULT_P, focus: float = 0.0) -> Result:
     played = [play(rules, seed, p, focus) for seed in range(games)]
     return Result(
         rules,
@@ -163,11 +185,12 @@ def simulate(rules: Ruleset, games: int, p: float = DEFAULT_P, focus: float = 0.
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--games", type=int, default=2000)
-    parser.add_argument("--p", type=float, default=DEFAULT_P)
-    parser.add_argument("--focus", type=float, default=0.0)
+    parser.add_argument("--p", type=float, help="one fixed accuracy instead of FITTED_P")
+    parser.add_argument("--focus", type=float, default=FITTED_FOCUS)
     args = parser.parse_args()
+    p: Accuracy = FITTED_P if args.p is None else args.p
     for rules in VARIANTS:
-        r = simulate(rules, args.games, args.p, args.focus)
+        r = simulate(rules, args.games, p, args.focus)
         print(
             f"{rules.name:24} {100 * r.village_rate:5.1f}% ±{100 * r.margin:.1f}  "
             f"{r.mean_turns:5.1f} turns"
