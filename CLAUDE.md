@@ -433,7 +433,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] README front page: a 30-second summary at the top (what it is, 4–5 headline
       findings with numbers and intervals, an architecture diagram, links); move the
       detail into docs/ pages. Keep every claim's caveats.
-- [ ] docs/design-decisions.md: an ADR for each of: event-sourced turn log + replay;
+- [x] docs/design-decisions.md: an ADR for each of: event-sourced turn log + replay;
       lease fencing; Postgres queue vs Redis/Kafka; exact vs sharded spend counters;
       gates and budgets for paid runs; Bradley-Terry final ratings vs live ratings.
       Each: context, decision, alternatives, consequences, evidence from this repo.
