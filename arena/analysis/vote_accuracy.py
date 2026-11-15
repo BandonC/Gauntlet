@@ -4,7 +4,8 @@ How often a living villager's day vote names a wolf, grouped by how many nights 
 played before that vote: night-first `werewolf` votes on day d after d nights, `werewolf_dayfirst`
 after d - 1. Indexing by nights rather than by day is what lets one curve serve both openings,
 since a night is when the kill and the seer's inspection add information. It also counts each
-table's first vote as a wolf out, someone else out, or a tie. `arena.balance` uses the fitted
+table's first vote as a wolf out, someone else out, or a tie. Cancelled tournaments are left
+out, like every other total. `arena.balance` uses the fitted
 curve; this module is how to refit it.
 
     python -m arena.analysis.vote_accuracy --tournaments 6,7
@@ -67,6 +68,7 @@ async def load(database_url: str, tournaments: list[int]) -> dict[int, Tally]:
     from arena.engine.match_runner import MatchSpec, iter_states
     from arena.games.registry import get_game
     from arena.store.db import create_pool
+    from arena.store.ratings import NOT_CANCELLED_SQL
     from arena.store.turns import PostgresTurnStore
 
     pool = await create_pool(database_url)
@@ -77,7 +79,7 @@ async def load(database_url: str, tournaments: list[int]) -> dict[int, Tally]:
             "array_agg(s.player_id ORDER BY s.seat) seats "
             "FROM matches m JOIN match_seats s ON s.match_id = m.id "
             "WHERE m.tournament_id = ANY($1) AND m.status = 'completed' "
-            "AND m.game = ANY($2) GROUP BY m.id ORDER BY m.id",
+            f"AND m.game = ANY($2) AND {NOT_CANCELLED_SQL} GROUP BY m.id ORDER BY m.id",
             tournaments,
             list(NIGHTS_BEFORE_DAY_ONE),
         )
