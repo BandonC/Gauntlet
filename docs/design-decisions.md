@@ -29,8 +29,8 @@ pure function of state, and any read of a stored match must pass its `options`.
 
 **Evidence.** Tournament 7: a worker was killed mid-game and a new process resumed two matches
 at turns 34 and 12. All 40 matches ended with continuous turn numbers and no duplicates. The
-re-asked turns cost $0.0006 of $2.49 (0.02%). Every Word Link, Split the Deal and Code Break
-tournament replayed all matches to their stored scores.
+re-asked turns cost $0.0006 of $2.49 (0.02%). Tournaments 13, 14, 15 and 30-32
+(570 matches) were each replayed to their stored scores, and all matched.
 
 ## ADR 2: Lease fencing
 
@@ -124,8 +124,10 @@ bound spend only to within the documented overshoot.
 **Evidence.** Tournament 12 was cancelled at 30 of 180 matches ($0.4226): Sonnet 5 sent
 malformed codes on 34 of 163 attempts, and the only gate was a Haiku game. That is why every
 model now gets its own gate. The first CFR test game ran a paid player at $0 because prices
-were missing, which led to the load-time refusal. Most tournaments finished under their
-predicted cost.
+were missing, which led to the load-time refusal. Of the nine runs with a recorded cost
+prediction (tournaments 10, 11, 13, 14, 15, 16-18, 19-22, 30-32, 33), eight finished under it.
+The effort sweep (16-18) cost $3.11 against $2.50, and tournament 26 hit its cap and needed it
+raised.
 
 ## ADR 6: Bradley-Terry final ratings versus live ratings
 
