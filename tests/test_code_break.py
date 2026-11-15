@@ -1,5 +1,6 @@
 import asyncio
 import json
+from collections import Counter
 from statistics import mean
 
 import pytest
@@ -14,6 +15,8 @@ from arena.games.code_break import (
     PEG_FIELDS,
     CodeBreak,
     Guess,
+    _feedback_id,
+    _feedback_rows,
     code_of,
     feedback,
     guess_action,
@@ -227,6 +230,17 @@ def test_the_solver_never_needs_more_than_five_on_any_secret():
     counts = [solver_guesses(secret) for secret in ALL_CODES]
     assert max(counts) <= 5
     assert mean(counts) < 4.5
+    # Knuth's exact result, so a faster solver can't quietly pick different guesses:
+    # 5,801 guesses over 1,296 secrets (4.476), solved in 1 to 5 guesses this often.
+    assert sum(counts) == 5801
+    assert sorted(Counter(counts).items()) == [(1, 1), (2, 6), (3, 62), (4, 533), (5, 694)]
+
+
+def test_the_feedback_table_agrees_with_feedback():
+    rows = _feedback_rows()
+    for i in range(0, len(ALL_CODES), 37):
+        for j in range(0, len(ALL_CODES), 41):
+            assert rows[i][j] == _feedback_id(feedback(ALL_CODES[i], ALL_CODES[j]))
 
 
 def test_the_solver_plays_through_the_real_engine():
