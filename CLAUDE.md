@@ -30,7 +30,7 @@ Optimise for correctness and clear failure semantics over features.
 | Code Break (deduction race), minimax solver, cancellable tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 13, see Gotchas) |
 | Split the Deal (negotiation), conceding bot, value-claim metrics | Done, db-tested, replay renderer, proven by a real run (tournament 14, see Gotchas) |
 | Word Link (team word game), Weng-Lin team ratings, team tournaments | Done, db-tested, replay renderer, proven by a real run (tournament 15, see Gotchas) |
-| Remote HTTP players (`provider = "http"`): signed requests, retries, circuit breaker | Done, tested on a mock transport and through `MatchRunner`; no real agent yet |
+| Remote HTTP players (`provider = "http"`): signed requests, retries, circuit breaker | Done, tested on a mock transport and through `MatchRunner`, and over a real tunnel (tournaments 35-36, see Gotchas) |
 | `liars_dice_small` (2 dice, faces 1-4), CFR+ solver with exact exploitability, `liars-dice-cfr` bot | Done, tested against plain recursion, proven by real runs (tournaments 30-32, see Gotchas) |
 
 ## Commands
@@ -440,8 +440,9 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       Each: context, decision, alternatives, consequences, evidence from this repo.
 - [x] One-command stack: docker compose profile that runs db + migrate + API + worker
       + a bot tournament, so `docker compose --profile demo up` shows a live replay.
-- [ ] [human] Real outside-agent test: run examples/agent.py on another machine or
-      through a tunnel and enter it in a bot tournament.
+- [x] [human] Real outside-agent test: run examples/agent.py on another machine or
+      through a tunnel and enter it in a bot tournament. Done 2026-11-15 through a
+      Cloudflare quick tunnel, tournaments 35-36, $0.
 
 **Maintenance**
 - [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
@@ -492,7 +493,7 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 
 - Demo stack (`docker compose --profile demo up --build`): `Dockerfile` installs editable because `MIGRATIONS_DIR` is found beside the package. Services `demo-db` (own volume `demodata`, no host port), `demo-migrate`, `demo-api` (:8000), `demo-worker`, `demo-seed`; all use `roster.example.toml` and bots only, and `.env` isn't in the image, so no key can reach it. `scripts/demo_seed.py` queues one Liar's Dice tournament and skips if one exists. Bot matches take milliseconds, so the worker runs with `--turn-delay 1` (`PacedPlayer`, wall-clock only, off by default): 534 turns over 2 workers is about 4.5 minutes to watch live. Run end to end from a clean state on 2026-11-15: 20 of 20 at $0, pages and API 200. Never `down -v` with this profile: it removes `pgdata` too. Reset with `rm -sf` on the five demo services and `docker volume rm gauntlet_demodata`. `tests/test_demo_stack.py` runs the seed twice on Postgres and counts paced waits against the turn log.
 
-- mypy (`pyproject.toml`, 2026-11-09): `mypy arena` is clean and runs in `scripts/check.sh`. Core modules (`types`, `games`, `engine`, `players`, `ratings`, `costs`) also set `disallow_untyped_defs` and `disallow_any_generics`. Fixes were `TypeGuard` on `_is_int`, asserts where a value is non-None by construction, and no behaviour change. CI's `typecheck` job is still `continue-on-error`: the [human] item flips it.
+- mypy (`pyproject.toml`, 2026-11-09): `mypy arena` is clean and runs in `scripts/check.sh`. Core modules (`types`, `games`, `engine`, `players`, `ratings`, `costs`) also set `disallow_untyped_defs` and `disallow_any_generics`. Fixes were `TypeGuard` on `_is_int`, asserts where a value is non-None by construction, and no behaviour change. The [human] item made CI's `typecheck` job fail the build (ce82983); it was `continue-on-error` before.
 
 - CI (`.github/workflows/ci.yml`): the `checks` job runs `scripts/check.sh` itself, on Python 3.12
   and 3.14, against a `postgres:16` service published on 5433 with database `arena_test` (the name
@@ -535,6 +536,21 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   fails fast with `retry_after`. Identity is `http-` + the URL's hash, so the agent behind a URL
   can change; the secret and URL never reach the players table. `http` is a free provider (no
   prices), so `--budget` doesn't apply to it.
+- Outside-agent test (tournaments 35-36, 2026-11-15, $0): `examples/agent.py` on this machine behind
+  a Cloudflare quick tunnel (`cloudflared tunnel --url http://localhost:9000`, edge yyz04), entered as
+  `outside-agent` against `random` in Connect 4, 10 games each. An unsigned POST through the public
+  URL got 401. Tournament 35: 10/10 completed on run attempt 1, 86 agent turns, 86 attempts, 0
+  rejections, 0 forfeits, latency p50 116 ms, p95 146 ms, max 371 ms; the agent logged exactly 86
+  signed 200s. Tournament 36: the agent was killed after 3 matches and restarted about 60 s later.
+  With the agent down, Cloudflare answers 502, so the in-flight match was retried 4 times and
+  released, the breaker opened, and the next five failed fast with no call made, all re-queued.
+  After the restart all 10 completed (6 on run attempt 2); 103 agent turns against 42 + 61 agent
+  log lines, 0 forfeits, 0 extra attempts. Both tournaments' logs are continuous, and all 20 replay
+  to their stored scores. Not tested: clock skew (one clock, so the 5-minute window wasn't
+  stressed). A quick tunnel's URL changes on every start, so restart the agent, not the tunnel, to
+  simulate an outage. `arena worker` has no `--roster`; set `ARENA_ROSTER_PATH`. A roster of only
+  the test players kept tournament 12's queued paid matches out of reach, though claims already
+  skip cancelled tournaments.
 - `examples/agent.py` is standalone (no arena import), so it inlines its own signature check.
   `tests/test_agent_chaos.py` (db) runs it behind `httpx2.ASGITransport` with a seeded fault layer
   per agent (slow: 15% time out; flaky: 25% 503 plus a 4-call outage at the start; garbage: 30%
