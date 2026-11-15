@@ -68,12 +68,14 @@ async def test_example_agent_checks_signatures_and_repeats_itself_on_retries():
 
 
 @pytest.mark.parametrize(
-    ("skew", "accepted"), [(-250, True), (250, True), (-310, False), (310, False)]
+    ("skew", "accepted"), [(-298, True), (298, True), (-302, False), (302, False)]
 )
 async def test_clock_skew_between_arena_and_agent_is_fine_inside_five_minutes_only(skew, accepted):
     """The tunnel test ran on one clock. Here the arena's clock is off from the agent's: inside
     the 5-minute window the move goes through, outside it the agent's 401 is an invalid attempt
-    (the agent's answer, never retried), so a badly set clock costs the agent, not the arena."""
+    (the agent's answer, never retried), so a badly set clock costs the agent, not the arena.
+    2 s each side of 300 pins the edge without flaking: timestamps are whole seconds, rounded
+    down, and the call itself takes time. Needs no database, so plain `pytest` runs it."""
     calls = []
     app_client = httpx2.AsyncClient(
         transport=httpx2.ASGITransport(app=example_app()), base_url="http://a"

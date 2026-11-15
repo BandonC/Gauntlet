@@ -555,8 +555,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   simulate an outage. `--roster` was then a global option only (`arena --roster r.toml worker`);
   it now works after any command too (`tests/test_cli_roster.py`). A roster of only the test
   players kept tournament 12's queued paid matches out of reach, though claims already skip
-  cancelled tournaments. Clock skew is covered by a test instead: `RemotePlayer`'s clock 250 s off
-  the example agent's is accepted, 310 s off is the agent's 401, an invalid attempt, not retried.
+  cancelled tournaments. Clock skew is covered by a test instead: `RemotePlayer`'s clock 298 s off
+  the example agent's is accepted, 302 s off is the agent's 401, an invalid attempt, not retried.
   Tournaments 35-36 stay in the dev database's Connect 4 ratings: `cancel` refuses a finished
   tournament, and removing finished results would be a new operation.
 - `examples/agent.py` is standalone (no arena import), so it inlines its own signature check.
