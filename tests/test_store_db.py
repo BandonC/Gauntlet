@@ -36,6 +36,7 @@ from arena.store.metrics import (
 )
 from arena.store.migrate import MIGRATIONS_DIR, migrate
 from arena.store.ratelimit import PostgresTokenBucket, seed_rate_limits
+from arena.store.ratings import LATEST_FINAL_SQL
 from arena.store.tournaments import (
     NEXT_ROUND_SQL,
     advance_tournament,
@@ -1331,6 +1332,35 @@ async def test_cancel_refuses_a_running_match_and_a_finished_tournament(pool):
         await cancel_tournament(pool, tid, "x")
     with pytest.raises(ValueError, match="no tournament"):
         await cancel_tournament(pool, 999, "x")
+
+
+async def test_a_finished_test_run_can_be_cancelled_and_stops_being_the_latest_final(pool):
+    real, _ = await create_round_robin(pool, "connect4", PLAYERS, 4, None, seed=1)
+    await run_worker(pool, FACTORY, FAST, concurrency=2, exit_when_idle=True)
+    extra = PlayerConfig("r3", "random", seed=3)
+    factory = PlayerFactory(Roster({p.id: p for p in [*PLAYERS, extra]}, {}), {})
+    test_run, _ = await create_round_robin(pool, "connect4", [PLAYERS[0], extra], 4, None, seed=2)
+    await run_worker(pool, factory, FAST, concurrency=2, exit_when_idle=True)
+    assert await pool.fetchval(LATEST_FINAL_SQL, "connect4") == test_run
+    r1_before = await pool.fetchval("SELECT count(*) FROM rating_history WHERE player_id = 'r1'")
+
+    with pytest.raises(ValueError, match="--finished"):
+        await cancel_tournament(pool, test_run, "test run")
+    await cancel_tournament(pool, test_run, "test run", finished=True)
+
+    assert await pool.fetchval("SELECT status FROM tournaments WHERE id = $1", test_run) == (
+        "cancelled"
+    )
+    assert await pool.fetchval(LATEST_FINAL_SQL, "connect4") == real  # finals fall back
+    assert await pool.fetchval("SELECT count(*) FROM rating_history WHERE player_id = 'r3'") == 0
+    r1_after = await pool.fetchval("SELECT count(*) FROM rating_history WHERE player_id = 'r1'")
+    assert r1_after == r1_before - 4  # only the test run's games left the ratings
+    assert {r["player_id"] for r in await leaderboard(pool, "connect4")} == {"r1", "r2"}
+    assert await pool.fetchval(
+        "SELECT count(*) FROM turns t JOIN matches m ON m.id = t.match_id "
+        "WHERE m.tournament_id = $1",
+        test_run,
+    )  # the data stays
 
 
 async def test_split_deal_rates_by_who_scored_more_not_by_scores(pool):

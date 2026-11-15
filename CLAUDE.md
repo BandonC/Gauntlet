@@ -57,6 +57,7 @@ arena tournament --game werewolf_dayfirst --players a,b,c,d,e,f,g --tables 1
 arena tournament --game connect4 --players a,b --budget 2 --spend-mode sharded
 arena tournament --game word_link --teams a+b,c+d,e+f --games-per-pair 30 --budget 3
 arena tournament cancel 12 --reason "..."   # keep the data, drop it from ratings
+arena tournament cancel 36 --reason "..." --finished   # also a finished one, e.g. a test run
 arena worker --concurrency 4             # Ctrl-C any time; matches resume elsewhere
 arena worker --record recordings         # also append every model reply for fixtures
 arena worker --metrics-port 9100         # also serve Prometheus metrics on /metrics
@@ -175,8 +176,10 @@ migrations/             forward-only SQL, applied in filename order
   report tokens and cost from the output afterwards.
 - The Anthropic account's credit is shared with other projects ($44 on 2026-11-02). If any call
   fails for insufficient credit, stop at once and report it. Don't retry.
-- Total project budget is about $50. Rough split: ~$5 dev/testing, ~$10 a cheap-model
-  second game, ~$25 Werewolf, ~$10 buffer.
+- The project spend cap is $80 (see Roadmap, above Phase 9), and the project is at about $79.50
+  (2026-11-15), so no paid step fits without the user raising it. The original plan was about $50
+  (~$5 dev/testing, ~$10 a cheap-model second game, ~$25 Werewolf, ~$10 buffer); it was raised
+  as the paid phases were approved.
 
 ## SDK notes (verified against anthropic 2.3.0 / openai 3.41.0, Oct 2026)
 
@@ -557,8 +560,10 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   players kept tournament 12's queued paid matches out of reach, though claims already skip
   cancelled tournaments. Clock skew is covered by a test instead: `RemotePlayer`'s clock 298 s off
   the example agent's is accepted, 302 s off is the agent's 401, an invalid attempt, not retried.
-  Tournaments 35-36 stay in the dev database's Connect 4 ratings: `cancel` refuses a finished
-  tournament, and removing finished results would be a new operation.
+  Tournaments 35-36 were then cancelled with `arena tournament cancel --finished` (2026-11-15):
+  as the newest finished heads-up Connect 4 tournament, 36 had become the source of the
+  leaderboard's final ratings, showing the test agent and dropping both Haikus' finals from
+  tournament 3. `cancel` still refuses a finished tournament without `--finished`.
 - `examples/agent.py` is standalone (no arena import), so it inlines its own signature check.
   `tests/test_agent_chaos.py` (db) runs it behind `httpx2.ASGITransport` with a seeded fault layer
   per agent (slow: 15% time out; flaky: 25% 503 plus a 4-call outage at the start; garbage: 30%

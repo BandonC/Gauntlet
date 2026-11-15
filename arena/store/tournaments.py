@@ -368,17 +368,25 @@ async def pause_tournament(conn: asyncpg.Connection, tournament_id: int | None, 
         await conn.execute(PAUSE_SQL, tournament_id, error[:2000])
 
 
-async def cancel_tournament(pool: asyncpg.Pool, tournament_id: int, reason: str) -> None:
+async def cancel_tournament(
+    pool: asyncpg.Pool, tournament_id: int, reason: str, *, finished: bool = False
+) -> None:
     """End a tournament for good. Its data stays and its spend stays real, but claims skip
-    its queued matches and its results leave the ratings, so `ratings.rebuild` runs after."""
+    its queued matches and its results leave the ratings, so `ratings.rebuild` runs after.
+    A finished tournament is refused unless `finished`, so a real result can't be dropped by
+    accident; with it, a finished test run leaves the ratings and stops being the game's
+    latest final-ratings tournament (`LATEST_FINAL_SQL` reads only completed ones)."""
     async with pool.acquire() as conn, conn.transaction():
         row = await conn.fetchrow(
             "SELECT game, status FROM tournaments WHERE id = $1 FOR NO KEY UPDATE", tournament_id
         )
         if row is None:
             raise ValueError(f"no tournament {tournament_id}")
-        if row["status"] == "completed":
-            raise ValueError(f"tournament {tournament_id} already finished")
+        if row["status"] == "completed" and not finished:
+            raise ValueError(
+                f"tournament {tournament_id} already finished; pass --finished to drop its "
+                "results from the ratings anyway"
+            )
         running = await conn.fetchval(
             "SELECT count(*) FROM matches WHERE tournament_id = $1 AND status = 'running'",
             tournament_id,
