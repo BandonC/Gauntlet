@@ -38,8 +38,10 @@ echo "==> ruff format --check"
 echo "==> mypy"
 "$PYTHON" -m mypy arena
 # Plain pytest would run the db tests too when DATABASE_URL is set, and then again below.
+# Unit tests run in parallel (pytest-xdist): 4 workers 56 s, 8 workers 53 s, 20 slower here.
+# db tests stay serial below: they share arena_test and drop its schema.
 echo "==> pytest"
-"$PYTHON" -m pytest -q -m "not slow and not db"
+"$PYTHON" -m pytest -q -m "not slow and not db" -n "${PYTEST_WORKERS:-4}" --dist worksteal
 if [ -n "${DATABASE_URL:-}" ]; then
   echo "==> pytest -m db"
   "$PYTHON" -m pytest -m db -q

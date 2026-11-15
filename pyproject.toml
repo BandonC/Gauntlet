@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.6", "mypy>=1.10", "numpy>=2.0",
+    "pytest>=8", "pytest-asyncio>=0.23", "pytest-xdist>=3.6", "ruff>=0.6", "mypy>=1.10", "numpy>=2.0",
     "scikit-learn>=1.5",
 ]
 # Phase 11 analysis: CFR training (numpy) and the wolf detector (scikit-learn). Bots read the

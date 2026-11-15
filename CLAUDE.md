@@ -445,8 +445,9 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       Cloudflare quick tunnel, tournaments 35-36, $0.
 
 **Maintenance**
-- [ ] Default pytest run takes ~55s, ~20s in collection; profile imports
-      (`python -X importtime`) and lazy-load heavy modules.
+- [x] Default pytest run takes ~55s, ~20s in collection; profile imports
+      (`python -X importtime`) and lazy-load heavy modules. Done 2026-11-15: the unit run in
+      check.sh went from about 180 s to 56 s (see the test speed gotcha).
 - [ ] Simulator: replace fixed p with per-day accuracy fitted from tournaments 6–7.
 
 ## Unattended runs (loops and scheduled tasks)
@@ -1111,6 +1112,18 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   staged files, so unstaged edits count. A commit waits for the whole run (over a
   minute, about two and a half with db tests). Git sets `GIT_DIR` while a hook runs, so a test that runs
   git must strip `GIT_*` (see `tests/test_check_script.py`) or it hits this repository.
+- Test speed (2026-11-15, this machine): plain `pytest` was 181 s with 3 failures and 30 errors,
+  because `test_agent_chaos` and `test_bench` read `DATABASE_URL` without a skip;
+  `tests/conftest.py` now skips every `db` test without it, so plain `pytest` is 135 s and clean.
+  Collection is about 16 s warm, and 6.4 s of it is `import anthropic` in `test_adapters.py`, which
+  those tests need, so lazy-loading wouldn't shorten a full run. arena itself already imports the
+  SDKs, scikit-learn (6 s warm, 32 s cold) and the OTLP exporter only when used. The slowest test
+  was the Code Break solver walking all 1,296 secrets, 38 s: `minimax_guess` now counts feedback
+  from a 1,296 x 1,296 byte table built on first use (2.3 s), 4.1 s in all against 40.7 s, with
+  identical guesses on every secret, and the test pins Knuth's exact result (5,801 guesses,
+  1/6/62/533/694). check.sh runs unit tests with `pytest-xdist` (`-n 4 --dist worksteal`,
+  `PYTEST_WORKERS` overrides): 56 s. db tests stay serial, since they share `arena_test` and
+  drop its schema. Cold imports here are 1.5-5x slower than warm, likely antivirus scanning.
 - `addopts` excludes `slow`; a `-m` on the command line replaces it, so `pytest -m db` and
   `pytest -m slow` both work. Plain `pytest` keeps a few-game smoke test of the simulator.
 - Werewolf balance: a non-wolf voted out on day 1 means the next kill reaches parity, so the

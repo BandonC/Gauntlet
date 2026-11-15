@@ -19,7 +19,7 @@ exit 0
 RUFF = "-m ruff check arena tests"
 FORMAT = "-m ruff format --check arena tests"
 MYPY = "-m mypy arena"
-PYTEST = "-m pytest -q -m not slow and not db"
+PYTEST = "-m pytest -q -m not slow and not db -n 4 --dist worksteal"
 DB = "-m pytest -m db -q"
 GOOD_URL = "postgresql://arena:arena@localhost:5433/arena_test"
 
