@@ -313,8 +313,8 @@ def _feedback_rows() -> tuple[bytes, ...]:
     indexing instead of a Python call per pair, which is 10x faster over all 1,296 secrets,
     with the same guesses (a test walks them all). The build runs synchronously, so a worker's
     first solver turn blocks its event loop that long, once per process: well inside the default
-    60 s lease and 20 s heartbeat, and less than the solver already blocked per uncached
-    position before the table existed."""
+    60 s lease and 20 s heartbeat. Before the table, the solver blocked the same way on every
+    uncached position, up to 1.9 s each (1,378 positions, 30 s in all)."""
     return tuple(
         bytes(_feedback_id(feedback(guess, secret)) for secret in ALL_CODES) for guess in ALL_CODES
     )
