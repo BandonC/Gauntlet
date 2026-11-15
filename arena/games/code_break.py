@@ -290,7 +290,7 @@ def minimax_guess(history: tuple[tuple[str, tuple[int, int]], ...]) -> str:
     if len(keep) <= 2:
         return ALL_CODES[keep[0]]
     possible = {ALL_CODES[j] for j in keep}
-    pick = itemgetter(*keep)
+    pick = itemgetter(*keep)  # a tuple: the early return above leaves 3 or more indices
 
     def worst_case(code: str) -> int:
         return max(Counter(pick(rows[_CODE_INDEX[code]])).values())
@@ -311,7 +311,10 @@ def _feedback_rows() -> tuple[bytes, ...]:
     """`rows[i][j]` is `feedback(ALL_CODES[i], ALL_CODES[j])` as one byte. Built on first use
     (about 2 s) so importing the engine stays cheap; it lets the solver count with C-level
     indexing instead of a Python call per pair, which is 10x faster over all 1,296 secrets,
-    with the same guesses (a test walks them all)."""
+    with the same guesses (a test walks them all). The build runs synchronously, so a worker's
+    first solver turn blocks its event loop that long, once per process: well inside the default
+    60 s lease and 20 s heartbeat. Before the table, the solver blocked the same way on every
+    uncached position, up to 1.9 s each (1,378 positions, 30 s in all)."""
     return tuple(
         bytes(_feedback_id(feedback(guess, secret)) for secret in ALL_CODES) for guess in ALL_CODES
     )
