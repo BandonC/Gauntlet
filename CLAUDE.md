@@ -62,7 +62,8 @@ arena worker --record recordings         # also append every model reply for fix
 arena worker --metrics-port 9100         # also serve Prometheus metrics on /metrics
 docker compose --profile observability up -d   # Jaeger :16686, Prometheus :9090, both optional
 arena leaderboard --game connect4
-arena serve                              # http://localhost:8000
+arena serve                              # http://localhost:8000 (--host 0.0.0.0 in containers)
+docker compose --profile demo up --build # db + migrate + API + worker + bot tournament, :8000
 arena export --out site                  # static HTML + JSON for GitHub Pages
 arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
@@ -437,7 +438,7 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
       lease fencing; Postgres queue vs Redis/Kafka; exact vs sharded spend counters;
       gates and budgets for paid runs; Bradley-Terry final ratings vs live ratings.
       Each: context, decision, alternatives, consequences, evidence from this repo.
-- [ ] One-command stack: docker compose profile that runs db + migrate + API + worker
+- [x] One-command stack: docker compose profile that runs db + migrate + API + worker
       + a bot tournament, so `docker compose --profile demo up` shows a live replay.
 - [ ] [human] Real outside-agent test: run examples/agent.py on another machine or
       through a tunnel and enter it in a bot tournament.
@@ -488,6 +489,8 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
 7. Only then: one real match with a cheap model and `--budget`.
 
 ## Gotchas
+
+- Demo stack (`docker compose --profile demo up --build`): `Dockerfile` installs editable because `MIGRATIONS_DIR` is found beside the package. Services `demo-db` (own volume, no host port), `demo-migrate`, `demo-api` (:8000), `demo-worker`, `demo-seed`; all use `roster.example.toml` and bots only. `scripts/demo_seed.py` queues one Liar's Dice tournament and skips if one exists. Not run end to end: the cloud session had no Docker daemon, so only `docker compose config`, the seed script on Postgres and static tests cover it.
 
 - mypy (`pyproject.toml`, 2026-11-09): `mypy arena` is clean and runs in `scripts/check.sh`. Core modules (`types`, `games`, `engine`, `players`, `ratings`, `costs`) also set `disallow_untyped_defs` and `disallow_any_generics`. Fixes were `TypeGuard` on `_is_int`, asserts where a value is non-None by construction, and no behaviour change. CI's `typecheck` job is still `continue-on-error`: the [human] item flips it.
 
