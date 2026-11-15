@@ -265,6 +265,7 @@ async def _worker(args: argparse.Namespace) -> None:
         lease_seconds=s.arena_lease_seconds,
         heartbeat_seconds=s.arena_heartbeat_seconds,
         max_run_attempts=s.arena_max_run_attempts,
+        turn_delay_seconds=args.turn_delay,
     )
     pool = await create_pool(s.database_url, max_size=args.concurrency + 2)
     # Requests/minute is shared with every other worker through Postgres.
@@ -437,6 +438,13 @@ def main(argv: list[str] | None = None) -> None:
     w.add_argument("--concurrency", type=int, default=1)
     w.add_argument("--exit-when-idle", action="store_true")
     w.add_argument("--metrics-port", type=int, help="serve Prometheus metrics on this port")
+    w.add_argument(
+        "--turn-delay",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="wait before every turn, so bot matches can be watched live (the demo uses 1)",
+    )
     w.add_argument(
         "--record", metavar="DIR", help="append every model completion to DIR/<vendor>-*.jsonl"
     )
