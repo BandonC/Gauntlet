@@ -8,8 +8,10 @@ from arena.balance import (
     CURRENT,
     DEFAULT_P,
     DOCTOR,
+    FITTED_P,
     VARIANTS,
     Ruleset,
+    accuracy_after,
     play,
     protect,
     simulate,
@@ -151,3 +153,30 @@ def test_the_published_predictions_still_hold(rules, rate):
 def test_the_bot_that_knows_every_role_is_not_reachable_from_a_roster(kind):
     with pytest.raises(ValueError):
         build_bot(kind, "x", 1)
+
+
+def test_a_curve_of_one_value_plays_exactly_like_that_fixed_value():
+    for rules in (CURRENT, DAY_FIRST):
+        assert [play(rules, s, (DEFAULT_P,), 0.7) for s in range(60)] == [
+            play(rules, s, DEFAULT_P, 0.7) for s in range(60)
+        ]
+
+
+def test_the_curve_is_indexed_by_nights_not_days():
+    # Perfect voters after any night, hopeless before one. Night-first votes after night 1,
+    # so the first vote always removes a wolf; day-first votes before any night, so never.
+    curve = (0.0, 1.0)
+    night_first = simulate(CURRENT, 200, curve, focus=1.0)
+    day_first = simulate(DAY_FIRST, 200, curve, focus=1.0)
+    assert night_first.first_vote["wolf"] == 200
+    assert day_first.first_vote["wolf"] == 0
+
+
+def test_the_last_entry_holds_past_the_end_of_the_curve():
+    assert accuracy_after((0.1, 0.2), 0) == 0.1
+    assert accuracy_after((0.1, 0.2), 5) == 0.2
+    assert accuracy_after(0.3, 9) == 0.3
+
+
+def test_the_fitted_curve_is_the_recorded_counts():
+    assert FITTED_P == (73 / 200, 152 / 293, 62 / 99)

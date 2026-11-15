@@ -68,7 +68,8 @@ arena export --out site                  # static HTML + JSON for GitHub Pages
 arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34 --matches 116,142   # only those pages
 arena bench --matches 5000 --workers 1,2,4,8   # scaling table, bots only, own database
 arena chaos --matches 2000 --workers 4   # kill workers, freeze Postgres, check invariants
-python -m arena.balance --focus 0.7      # Werewolf what-if rulesets, free, no database
+python -m arena.balance                  # Werewolf what-if rulesets, free, no database (--p 0.54: old fixed mode)
+python -m arena.analysis.vote_accuracy --tournaments 6,7   # refit its per-night curve, read only
 python -m arena.dice_sim sweep           # Liar's Dice bot tuning (also field, evaluate), free
 python -m arena.solvers.c4_grade --tournament 3   # grade Connect 4 moves by perfect play, read only
 python -m arena.solvers.liars_dice_cfr --iterations 600 --threshold 0   # retrain the CFR bot's policy
@@ -448,7 +449,8 @@ New dependencies pre-approved: numpy, scikit-learn. No torch.
 - [x] Default pytest run takes ~55s, ~20s in collection; profile imports
       (`python -X importtime`) and lazy-load heavy modules. Done 2026-11-15: the unit run in
       check.sh went from about 180 s to 56 s (see the test speed gotcha).
-- [ ] Simulator: replace fixed p with per-day accuracy fitted from tournaments 6–7.
+- [x] Simulator: replace fixed p with per-day accuracy fitted from tournaments 6–7. Done
+      2026-11-15, indexed by nights elapsed (see the simulator caveat).
 
 ## Unattended runs (loops and scheduled tasks)
 
@@ -1086,7 +1088,25 @@ When working without the user watching (a `/loop`, or a cloud scheduled task):
   day and a wolf out on 46% of first votes; tournament 7 had 36.5% and 30%, with later days
   making up the difference. Fixed p got the total and missed the path, so don't trust it for
   rulesets that change when information arrives. Moving p by 0.10 also moves day-first by about
-  15 points either way. The roadmap has the fix: per-day accuracy.
+  15 points either way.
+- Per-night accuracy (2026-11-15, `arena/analysis/vote_accuracy.py`, `balance.FITTED_P`): `p` is
+  now a curve by nights elapsed before the vote, not by day, so one curve covers both openings
+  (night-first day d follows d nights, day-first d - 1). Pooled over tournaments 6 and 7: 0 nights
+  73/200 (36.5%, 30.1-43.4), 1 night 152/293 (51.9%, 46.2-57.5; t6 day 1 53.8%, t7 day 2 49.6%,
+  which agree), 2 nights 62/99 (62.6%, 52.8-71.5); 3 nights had 6 votes, so the last entry holds
+  beyond. Refitting focus on both tournaments' first votes kept 0.7 (squared error 0.0026, against
+  0.0718 for fixed p = 0.54). That is in-sample: the curve and focus were fitted to these same
+  tournaments' votes, so it shows the model can reproduce the path, not that it predicts one. It
+  reproduces the path where fixed p couldn't: t7 first votes 30/66/4 wolf/other/tie against a real
+  30/68/2 (fixed p: 47/47/5), t6 39/51/10 against 40/48/12. Village win rates: t6 25.8% against a
+  real 7/40 (17.5%, 8.7-32.0), t7 32.3% against 17/40 (42.5%, 28.5-57.8), both inside, but t7's
+  point is further off than fixed p's lucky 41.4%. Each tournament's own curve still gives 22.0% and
+  36.7%, so the rest of the gap is the model (uniform kills, a seer with no skill, focus), not the
+  curve. The two openings disagree after 2 nights (t6 34/63, 54.0%, 41.8-65.7; t7 28/36, 77.8%,
+  61.9-88.3; the intervals barely overlap), and pooling averages them, so the 2-night entry is the
+  least certain. Indexing by nights rather than days was a choice the roadmap didn't settle. Defaults: the CLI uses `FITTED_P` and focus 0.7; `play` and `simulate` still
+  default to fixed `DEFAULT_P`, so the published predictions (22.4%, 41.4%) replay exactly, and
+  `AccuracyVoteBot` stays fixed p for the engine check. No prediction was written before the fit.
 - Crash recovery in practice (tournament 7, 2026-10-30). Two real interruptions, no failed
   match. 23:17 to 23:49: everything on the machine stopped for 32 minutes, most likely sleep
   (not confirmed by Windows' power log), so leases expired; when it woke, 2 stale writes were
