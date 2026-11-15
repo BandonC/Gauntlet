@@ -165,7 +165,7 @@ async def _tournament(args: argparse.Namespace) -> None:
 
         pool = await create_pool(settings().database_url)
         try:
-            await cancel_tournament(pool, args.tournament_id, args.reason)
+            await cancel_tournament(pool, args.tournament_id, args.reason, finished=args.finished)
         except ValueError as e:
             sys.exit(f"arena tournament cancel: {e}")
         finally:
@@ -381,10 +381,12 @@ async def _export(args: argparse.Namespace) -> None:
     print(f"open {Path(args.out) / 'index.html'}")
 
 
-def main(argv: list[str] | None = None) -> None:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+ROSTER_HELP = "roster TOML (default: $ARENA_ROSTER_PATH or roster.toml)"
+
+
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="arena")
-    ap.add_argument("--roster", help="roster TOML (default: $ARENA_ROSTER_PATH or roster.toml)")
+    ap.add_argument("--roster", help=ROSTER_HELP)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("play", help="run one match in memory and print it")
@@ -433,6 +435,11 @@ def main(argv: list[str] | None = None) -> None:
     tc = t_sub.add_parser("cancel", help="end it for good: keep the data, drop it from ratings")
     tc.add_argument("tournament_id", type=int)
     tc.add_argument("--reason", required=True)
+    tc.add_argument(
+        "--finished",
+        action="store_true",
+        help="also cancel a tournament that already finished, e.g. a test run",
+    )
 
     w = sub.add_parser("worker", help="run queued matches")
     w.add_argument("--concurrency", type=int, default=1)
@@ -481,7 +488,23 @@ def main(argv: list[str] | None = None) -> None:
     c.add_argument("--spend-mode", choices=["exact", "sharded"], default="exact")
     c.add_argument("--timeout", type=float, default=1800.0, help="seconds before giving up")
 
-    args = ap.parse_args(argv)
+    # `--roster` works before or after the command: `arena worker --roster r.toml` too.
+    # SUPPRESS keeps a value given before the command when none is given after it.
+    _add_roster_everywhere(ap)
+    return ap
+
+
+def _add_roster_everywhere(parser: argparse.ArgumentParser) -> None:
+    for action in parser._actions:
+        if isinstance(action, argparse._SubParsersAction):
+            for command in action.choices.values():
+                command.add_argument("--roster", default=argparse.SUPPRESS, help=ROSTER_HELP)
+                _add_roster_everywhere(command)
+
+
+def main(argv: list[str] | None = None) -> None:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s")
+    args = build_parser().parse_args(argv)
     if args.cmd == "serve":
         import uvicorn
 

@@ -148,4 +148,7 @@ arena export --out docs --tournaments 6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,2
 
 Any HTTP service can take a seat: the arena POSTs the seat's view to your URL and you answer with a
 move. The protocol, signature code, a curl example and what counts against you are in
-[docs/enter-your-agent.md](docs/enter-your-agent.md).
+[docs/enter-your-agent.md](docs/enter-your-agent.md). The example agent has also played 20
+Connect 4 games against `random` through a public tunnel, with agent and arena on one machine and
+one outage partway through, with no forfeits or lost turns
+([details](docs/enter-your-agent.md#tested-over-a-real-network)).

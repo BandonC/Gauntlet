@@ -15,7 +15,15 @@ import pytest
 
 from arena.bench import bench_dsn, drop_database, reset_database
 from arena.chaos import check_invariants
-from arena.players.remote import IDEMPOTENCY_HEADER, SIGNATURE_HEADER, TIMESTAMP_HEADER, sign
+from arena.games.connect4 import Connect4
+from arena.players.base import TurnContext
+from arena.players.remote import (
+    IDEMPOTENCY_HEADER,
+    SIGNATURE_HEADER,
+    TIMESTAMP_HEADER,
+    RemotePlayer,
+    sign,
+)
 from arena.roster import PlayerConfig, PlayerFactory, Roster
 from arena.store.db import create_pool
 from arena.store.tournaments import create_round_robin
@@ -57,6 +65,45 @@ async def test_example_agent_checks_signatures_and_repeats_itself_on_retries():
         "/move", content=body, headers=signed(body, ts=int(time.time()) - 301)
     )
     assert wrong.status_code == 401 and stale.status_code == 401
+
+
+@pytest.mark.parametrize(
+    ("skew", "accepted"), [(-298, True), (298, True), (-302, False), (302, False)]
+)
+async def test_clock_skew_between_arena_and_agent_is_fine_inside_five_minutes_only(skew, accepted):
+    """The tunnel test ran on one clock. Here the arena's clock is off from the agent's: inside
+    the 5-minute window the move goes through, outside it the agent's 401 is an invalid attempt
+    (the agent's answer, never retried), so a badly set clock costs the agent, not the arena.
+    2 s each side of 300 pins the edge without flaking: timestamps are whole seconds, rounded
+    down, and the call itself takes time. Needs no database, so plain `pytest` runs it."""
+    calls = []
+    app_client = httpx2.AsyncClient(
+        transport=httpx2.ASGITransport(app=example_app()), base_url="http://a"
+    )
+
+    async def counted(request: httpx2.Request) -> httpx2.Response:
+        calls.append(request)
+        resp = await app_client.send(request)
+        await resp.aread()
+        return resp
+
+    client = httpx2.AsyncClient(transport=httpx2.MockTransport(counted))
+    remote = RemotePlayer(
+        "agent", "http://a/move", SECRET, client=client, clock=lambda: time.time() + skew
+    )
+    game = Connect4()
+    s = game.initial_state(2, 1)
+    view = game.player_view(s, 0)
+    ctx = TurnContext(
+        "connect4", 0, game.rules_text(), view, game.render_view(view), game.action_spec(s, 0),
+        game.legal_actions_hint(s, 0), match_id="m", turn_no=0,
+    )  # fmt: skip
+    decision = await remote.act(ctx)
+    assert len(calls) == 1
+    if accepted:
+        assert decision.action in game.legal_actions_hint(s, 0)
+    else:
+        assert decision.action is None and decision.raw.startswith("HTTP 401")
 
 
 class Faulty(httpx2.AsyncBaseTransport):

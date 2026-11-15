@@ -91,3 +91,17 @@ The arena treats your agent the way it treats a model:
 - **Your move:** anything else you send. A `4xx` (a wrong secret shows up as your own `401`), a body
   that isn't JSON, a reply with no `action` object, or an illegal move each count as an invalid
   attempt, and three in one turn forfeit it, exactly as for a model.
+
+Your clock and the arena's must agree to within 5 minutes. Outside that, your agent's own
+signature check returns `401`, which counts as your invalid attempt, not as an outage
+(`test_clock_skew_between_arena_and_agent_is_fine_inside_five_minutes_only`).
+
+## Tested over a real network
+
+`examples/agent.py` has played through a public Cloudflare tunnel (2026-11-15, tournaments 35-36,
+Connect 4 against `random`, $0). An unsigned request to the public URL got `401`. Ten games
+completed with 86 agent moves, none rejected, at 116 ms median latency. In ten more, the agent was
+killed partway through and restarted a minute later: the arena retried, opened its circuit breaker,
+re-queued the affected games and finished all ten once the agent was back, with no forfeits and no
+lost or repeated turns. Agent and arena shared one machine, so clock skew is covered by the test
+above, not by that run.
