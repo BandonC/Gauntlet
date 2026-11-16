@@ -1,4 +1,4 @@
-# LLM Arena
+# Gauntlet (LLM Arena)
 
 [![CI](https://github.com/BandonC/Gauntlet/actions/workflows/ci.yml/badge.svg)](https://github.com/BandonC/Gauntlet/actions/workflows/ci.yml)
 
